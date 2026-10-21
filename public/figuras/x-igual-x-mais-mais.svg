@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">x = x++ em três passos de bytecode: iload empilha o 10, iinc muda a variável para 11, istore grava de volta o 10 que estava na pilha, e o incremento se perde</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <text x="30" y="34" font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700" fill="#f3eee7">x = x++;   com x valendo 10</text>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" font-weight="700" letter-spacing="1.2" fill="#8a8277">
+    <text x="30" y="128">PILHA</text>
+    <text x="30" y="214">VARIÁVEL x</text>
+  </g>
+
+  <!-- três passos -->
+  <g font-family="Cascadia Code, Consolas, monospace" text-anchor="middle">
+    <g font-size="15" font-weight="700" fill="#ff9447">
+      <text x="230" y="76">iload_1</text>
+      <text x="440" y="76">iinc 1, 1</text>
+      <text x="650" y="76">istore_1</text>
+    </g>
+    <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">
+      <text x="230" y="96">empilha o valor de x</text>
+      <text x="440" y="96">soma 1 direto em x</text>
+      <text x="650" y="96">desempilha e grava em x</text>
+    </g>
+
+    <rect x="190" y="106" width="80" height="34" rx="5" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="230" y="129" font-size="16" fill="#f2c75c">10</text>
+    <rect x="400" y="106" width="80" height="34" rx="5" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="440" y="129" font-size="16" fill="#f2c75c">10</text>
+    <rect x="610" y="106" width="80" height="34" rx="5" fill="none" stroke="#43403a" stroke-dasharray="4 3"/>
+    <text x="650" y="129" font-size="13" fill="#8a8277">vazia</text>
+
+    <rect x="190" y="190" width="80" height="38" rx="5" fill="#1b1916" stroke="#43403a"/>
+    <text x="230" y="215" font-size="17" fill="#f3eee7">10</text>
+    <rect x="400" y="190" width="80" height="38" rx="5" fill="#13221a" stroke="#4fd68b"/>
+    <text x="440" y="215" font-size="17" fill="#4fd68b">11</text>
+    <rect x="610" y="190" width="80" height="38" rx="5" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="650" y="215" font-size="17" fill="#ff8a80">10</text>
+  </g>
+  <g fill="none" stroke="#8a8277" stroke-width="1.6">
+    <path d="M282 160 h106 m-8 -5 l8 5 l-8 5"/>
+    <path d="M492 160 h106 m-8 -5 l8 5 l-8 5"/>
+  </g>
+  <path d="M650 142 v44 m-5 -8 l5 8 l5 -8" fill="none" stroke="#f2c75c" stroke-width="1.6"/>
+
+  <text x="30" y="262" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">O 10 subiu para a pilha antes do incremento. O istore grava esse 10 por cima do 11,</text>
+  <text x="30" y="282" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">e x termina valendo exatamente o que valia antes.</text>
+</svg>

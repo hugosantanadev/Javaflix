@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360" role="img" aria-labelledby="t">
+  <title id="t">Pirâmide de testes: muitos testes de unidade na base, alguns de integração no meio e poucos de ponta a ponta no topo</title>
+  <rect width="760" height="360" fill="#13110f"/>
+  <polygon points="250,30 323.3,130 176.7,130" fill="#ff7a1a"/>
+  <polygon points="176.7,134 323.3,134 393.8,230 106.2,230" fill="#a8500f"/>
+  <polygon points="106.2,234 393.8,234 470,330 30,330" fill="#5a2c09"/>
+
+  <g font-family="Segoe UI, system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="700">
+    <text x="250" y="112" font-size="13" fill="#1a0b01">Ponta a ponta</text>
+    <text x="250" y="190" font-size="17" fill="#f3eee7">Integração</text>
+    <text x="250" y="292" font-size="20" fill="#f3eee7">Unidade</text>
+  </g>
+
+  <g stroke="#312d28">
+    <line x1="300" y1="96" x2="500" y2="96"/>
+    <line x1="370" y1="184" x2="500" y2="184"/>
+    <line x1="440" y1="284" x2="500" y2="284"/>
+  </g>
+
+  <g font-family="Segoe UI, system-ui, -apple-system, sans-serif">
+    <text x="512" y="92" font-size="15" font-weight="700" fill="#f3eee7">poucos · minutos</text>
+    <text x="512" y="113" font-size="13" fill="#8a8277">a aplicação no ar, como um usuário</text>
+
+    <text x="512" y="180" font-size="15" font-weight="700" fill="#f3eee7">alguns · segundos</text>
+    <text x="512" y="201" font-size="13" fill="#8a8277">@SpringBootTest, Testcontainers</text>
+
+    <text x="512" y="280" font-size="15" font-weight="700" fill="#f3eee7">muitos · milissegundos</text>
+    <text x="512" y="301" font-size="13" fill="#8a8277">JUnit, AssertJ, Mockito</text>
+  </g>
+</svg>

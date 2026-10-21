@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Os 8 bits do número 42: 0010 1010, com o peso de cada posição</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="13" fill="#8a8277">
+    <text x="60" y="56">bit mais significativo</text>
+    <text x="690" y="56" text-anchor="end">bit menos significativo</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, ui-monospace, monospace" font-size="34" font-weight="700" text-anchor="middle">
+    <rect x="60" y="68" width="70" height="70" rx="6" fill="#1b1916" stroke="#312d28"/>
+    <text x="95" y="115" fill="#8a8277">0</text>
+    <rect x="140" y="68" width="70" height="70" rx="6" fill="#1b1916" stroke="#312d28"/>
+    <text x="175" y="115" fill="#8a8277">0</text>
+    <rect x="220" y="68" width="70" height="70" rx="6" fill="#3a1d07" stroke="#ff7a1a"/>
+    <text x="255" y="115" fill="#ff9447">1</text>
+    <rect x="300" y="68" width="70" height="70" rx="6" fill="#1b1916" stroke="#312d28"/>
+    <text x="335" y="115" fill="#8a8277">0</text>
+    <rect x="380" y="68" width="70" height="70" rx="6" fill="#3a1d07" stroke="#ff7a1a"/>
+    <text x="415" y="115" fill="#ff9447">1</text>
+    <rect x="460" y="68" width="70" height="70" rx="6" fill="#1b1916" stroke="#312d28"/>
+    <text x="495" y="115" fill="#8a8277">0</text>
+    <rect x="540" y="68" width="70" height="70" rx="6" fill="#3a1d07" stroke="#ff7a1a"/>
+    <text x="575" y="115" fill="#ff9447">1</text>
+    <rect x="620" y="68" width="70" height="70" rx="6" fill="#1b1916" stroke="#312d28"/>
+    <text x="655" y="115" fill="#8a8277">0</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, ui-monospace, monospace" text-anchor="middle">
+    <g font-size="18" fill="#bdb5aa">
+      <text x="95" y="172">128</text>
+      <text x="175" y="172">64</text>
+      <text x="255" y="172" fill="#ff9447">32</text>
+      <text x="335" y="172">16</text>
+      <text x="415" y="172" fill="#ff9447">8</text>
+      <text x="495" y="172">4</text>
+      <text x="575" y="172" fill="#ff9447">2</text>
+      <text x="655" y="172">1</text>
+    </g>
+    <g font-size="13" fill="#8a8277">
+      <text x="95" y="194">2⁷</text>
+      <text x="175" y="194">2⁶</text>
+      <text x="255" y="194">2⁵</text>
+      <text x="335" y="194">2⁴</text>
+      <text x="415" y="194">2³</text>
+      <text x="495" y="194">2²</text>
+      <text x="575" y="194">2¹</text>
+      <text x="655" y="194">2⁰</text>
+    </g>
+  </g>
+  <line x1="60" y1="222" x2="690" y2="222" stroke="#312d28"/>
+  <text x="375" y="262" text-anchor="middle" font-family="Cascadia Code, Consolas, ui-monospace, monospace" font-size="22" fill="#f3eee7">0010 1010 = 32 + 8 + 2 = <tspan fill="#ff9447" font-weight="700">42</tspan></text>
+</svg>

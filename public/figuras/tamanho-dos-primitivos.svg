@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360" role="img" aria-labelledby="t">
+  <title id="t">O tamanho dos oito tipos primitivos em bytes: byte tem 1, short e char 2, int e float 4, long e double 8; boolean não tem tamanho definido pela especificação</title>
+  <rect width="760" height="360" fill="#13110f"/>
+  <text x="30" y="32" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">Cada quadrado é um byte, 8 bits. Mais bytes, mais valores cabem.</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">
+    <text x="30" y="72">byte</text>
+    <text x="30" y="108">short</text>
+    <text x="30" y="144">char</text>
+    <text x="30" y="180">int</text>
+    <text x="30" y="216">float</text>
+    <text x="30" y="252">long</text>
+    <text x="30" y="288">double</text>
+    <text x="30" y="324">boolean</text>
+  </g>
+
+  <!-- 1 byte = 56 px de largura -->
+  <g stroke="#13110f" stroke-width="2">
+    <g fill="#ff7a1a">
+      <rect x="110" y="56" width="56" height="22" rx="3"/>
+      <rect x="110" y="92" width="56" height="22" rx="3"/><rect x="166" y="92" width="56" height="22" rx="3"/>
+      <rect x="110" y="164" width="56" height="22" rx="3"/><rect x="166" y="164" width="56" height="22" rx="3"/><rect x="222" y="164" width="56" height="22" rx="3"/><rect x="278" y="164" width="56" height="22" rx="3"/>
+      <rect x="110" y="236" width="56" height="22" rx="3"/><rect x="166" y="236" width="56" height="22" rx="3"/><rect x="222" y="236" width="56" height="22" rx="3"/><rect x="278" y="236" width="56" height="22" rx="3"/>
+      <rect x="334" y="236" width="56" height="22" rx="3"/><rect x="390" y="236" width="56" height="22" rx="3"/><rect x="446" y="236" width="56" height="22" rx="3"/><rect x="502" y="236" width="56" height="22" rx="3"/>
+    </g>
+    <g fill="#4fd68b">
+      <rect x="110" y="128" width="56" height="22" rx="3"/><rect x="166" y="128" width="56" height="22" rx="3"/>
+    </g>
+    <g fill="#f2c75c">
+      <rect x="110" y="200" width="56" height="22" rx="3"/><rect x="166" y="200" width="56" height="22" rx="3"/><rect x="222" y="200" width="56" height="22" rx="3"/><rect x="278" y="200" width="56" height="22" rx="3"/>
+      <rect x="110" y="272" width="56" height="22" rx="3"/><rect x="166" y="272" width="56" height="22" rx="3"/><rect x="222" y="272" width="56" height="22" rx="3"/><rect x="278" y="272" width="56" height="22" rx="3"/>
+      <rect x="334" y="272" width="56" height="22" rx="3"/><rect x="390" y="272" width="56" height="22" rx="3"/><rect x="446" y="272" width="56" height="22" rx="3"/><rect x="502" y="272" width="56" height="22" rx="3"/>
+    </g>
+  </g>
+  <rect x="110" y="308" width="56" height="22" rx="3" fill="none" stroke="#8a8277" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="138" y="324" text-anchor="middle" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#8a8277">?</text>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">
+    <text x="576" y="72">-128 a 127</text>
+    <text x="576" y="108">-32.768 a 32.767</text>
+    <text x="576" y="144">0 a 65.535, sem sinal</text>
+    <text x="576" y="180">cerca de ±2,1 bilhões</text>
+    <text x="576" y="216">uns 7 dígitos de precisão</text>
+    <text x="576" y="252">cerca de ±9,2 quintilhões</text>
+    <text x="576" y="288">uns 15 dígitos de precisão</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <text x="180" y="324">true ou false; a especificação não fixa o tamanho</text>
+  </g>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">
+    <rect x="110" y="342" width="12" height="10" rx="2" fill="#ff7a1a"/><text x="128" y="351">inteiro com sinal</text>
+    <rect x="250" y="342" width="12" height="10" rx="2" fill="#4fd68b"/><text x="268" y="351">caractere Unicode, sem sinal</text>
+    <rect x="450" y="342" width="12" height="10" rx="2" fill="#f2c75c"/><text x="468" y="351">ponto flutuante (IEEE 754)</text>
+  </g>
+</svg>

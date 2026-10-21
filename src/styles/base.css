@@ -1,0 +1,552 @@
+/* ------------------------------------------------------------------
+   Javaflix: tokens e base
+   Dois temas, escuro (padrão) e claro, e cinco acentos. O acento define
+   uma versão para fundo escuro (--a-e*) e outra para fundo claro (--a-c*);
+   o tema escolhe qual vale. Painéis de código, saída, arte e capas
+   continuam escuros no tema claro e usam a versão escura do acento.
+   Raio único: 4px em tudo que é interativo, 8px só em modais.
+------------------------------------------------------------------- */
+
+/* acentos */
+:root {
+  --a-e: #ff7a1a;
+  --a-e2: #ff9447;
+  --a-e-ink: #1a0b01;
+  --a-e-soft: rgb(255 122 26 / 0.14);
+  --a-c: #bf5006;
+  --a-c2: #a34400;
+  --a-c-ink: #ffffff;
+  --a-c-soft: rgb(191 80 6 / 0.11);
+}
+:root[data-acento='cobalto'] {
+  --a-e: #4d8dff;
+  --a-e2: #74a6ff;
+  --a-e-ink: #050d1f;
+  --a-e-soft: rgb(77 141 255 / 0.15);
+  --a-c: #1f5fd1;
+  --a-c2: #174ba8;
+  --a-c-ink: #ffffff;
+  --a-c-soft: rgb(31 95 209 / 0.11);
+}
+:root[data-acento='esmeralda'] {
+  --a-e: #2ecf86;
+  --a-e2: #5bdda1;
+  --a-e-ink: #03140b;
+  --a-e-soft: rgb(46 207 134 / 0.14);
+  --a-c: #0d7a4a;
+  --a-c2: #0a5f3a;
+  --a-c-ink: #ffffff;
+  --a-c-soft: rgb(13 122 74 / 0.11);
+}
+:root[data-acento='rosa'] {
+  --a-e: #ff5f8f;
+  --a-e2: #ff86aa;
+  --a-e-ink: #1f0710;
+  --a-e-soft: rgb(255 95 143 / 0.14);
+  --a-c: #c2185b;
+  --a-c2: #9c1249;
+  --a-c-ink: #ffffff;
+  --a-c-soft: rgb(194 24 91 / 0.1);
+}
+:root[data-acento='ambar'] {
+  --a-e: #f5b41a;
+  --a-e2: #f8c54d;
+  --a-e-ink: #1a1100;
+  --a-e-soft: rgb(245 180 26 / 0.14);
+  --a-c: #8f5f00;
+  --a-c2: #704a00;
+  --a-c-ink: #ffffff;
+  --a-c-soft: rgb(143 95 0 / 0.11);
+}
+
+/* tema escuro, e as superfícies que ficam escuras no tema claro */
+:root,
+:root[data-tema='claro'] :is(.md-codigo, .codigo, .md-saida, .campo-saida, .vazio-exemplo, .arte, .escuro-fixo, .md-imas) {
+  --bg: #0b0a09;
+  --bg-2: #13110f;
+  --bg-3: #1b1916;
+  --bg-4: #25221e;
+  --bg-5: #312d28;
+  --line: rgb(255 255 255 / 0.08);
+  --line-2: rgb(255 255 255 / 0.15);
+  --veu-1: rgb(255 255 255 / 0.05);
+  --veu-2: rgb(255 255 255 / 0.1);
+  --trilho: rgb(255 255 255 / 0.16);
+
+  --text: #f3eee7;
+  --text-2: #bdb5aa;
+  --text-3: #8a8277;
+  --texto-corpo: #e4ddd3;
+  --codigo-inline: #f6dcc0;
+  --nav-link: #ddd6cc;
+  --play-bg: #f3eee7;
+  --play-ink: #0b0a09;
+  --play-hover: #d9d3cb;
+  --hero-sinopse: #e8e2d9;
+  --hero-sombra: 0 1px 8px rgb(0 0 0 / 0.5);
+
+  --accent: var(--a-e);
+  --accent-2: var(--a-e2);
+  --accent-ink: var(--a-e-ink);
+  --accent-soft: var(--a-e-soft);
+
+  --ok: #4fd68b;
+  --ok-soft: rgb(79 214 139 / 0.13);
+  --erro: #ff5a4f;
+  --erro-soft: rgb(255 90 79 / 0.13);
+  --gelo: #8fd3ff;
+  --mat: #f2c75c;
+}
+
+:root[data-tema='claro'] {
+  --bg: #f4f3f0;
+  --bg-2: #ffffff;
+  --bg-3: #eceae6;
+  --bg-4: #e1ded9;
+  --bg-5: #d2cec7;
+  --line: rgb(26 24 22 / 0.1);
+  --line-2: rgb(26 24 22 / 0.19);
+  --veu-1: rgb(26 24 22 / 0.045);
+  --veu-2: rgb(26 24 22 / 0.08);
+  --trilho: rgb(26 24 22 / 0.14);
+
+  --text: #1a1816;
+  --text-2: #4b453f;
+  --text-3: #736b63;
+  --texto-corpo: #2a2622;
+  --codigo-inline: #8f3a05;
+  --nav-link: #3a3530;
+  --play-bg: #1a1816;
+  --play-ink: #ffffff;
+  --play-hover: #3a3530;
+  --hero-sinopse: #2a2622;
+  --hero-sombra: none;
+
+  --accent: var(--a-c);
+  --accent-2: var(--a-c2);
+  --accent-ink: var(--a-c-ink);
+  --accent-soft: var(--a-c-soft);
+
+  --ok: #12844a;
+  --ok-soft: rgb(18 132 74 / 0.11);
+  --erro: #c6322a;
+  --erro-soft: rgb(198 50 42 / 0.09);
+  --gelo: #1c6aa3;
+  --mat: #876000;
+
+  color-scheme: light;
+}
+
+/* cores de cargo usadas como texto ficam mais escuras no tema claro, para ter contraste */
+:root[data-tema='claro'] :is(.hero-cargo, .degrau-foco, .temporada-pilula-num) {
+  color: color-mix(in oklab, var(--cor, var(--accent)) 55%, #000);
+}
+
+:root {
+
+  --f-display: 'Big Shoulders Display Variable', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --f-ui: 'Schibsted Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* letra de mão das anotações, no espírito das margens do Use a Cabeça! */
+  --f-mao: 'Caveat Variable', 'Segoe Print', 'Comic Sans MS', cursive;
+  --f-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  --r: 4px;
+  --r-lg: 8px;
+  --gutter: clamp(16px, 4vw, 64px);
+  --nav-h: 68px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* camadas */
+  --z-nav: 40;
+  --z-preview: 60;
+  --z-modal: 80;
+  --z-toast: 100;
+  --z-boot: 120;
+  --z-grao: 140;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scrollbar-color: var(--bg-5) var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--f-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Grão de filme: fixo e sem eventos, para não repintar no scroll */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  z-index: var(--z-grao);
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+img,
+svg,
+video,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--f-mono);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pagina {
+  padding: calc(var(--nav-h) + 32px) var(--gutter) 96px;
+  min-height: 100dvh;
+}
+
+.titulo-pagina {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  line-height: 0.95;
+}
+
+.subtitulo-pagina {
+  color: var(--text-2);
+  margin-top: 10px;
+  max-width: 62ch;
+  font-size: 1.05rem;
+}
+
+/* ------------------------------------------------------------------
+   Botões
+------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 22px 0 18px;
+  border-radius: var(--r);
+  font-weight: 700;
+  font-size: 1.02rem;
+  white-space: nowrap;
+  transition:
+    background-color 0.18s var(--ease),
+    transform 0.12s var(--ease),
+    opacity 0.18s;
+  user-select: none;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn svg {
+  flex: none;
+}
+.btn-play {
+  background: var(--play-bg);
+  color: var(--play-ink);
+}
+.btn-play:hover {
+  background: var(--play-hover);
+}
+.btn-accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.btn-accent:hover {
+  background: var(--accent-2);
+}
+.btn-ghost {
+  background: rgb(110 104 96 / 0.55);
+  color: var(--text);
+}
+.btn-ghost:hover {
+  background: rgb(110 104 96 / 0.4);
+}
+.btn-linha {
+  border: 1px solid var(--line-2);
+  color: var(--text);
+}
+.btn-linha:hover {
+  border-color: var(--text-2);
+  background: var(--veu-1);
+}
+.btn-sm {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 0.92rem;
+  gap: 8px;
+}
+.btn-lg {
+  height: 54px;
+  padding: 0 30px 0 24px;
+  font-size: 1.12rem;
+}
+
+.btn-redondo {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 0.5);
+  background: rgb(20 18 16 / 0.6);
+  color: var(--text);
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.12s;
+  flex: none;
+}
+.btn-redondo:hover {
+  border-color: var(--text);
+}
+.btn-redondo:active {
+  transform: scale(0.94);
+}
+.btn-redondo.cheio {
+  background: var(--play-bg);
+  border-color: var(--play-bg);
+  color: var(--play-ink);
+}
+
+/* ------------------------------------------------------------------
+   Etiquetas e chips
+------------------------------------------------------------------- */
+
+.chip-prova {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid var(--line-2);
+  border-radius: 3px;
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+.chip-prova.minha {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--bg-4);
+  color: var(--text-2);
+}
+.etiqueta.accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.etiqueta.ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.barra-progresso {
+  height: 4px;
+  background: var(--trilho);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.barra-progresso > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.6s var(--ease-out);
+}
+
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  color: var(--text-2);
+}
+
+/* ------------------------------------------------------------------
+   Formulários
+------------------------------------------------------------------- */
+
+.campo {
+  display: grid;
+  gap: 8px;
+}
+.campo > label,
+.campo > .rotulo {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.campo .ajuda {
+  font-size: 0.85rem;
+  color: var(--text-3);
+}
+.input {
+  height: 48px;
+  padding: 0 14px;
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus {
+  border-color: var(--text-2);
+}
+textarea.input {
+  height: auto;
+  min-height: 110px;
+  padding: 12px 14px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------
+   Animações utilitárias
+------------------------------------------------------------------- */
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.surgir {
+  animation: surgir 0.6s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}

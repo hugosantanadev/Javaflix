@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="t">
+  <title id="t">O escopo das variáveis num método com dois blocos: x vive o método inteiro, e cada y vive só dentro do próprio bloco, por isso os dois y não entram em conflito</title>
+  <rect width="760" height="340" fill="#13110f"/>
+
+  <rect x="30" y="30" width="410" height="262" rx="8" fill="#191714" stroke="#43403a"/>
+  <text x="44" y="24" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" font-weight="700" letter-spacing="1.2" fill="#8a8277">BLOCO DO MAIN</text>
+  <rect x="58" y="72" width="366" height="102" rx="6" fill="#2a1a0c" stroke="#ff7a1a" stroke-dasharray="5 4"/>
+  <rect x="58" y="180" width="366" height="104" rx="6" fill="#132018" stroke="#4fd68b" stroke-dasharray="5 4"/>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14">
+    <g fill="#6f737a" text-anchor="end" font-size="12">
+      <text x="50" y="58">1</text><text x="50" y="90">2</text><text x="50" y="116">3</text><text x="50" y="142">4</text><text x="50" y="168">5</text>
+      <text x="50" y="198">6</text><text x="50" y="224">7</text><text x="50" y="250">8</text><text x="50" y="276">9</text>
+    </g>
+    <text x="70" y="58"><tspan fill="#cf8e6d">int</tspan><tspan fill="#f3eee7"> x</tspan><tspan fill="#bcbec4"> = </tspan><tspan fill="#2aacb8">1</tspan><tspan fill="#bcbec4">;</tspan></text>
+    <text x="70" y="90" fill="#bcbec4">{</text>
+    <text x="98" y="116"><tspan fill="#cf8e6d">int</tspan><tspan fill="#ff9447"> y</tspan><tspan fill="#bcbec4"> = x + </tspan><tspan fill="#2aacb8">1</tspan><tspan fill="#bcbec4">;</tspan></text>
+    <text x="98" y="142" fill="#bcbec4">System.out.println(y);</text>
+    <text x="70" y="168" fill="#bcbec4">}</text>
+    <text x="70" y="198" fill="#bcbec4">{</text>
+    <text x="98" y="224"><tspan fill="#cf8e6d">int</tspan><tspan fill="#4fd68b"> y</tspan><tspan fill="#bcbec4"> = </tspan><tspan fill="#2aacb8">10</tspan><tspan fill="#bcbec4">;</tspan></text>
+    <text x="98" y="250" fill="#bcbec4">System.out.println(x + y);</text>
+    <text x="70" y="276" fill="#bcbec4">}</text>
+  </g>
+
+  <!-- tempo de vida -->
+  <text x="476" y="24" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" font-weight="700" letter-spacing="1.2" fill="#8a8277">QUANDO CADA UMA EXISTE</text>
+  <g stroke="#2b2824" stroke-width="1">
+    <line x1="470" y1="53" x2="730" y2="53"/><line x1="470" y1="85" x2="730" y2="85"/><line x1="470" y1="111" x2="730" y2="111"/>
+    <line x1="470" y1="137" x2="730" y2="137"/><line x1="470" y1="163" x2="730" y2="163"/><line x1="470" y1="193" x2="730" y2="193"/>
+    <line x1="470" y1="219" x2="730" y2="219"/><line x1="470" y1="245" x2="730" y2="245"/><line x1="470" y1="271" x2="730" y2="271"/>
+  </g>
+  <rect x="490" y="44" width="22" height="240" rx="5" fill="#f3eee7" opacity="0.85"/>
+  <rect x="580" y="102" width="22" height="70" rx="5" fill="#ff7a1a"/>
+  <rect x="670" y="210" width="22" height="74" rx="5" fill="#4fd68b"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" text-anchor="middle">
+    <text x="501" y="306" fill="#f3eee7">x</text>
+    <text x="591" y="306" fill="#ff9447">y</text>
+    <text x="681" y="306" fill="#4fd68b">outro y</text>
+  </g>
+  <text x="30" y="326" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">Uma variável vive da linha em que é declarada até o } do seu bloco. Os dois y nunca existem juntos.</text>
+</svg>

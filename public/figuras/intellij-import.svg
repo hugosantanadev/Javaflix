@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="250" viewBox="0 0 760 250" role="img" aria-labelledby="t">
+  <title id="t">Editor do IntelliJ com a palavra LocalDate em vermelho e a sugestão java.time.LocalDate? Alt+Enter para importar a classe</title>
+  <rect width="760" height="250" fill="#13110f"/>
+  <rect x="16" y="14" width="728" height="222" rx="10" fill="#1e1f22" stroke="#43454a"/>
+  <rect x="16" y="14" width="728" height="30" rx="10" fill="#2b2d30"/>
+  <rect x="16" y="34" width="728" height="10" fill="#2b2d30"/>
+  <rect x="24" y="18" width="110" height="24" rx="4" fill="#1e1f22"/>
+  <circle cx="38" cy="30" r="5" fill="#3574f0"/>
+  <text x="50" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#dfe1e5">Agenda.java</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <g fill="#6f737a" text-anchor="end">
+      <text x="56" y="74">1</text><text x="56" y="98">2</text><text x="56" y="122">3</text><text x="56" y="146">4</text><text x="56" y="170">5</text>
+    </g>
+    <text x="80" y="74"><tspan fill="#cf8e6d">package</tspan><tspan fill="#bcbec4"> br.com.javaflix;</tspan></text>
+    <text x="80" y="122"><tspan fill="#cf8e6d">public class</tspan><tspan fill="#bcbec4"> Agenda {</tspan></text>
+    <text x="112" y="146" fill="#f75464" textLength="68" lengthAdjust="spacingAndGlyphs">LocalDate</text>
+    <text x="188" y="146" fill="#bcbec4">hoje;</text>
+    <text x="80" y="170" fill="#bcbec4">}</text>
+  </g>
+  <path d="M112 151 q2.5 -3 5 0 t5 0 t5 0 t5 0 t5 0 t5 0 t5 0 t5 0 t5 0 t5 0 t5 0 t5 0 t5 0" fill="none" stroke="#db5c5c" stroke-width="1.5"/>
+
+  <rect x="112" y="158" width="258" height="30" rx="6" fill="#2b2d30" stroke="#43454a"/>
+  <text x="124" y="178" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#dfe1e5">java.time.LocalDate?  <tspan fill="#548af7">Alt+Enter</tspan></text>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#1a0b01">
+    <circle cx="190" cy="128" r="11" fill="#ff7a1a"/><text x="190" y="132">1</text>
+    <circle cx="390" cy="173" r="11" fill="#ff7a1a"/><text x="390" y="177">2</text>
+  </g>
+  <text x="80" y="218" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bcbec4">Alt + Enter escreve o <tspan font-family="Cascadia Code, Consolas, monospace">import java.time.LocalDate;</tspan> na linha 2.</text>
+</svg>

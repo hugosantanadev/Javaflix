@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="470" viewBox="0 0 760 470" role="img" aria-labelledby="t">
+  <title id="t">Janela principal do IntelliJ IDEA com o projeto à esquerda, o Main.java no editor com o botão verde de executar ao lado do main e a janela Run embaixo mostrando a saída</title>
+  <rect width="760" height="470" fill="#13110f"/>
+  <rect x="16" y="14" width="728" height="442" rx="10" fill="#1e1f22" stroke="#43454a"/>
+
+  <!-- barra superior -->
+  <rect x="16" y="14" width="728" height="38" rx="10" fill="#2b2d30"/>
+  <rect x="16" y="40" width="728" height="12" fill="#2b2d30"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#dfe1e5">
+    <rect x="30" y="23" width="20" height="20" rx="4" fill="#3574f0"/>
+    <text x="40" y="37" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">JF</text>
+    <text x="60" y="38">javaflix</text>
+    <path d="M110 31 l4 4 l4 -4" fill="none" stroke="#bcbec4" stroke-width="1.4"/>
+    <text x="566" y="38" fill="#bcbec4">Main</text>
+    <path d="M600 31 l4 4 l4 -4" fill="none" stroke="#bcbec4" stroke-width="1.4"/>
+    <path d="M626 25 l13 8 l-13 8 z" fill="#5fb865"/>
+    <path d="M656 27 a7 7 0 1 0 0.1 0 M656 23 v-3 M650 24 l-2 -2 M662 24 l2 -2" fill="none" stroke="#bcbec4" stroke-width="1.4"/>
+  </g>
+  <line x1="16" y1="52" x2="744" y2="52" stroke="#43454a"/>
+
+  <!-- painel do projeto -->
+  <rect x="16" y="52" width="190" height="268" fill="#2b2d30"/>
+  <line x1="206" y1="52" x2="206" y2="320" stroke="#43454a"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">
+    <text x="28" y="72" fill="#dfe1e5" font-weight="600">Project</text>
+    <text x="34" y="96">▾  javaflix</text>
+    <text x="52" y="118">▸  .idea</text>
+    <text x="52" y="140">▾  src</text>
+    <rect x="62" y="148" width="132" height="20" rx="3" fill="#2e436e"/>
+    <circle cx="80" cy="158" r="5.5" fill="#3574f0"/>
+    <text x="92" y="162" fill="#dfe1e5">Main</text>
+    <text x="52" y="188">▸  External Libraries</text>
+  </g>
+
+  <!-- editor -->
+  <rect x="206" y="52" width="538" height="28" fill="#2b2d30"/>
+  <rect x="214" y="56" width="104" height="24" rx="4" fill="#1e1f22"/>
+  <circle cx="228" cy="68" r="5" fill="#3574f0"/>
+  <text x="240" y="72" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#dfe1e5">Main.java</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <g fill="#6f737a" text-anchor="end">
+      <text x="240" y="108">1</text><text x="240" y="132">2</text><text x="240" y="156">3</text><text x="240" y="180">4</text><text x="240" y="204">5</text>
+    </g>
+    <path d="M250 98 l10 6 l-10 6 z" fill="#5fb865"/>
+    <path d="M250 122 l10 6 l-10 6 z" fill="#5fb865"/>
+    <text x="272" y="108"><tspan fill="#cf8e6d">public class</tspan><tspan fill="#bcbec4"> Main {</tspan></text>
+    <text x="272" y="132"><tspan fill="#cf8e6d">    public static void</tspan><tspan fill="#56a8f5"> main</tspan><tspan fill="#bcbec4">(String[] args) {</tspan></text>
+    <text x="272" y="156"><tspan fill="#bcbec4">        System.</tspan><tspan fill="#c77dbb" font-style="italic">out</tspan><tspan fill="#bcbec4">.println(</tspan><tspan fill="#6aab73">"Olá, Javaflix!"</tspan><tspan fill="#bcbec4">);</tspan></text>
+    <text x="272" y="180" fill="#bcbec4">    }</text>
+    <text x="272" y="204" fill="#bcbec4">}</text>
+  </g>
+
+  <!-- janela Run -->
+  <line x1="16" y1="320" x2="744" y2="320" stroke="#43454a"/>
+  <rect x="16" y="320" width="728" height="28" fill="#2b2d30"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#dfe1e5">
+    <text x="28" y="339" font-weight="600">Run</text>
+    <rect x="62" y="325" width="62" height="20" rx="4" fill="#1e1f22"/>
+    <text x="93" y="339" text-anchor="middle">Main</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11.5">
+    <text x="30" y="370" fill="#6f737a" textLength="520" lengthAdjust="spacingAndGlyphs">"...\openjdk-25\bin\java.exe" ... -classpath ...\out\production\javaflix Main</text>
+    <text x="30" y="394" fill="#dfe1e5">Olá, Javaflix!</text>
+    <text x="30" y="430" fill="#bcbec4">Process finished with exit code 0</text>
+  </g>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#1a0b01">
+    <circle cx="255" cy="88" r="11" fill="#ff7a1a"/><text x="255" y="92">1</text>
+    <circle cx="626" cy="64" r="11" fill="#ff7a1a"/><text x="626" y="68">2</text>
+    <circle cx="186" cy="390" r="11" fill="#ff7a1a"/><text x="186" y="394">3</text>
+    <circle cx="568" cy="366" r="11" fill="#ff7a1a"/><text x="568" y="370">4</text>
+  </g>
+</svg>

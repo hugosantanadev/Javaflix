@@ -1,0 +1,122 @@
+import type { ProjetoMeta } from './types';
+
+/**
+ * Catálogo de projetos práticos. Todos aparecem na aba Projetos; os que ainda
+ * não têm pasta em src/content/projetos/ aparecem como "em breve".
+ *
+ * Um projeto abre quando o cargo dele está liberado, as temporadas de
+ * `requisitos` foram concluídas e o projeto anterior do mesmo cargo terminou.
+ */
+export const PROJETOS: ProjetoMeta[] = [
+  {
+    id: 'estagiario-p1',
+    cargo: 'estagiario',
+    numero: 1,
+    titulo: 'Caixa eletrônico no terminal',
+    glifo: 'R$',
+    resumo: 'Um caixa eletrônico de linha de comando, com menu, saque em notas, depósito e extrato, sem nenhuma biblioteca.',
+    pratica: ['Scanner', 'laços e switch', 'validação de entrada', 'divisão e resto', 'centavos em long'],
+    requisitos: ['estagiario-t1', 'estagiario-t2', 'estagiario-t3', 'estagiario-t4'],
+    horas: '3 a 4 horas',
+    stack: ['Java 25', 'terminal'],
+  },
+  {
+    id: 'estagiario-p2',
+    cargo: 'estagiario',
+    numero: 2,
+    titulo: 'Boletim da turma',
+    glifo: 'AVG',
+    resumo: 'Lê as notas de uma turma, calcula médias e situação de cada aluno e imprime um boletim alinhado e um resumo estatístico.',
+    pratica: ['arrays', 'String.format', 'StringBuilder', 'text blocks', 'Math e ordenação'],
+    requisitos: ['estagiario-t5', 'estagiario-t6'],
+    horas: '3 a 5 horas',
+    stack: ['Java 25', 'terminal'],
+  },
+  {
+    id: 'junior-p1',
+    cargo: 'junior',
+    numero: 1,
+    titulo: 'Biblioteca orientada a objetos',
+    glifo: 'ISBN',
+    resumo: 'O acervo e os empréstimos de uma biblioteca modelados em classes, com encapsulamento, enum de status e regras de negócio.',
+    pratica: ['classes e encapsulamento', 'construtores', 'enum com comportamento', 'interfaces', 'equals e hashCode'],
+    requisitos: ['junior-t1', 'junior-t2', 'junior-t3', 'junior-t4'],
+    horas: '4 a 6 horas',
+    stack: ['Java 25'],
+  },
+  {
+    id: 'junior-p2',
+    cargo: 'junior',
+    numero: 2,
+    titulo: 'Folha de pagamento moderna',
+    glifo: 'CLT',
+    resumo: 'Calcula a folha de uma empresa com CLT, PJ e estagiários usando records, tipos sealed e switch com pattern matching.',
+    pratica: ['records', 'sealed', 'switch com patterns', 'record patterns', 'imutabilidade'],
+    requisitos: ['junior-t5'],
+    horas: '3 a 5 horas',
+    stack: ['Java 25'],
+  },
+  {
+    id: 'backend-junior-p1',
+    cargo: 'backend-junior',
+    numero: 1,
+    titulo: 'Uma API sem framework',
+    glifo: 'GET',
+    resumo: 'Uma API REST de tarefas feita só com o JDK, para entender o que o Spring faz por você: rotas, status, JSON e testes com HttpClient.',
+    pratica: ['HttpServer do JDK', 'rotas e métodos HTTP', 'status codes', 'JSON à mão', 'HttpClient e curl'],
+    requisitos: ['backend-junior-t1', 'backend-junior-t2'],
+    horas: '4 a 6 horas',
+    stack: ['Java 25', 'Git', 'curl'],
+  },
+  {
+    id: 'backend-junior-p2',
+    cargo: 'backend-junior',
+    numero: 2,
+    titulo: 'Monolito: transações e estatísticas',
+    glifo: 'Σ',
+    resumo: 'O teste técnico clássico de vaga júnior: uma API Spring Boot que recebe transações e devolve as estatísticas do último minuto.',
+    pratica: ['Spring Boot', 'controllers REST', 'validação', '201, 400 e 422', 'concorrência em memória'],
+    requisitos: ['backend-junior-t4'],
+    horas: '5 a 8 horas',
+    stack: ['Java 25', 'Spring Boot 4', 'Maven'],
+  },
+  {
+    id: 'backend-junior-p3',
+    cargo: 'backend-junior',
+    numero: 3,
+    titulo: 'API em camadas: carteira digital',
+    glifo: 'TX',
+    resumo: 'Transferências entre usuários com saldo, autorizador externo e notificação, em camadas, com banco, migrations e testes.',
+    pratica: ['controller, service e repository', 'DTOs', 'JPA e Flyway', '@Transactional', 'Mockito e testes de integração'],
+    requisitos: ['backend-junior-t5', 'backend-junior-t6'],
+    horas: '10 a 15 horas',
+    stack: ['Java 25', 'Spring Boot 4', 'PostgreSQL', 'Flyway', 'JUnit'],
+  },
+  {
+    id: 'backend-pleno-p1',
+    cargo: 'backend-pleno',
+    numero: 1,
+    titulo: 'System design: encurtador de links',
+    glifo: '301',
+    resumo: 'Um encurtador pronto para muito tráfego: estimativas, geração de códigos, cache, banco particionado e métricas.',
+    pratica: ['estimativa de capacidade', 'cache com Redis', 'Docker Compose', 'testes de carga', 'observabilidade'],
+    requisitos: ['backend-pleno-t2', 'backend-pleno-t5', 'backend-pleno-t8'],
+    horas: '12 a 20 horas',
+    stack: ['Java 25', 'Spring Boot 4', 'PostgreSQL', 'Redis', 'Docker'],
+  },
+  {
+    id: 'backend-pleno-p2',
+    cargo: 'backend-pleno',
+    numero: 2,
+    titulo: 'Checkout com mensageria',
+    glifo: 'MQ',
+    resumo: 'O checkout de uma loja dividido em serviços que conversam por mensagens, com idempotência, retentativas e consistência eventual.',
+    pratica: ['mensageria', 'idempotência', 'outbox', 'retentativas', 'tracing distribuído'],
+    requisitos: ['backend-pleno-t4', 'backend-pleno-t6', 'backend-pleno-t8'],
+    horas: '15 a 25 horas',
+    stack: ['Java 25', 'Spring Boot 4', 'RabbitMQ', 'PostgreSQL', 'Docker'],
+  },
+];
+
+const porId = new Map(PROJETOS.map((p) => [p.id, p]));
+export const getProjeto = (id: string) => porId.get(id);

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="370" viewBox="0 0 760 370" role="img" aria-labelledby="t">
+  <title id="t">À esquerda, o N+1: quatro idas ao banco, uma para os pedidos e uma para cada cliente. À direita, o join fetch: uma ida só</title>
+  <defs>
+    <marker id="ponta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/>
+    </marker>
+    <marker id="ponta-volta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/>
+    </marker>
+  </defs>
+  <rect width="760" height="370" fill="#13110f"/>
+  <line x1="380" y1="24" x2="380" y2="346" stroke="#25221e"/>
+
+  <g font-family="Segoe UI, system-ui, -apple-system, sans-serif">
+    <text x="195" y="40" text-anchor="middle" font-size="17" font-weight="700" fill="#f3eee7">N+1: um cliente de cada vez</text>
+    <text x="565" y="40" text-anchor="middle" font-size="17" font-weight="700" fill="#f3eee7">join fetch: tudo junto</text>
+    <g font-size="13" fill="#8a8277" text-anchor="middle">
+      <text x="80" y="76">aplicação</text>
+      <text x="310" y="76">banco</text>
+      <text x="450" y="76">aplicação</text>
+      <text x="680" y="76">banco</text>
+    </g>
+  </g>
+
+  <g stroke="#312d28" stroke-width="2">
+    <line x1="80" y1="86" x2="80" y2="300"/>
+    <line x1="310" y1="86" x2="310" y2="300"/>
+    <line x1="450" y1="86" x2="450" y2="300"/>
+    <line x1="680" y1="86" x2="680" y2="300"/>
+  </g>
+
+  <g stroke-width="2">
+    <line x1="84" y1="110" x2="306" y2="110" stroke="#ff7a1a" marker-end="url(#ponta)"/>
+    <line x1="306" y1="128" x2="84" y2="128" stroke="#8a8277" stroke-dasharray="5 4" marker-end="url(#ponta-volta)"/>
+    <line x1="84" y1="162" x2="306" y2="162" stroke="#ff7a1a" marker-end="url(#ponta)"/>
+    <line x1="306" y1="180" x2="84" y2="180" stroke="#8a8277" stroke-dasharray="5 4" marker-end="url(#ponta-volta)"/>
+    <line x1="84" y1="214" x2="306" y2="214" stroke="#ff7a1a" marker-end="url(#ponta)"/>
+    <line x1="306" y1="232" x2="84" y2="232" stroke="#8a8277" stroke-dasharray="5 4" marker-end="url(#ponta-volta)"/>
+    <line x1="84" y1="266" x2="306" y2="266" stroke="#ff7a1a" marker-end="url(#ponta)"/>
+    <line x1="306" y1="284" x2="84" y2="284" stroke="#8a8277" stroke-dasharray="5 4" marker-end="url(#ponta-volta)"/>
+
+    <line x1="454" y1="110" x2="676" y2="110" stroke="#ff7a1a" marker-end="url(#ponta)"/>
+    <line x1="676" y1="128" x2="454" y2="128" stroke="#8a8277" stroke-dasharray="5 4" marker-end="url(#ponta-volta)"/>
+  </g>
+
+  <g font-family="Cascadia Code, Consolas, ui-monospace, monospace" font-size="12" fill="#bdb5aa" text-anchor="middle">
+    <text x="195" y="103">select pedidos</text>
+    <text x="195" y="155">select cliente 1</text>
+    <text x="195" y="207">select cliente 2</text>
+    <text x="195" y="259">select cliente 3</text>
+    <text x="565" y="103">select pedidos join clientes</text>
+  </g>
+
+  <g font-family="Segoe UI, system-ui, -apple-system, sans-serif" text-anchor="middle">
+    <text x="195" y="332" font-size="15" fill="#ff9447" font-weight="700">4 idas ao banco: 1 + N</text>
+    <text x="565" y="332" font-size="15" fill="#4fd68b" font-weight="700">1 ida ao banco</text>
+  </g>
+</svg>

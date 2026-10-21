@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">O JDK contém o runtime, que contém a JVM: a JVM executa bytecode, o runtime soma a biblioteca padrão, e o JDK soma as ferramentas como javac, jar, jshell, javadoc e jlink</title>
+  <rect width="760" height="300" fill="#13110f"/>
+
+  <rect x="24" y="24" width="712" height="252" rx="12" fill="#191714" stroke="#ff7a1a" stroke-width="1.6"/>
+  <text x="44" y="56" font-family="Segoe UI, system-ui, sans-serif" font-size="20" font-weight="800" fill="#ff7a1a">JDK</text>
+  <text x="96" y="56" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">o que você instala para programar</text>
+
+  <rect x="44" y="76" width="430" height="182" rx="10" fill="#1f1c18" stroke="#f2c75c" stroke-width="1.4"/>
+  <text x="62" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="800" fill="#f2c75c">Runtime</text>
+  <text x="138" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#8a8277">(o antigo JRE)</text>
+  <text x="62" y="126" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">biblioteca padrão:</text>
+  <text x="62" y="144" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#bdb5aa">java.lang  java.util  java.time  java.io</text>
+
+  <rect x="62" y="162" width="250" height="80" rx="8" fill="#262119" stroke="#4fd68b" stroke-width="1.4"/>
+  <text x="80" y="190" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="800" fill="#4fd68b">JVM</text>
+  <text x="80" y="210" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">executa o bytecode, compila (JIT)</text>
+  <text x="80" y="228" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">e recolhe o lixo da memória</text>
+
+  <text x="330" y="196" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#8a8277">para rodar</text>
+  <text x="330" y="214" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#8a8277">programas</text>
+
+  <text x="500" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">ferramentas, só no JDK:</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#f3eee7">
+    <rect x="500" y="118" width="96" height="28" rx="4" fill="#25221e" stroke="#43403a"/>
+    <text x="514" y="137">javac</text>
+    <rect x="608" y="118" width="96" height="28" rx="4" fill="#25221e" stroke="#43403a"/>
+    <text x="622" y="137">jdeps</text>
+    <rect x="500" y="156" width="96" height="28" rx="4" fill="#25221e" stroke="#43403a"/>
+    <text x="514" y="175">jar</text>
+    <rect x="608" y="156" width="96" height="28" rx="4" fill="#25221e" stroke="#43403a"/>
+    <text x="622" y="175">jshell</text>
+    <rect x="500" y="194" width="96" height="28" rx="4" fill="#25221e" stroke="#43403a"/>
+    <text x="514" y="213">javadoc</text>
+    <rect x="608" y="194" width="96" height="28" rx="4" fill="#25221e" stroke="#43403a"/>
+    <text x="622" y="213">jlink</text>
+  </g>
+  <text x="500" y="246" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">desde o Java 11, não há runtime</text>
+  <text x="500" y="262" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">separado para baixar</text>
+</svg>

@@ -1,0 +1,7 @@
+node_modules
+dist
+*.local
+.DS_Store
+videos.txt
+.env
+src/content/videos.local.ts

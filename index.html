@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0a09" />
+    <meta name="description" content="Estude Java como quem maratona uma série: da primeira aula à certificação Oracle e ao backend que o mercado pede." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Javaflix</title>
+    <script>
+      // Aplica tema e acento antes da primeira pintura, para não piscar o tema errado.
+      try {
+        var salvo = JSON.parse(localStorage.getItem('javaflix-aparencia') || '{}').state || {};
+        var claro = salvo.tema === 'claro' || (salvo.tema === 'sistema' && matchMedia('(prefers-color-scheme: light)').matches);
+        if (claro) document.documentElement.dataset.tema = 'claro';
+        if (salvo.acento && salvo.acento !== 'brasa') document.documentElement.dataset.acento = salvo.acento;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

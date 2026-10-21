@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="270" viewBox="0 0 760 270" role="img" aria-labelledby="t">
+  <title id="t">A expressão 1 + 2 + "3" resolvida da esquerda para a direita: 1 + 2 dá o int 3, e 3 + "3" dá a String "33"; já "1" + 2 + 3 vira texto no primeiro passo e dá "123"</title>
+  <rect width="760" height="270" fill="#13110f"/>
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/>
+    </marker>
+  </defs>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7">
+    <text x="30" y="70">1 + 2 + "3"</text>
+    <text x="30" y="190">"1" + 2 + 3</text>
+  </g>
+
+  <g fill="#1b1916" stroke="#43403a">
+    <rect x="190" y="44" width="120" height="40" rx="6"/>
+    <rect x="460" y="44" width="130" height="40" rx="6"/>
+    <rect x="190" y="164" width="120" height="40" rx="6"/>
+    <rect x="460" y="164" width="130" height="40" rx="6"/>
+  </g>
+  <g fill="#3a1d07" stroke="#ff7a1a">
+    <rect x="356" y="44" width="70" height="40" rx="6"/>
+    <rect x="630" y="44" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <rect x="356" y="164" width="70" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <rect x="630" y="164" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" text-anchor="middle">
+    <text x="250" y="70" fill="#bcbec4">1 + 2</text>
+    <text x="391" y="70" fill="#ff9447" font-weight="700">3</text>
+    <text x="525" y="70" fill="#bcbec4">3 + "3"</text>
+    <text x="680" y="70" fill="#4fd68b" font-weight="700">"33"</text>
+    <text x="250" y="190" fill="#bcbec4">"1" + 2</text>
+    <text x="391" y="190" fill="#4fd68b" font-weight="700">"12"</text>
+    <text x="525" y="190" fill="#bcbec4">"12" + 3</text>
+    <text x="680" y="190" fill="#4fd68b" font-weight="700">"123"</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" marker-end="url(#seta)">
+    <line x1="312" y1="64" x2="352" y2="64"/><line x1="428" y1="64" x2="456" y2="64"/><line x1="592" y1="64" x2="626" y2="64"/>
+    <line x1="312" y1="184" x2="352" y2="184"/><line x1="428" y1="184" x2="456" y2="184"/><line x1="592" y1="184" x2="626" y2="184"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" text-anchor="middle">
+    <text x="391" y="104" fill="#ff9447">int: soma</text>
+    <text x="680" y="104" fill="#4fd68b">String: concatena</text>
+    <text x="391" y="224" fill="#4fd68b">String já no 1º passo</text>
+    <text x="680" y="224" fill="#4fd68b">continua String</text>
+  </g>
+  <text x="30" y="254" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">O + resolve um par por vez, da esquerda para a direita; a partir da primeira String, tudo vira texto.</text>
+</svg>

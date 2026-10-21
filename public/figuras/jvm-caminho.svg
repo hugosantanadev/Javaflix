@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="t">
+  <title id="t">O caminho de um programa Java: Ola.java vira Ola.class com o javac uma vez só, e o mesmo Ola.class roda em JVMs de Windows, Linux e macOS, cada uma gerando código para o seu processador</title>
+  <rect width="760" height="340" fill="#13110f"/>
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/>
+    </marker>
+    <marker id="seta-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/>
+    </marker>
+  </defs>
+
+  <!-- Ola.java -->
+  <g font-family="Cascadia Code, Consolas, monospace">
+    <path d="M30 104 h86 l24 24 v122 h-110 z" fill="#1b1916" stroke="#8a8277" stroke-width="1.4"/>
+    <path d="M116 104 v24 h24" fill="none" stroke="#8a8277" stroke-width="1.4"/>
+    <text x="85" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="#f3eee7">Ola.java</text>
+    <rect x="42" y="142" width="62" height="6" rx="2" fill="#cf8e6d"/>
+    <rect x="52" y="158" width="74" height="6" rx="2" fill="#56a8f5"/>
+    <rect x="62" y="174" width="56" height="6" rx="2" fill="#6aab73"/>
+    <rect x="52" y="190" width="14" height="6" rx="2" fill="#bdb5aa"/>
+    <rect x="42" y="206" width="10" height="6" rx="2" fill="#bdb5aa"/>
+  </g>
+  <text x="85" y="272" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">código-fonte</text>
+
+  <!-- javac -->
+  <line x1="148" y1="177" x2="228" y2="177" stroke="#ff7a1a" stroke-width="2" marker-end="url(#seta-a)"/>
+  <text x="188" y="167" text-anchor="middle" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#ff7a1a">javac</text>
+  <text x="188" y="197" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#8a8277">uma vez</text>
+
+  <!-- Ola.class -->
+  <g font-family="Cascadia Code, Consolas, monospace">
+    <path d="M238 104 h86 l24 24 v122 h-110 z" fill="#1b1916" stroke="#f2c75c" stroke-width="1.4"/>
+    <path d="M324 104 v24 h24" fill="none" stroke="#f2c75c" stroke-width="1.4"/>
+    <text x="293" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="#f3eee7">Ola.class</text>
+    <text x="293" y="160" text-anchor="middle" font-size="12.5" fill="#f2c75c">CA FE BA BE</text>
+    <text x="293" y="180" text-anchor="middle" font-size="12.5" fill="#bdb5aa">00 00 00 45</text>
+    <text x="293" y="200" text-anchor="middle" font-size="12.5" fill="#8a8277">2A B7 00 01</text>
+    <text x="293" y="220" text-anchor="middle" font-size="12.5" fill="#8a8277">...</text>
+  </g>
+  <text x="293" y="272" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">bytecode, igual para todos</text>
+
+  <!-- leque até as JVMs -->
+  <g fill="none" stroke="#8a8277" stroke-width="1.6" marker-end="url(#seta)">
+    <path d="M356 166 C 390 120, 400 82, 432 76"/>
+    <path d="M356 177 L 432 177"/>
+    <path d="M356 188 C 390 234, 400 272, 432 278"/>
+  </g>
+  <text x="394" y="152" text-anchor="middle" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#bdb5aa">java Ola</text>
+
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <rect x="440" y="44" width="178" height="64" rx="8" fill="#1b1916" stroke="#312d28"/>
+    <text x="456" y="70" font-size="14" font-weight="700" fill="#f3eee7">JVM do Windows</text>
+    <text x="456" y="92" font-size="12" fill="#8a8277">interpreta e compila (JIT)</text>
+    <rect x="440" y="145" width="178" height="64" rx="8" fill="#1b1916" stroke="#312d28"/>
+    <text x="456" y="171" font-size="14" font-weight="700" fill="#f3eee7">JVM do Linux</text>
+    <text x="456" y="193" font-size="12" fill="#8a8277">interpreta e compila (JIT)</text>
+    <rect x="440" y="246" width="178" height="64" rx="8" fill="#1b1916" stroke="#312d28"/>
+    <text x="456" y="272" font-size="14" font-weight="700" fill="#f3eee7">JVM do macOS</text>
+    <text x="456" y="294" font-size="12" fill="#8a8277">interpreta e compila (JIT)</text>
+  </g>
+
+  <!-- processadores -->
+  <g stroke="#4fd68b" stroke-width="1.4">
+    <line x1="620" y1="76" x2="650" y2="76" marker-end="url(#seta)" stroke="#8a8277"/>
+    <line x1="620" y1="177" x2="650" y2="177" marker-end="url(#seta)" stroke="#8a8277"/>
+    <line x1="620" y1="278" x2="650" y2="278" marker-end="url(#seta)" stroke="#8a8277"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700" fill="#4fd68b" text-anchor="middle">
+    <rect x="658" y="52" width="76" height="48" rx="5" fill="#13221a" stroke="#4fd68b"/>
+    <text x="696" y="81">x86-64</text>
+    <rect x="658" y="153" width="76" height="48" rx="5" fill="#13221a" stroke="#4fd68b"/>
+    <text x="696" y="182">x86-64</text>
+    <rect x="658" y="254" width="76" height="48" rx="5" fill="#13221a" stroke="#4fd68b"/>
+    <text x="696" y="283">ARM64</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.2">
+    <path d="M668 52 v-6 M680 52 v-6 M692 52 v-6 M704 52 v-6 M716 52 v-6 M728 52 v-6"/>
+    <path d="M668 153 v-6 M680 153 v-6 M692 153 v-6 M704 153 v-6 M716 153 v-6 M728 153 v-6"/>
+    <path d="M668 254 v-6 M680 254 v-6 M692 254 v-6 M704 254 v-6 M716 254 v-6 M728 254 v-6"/>
+  </g>
+
+  <text x="30" y="40" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">Escreva uma vez, rode em qualquer lugar:</text>
+  <text x="30" y="58" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">quem muda de um sistema para outro é a JVM.</text>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="250" viewBox="0 0 760 250" role="img" aria-labelledby="t">
+  <title id="t">O int 300 em binário e o cast para byte: só os 8 bits de baixo, 0010 1100, ficam, e eles valem 44</title>
+  <rect width="760" height="250" fill="#13110f"/>
+  <text x="30" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">O int 300 ocupa 32 bits. O cast para byte fica com os 8 da direita e joga o resto fora.</text>
+
+  <text x="30" y="88" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">int 300</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15">
+    <text x="130" y="88" fill="#6f737a">0000 0000 0000 0000 0000 000</text>
+    <text x="410" y="88" fill="#db5c5c">1</text>
+    <rect x="432" y="66" width="104" height="32" rx="5" fill="none" stroke="#ff7a1a" stroke-width="1.6"/>
+    <text x="442" y="88" fill="#ff9447">0010 1100</text>
+  </g>
+  <path d="M484 102 v40 m-5 -8 l5 8 l5 -8" fill="none" stroke="#ff7a1a" stroke-width="1.6"/>
+  <text x="426" y="124" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#db5c5c" text-anchor="end">esse 1 vale 256 e some</text>
+
+  <text x="30" y="172" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">byte</text>
+  <rect x="432" y="150" width="104" height="32" rx="5" fill="#3a1d07" stroke="#ff7a1a" stroke-width="1.6"/>
+  <text x="442" y="172" font-family="Cascadia Code, Consolas, monospace" font-size="15" fill="#ff9447">0010 1100</text>
+  <text x="556" y="172" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f2c75c">= 32 + 8 + 4 = 44</text>
+
+  <text x="30" y="224" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">Em conta: 300 - 256 = 44. Se o oitavo bit fosse 1, o byte ficaria negativo, como 200, que vira -56.</text>
+</svg>
