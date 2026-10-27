@@ -1,0 +1,17 @@
+{
+  "q01": "Os dois operandos são inteiros. O que a divisão faz com a parte decimal?",
+  "q02": "Resolva da esquerda para a direita: a partir da primeira String, o `+` passa a juntar texto.",
+  "q03": "O resto tem o sinal do dividendo, e a divisão inteira corta em direção a zero.",
+  "q04": "`*` e `%` estão no mesmo nível e vêm antes de `+` e `-`; dentro de um nível, da esquerda para a direita.",
+  "q05": "Os métodos são chamados na ordem em que aparecem; a precedência só decide como os resultados se combinam.",
+  "q06": "Só o `+` aceita String, e um `char` com um número continua sendo conta.",
+  "q07": "`char` somado a `int` é conta de números. Qual é o código de `'A'`?",
+  "q08": "O parêntese é calculado antes. Que valor ele precisa ter para que, vezes 4, dê 20?",
+  "q09": "Divisão inteira por zero não tem resultado. O que a JVM faz quando não há resultado possível?",
+  "q10": "Com `double`, dividir por zero não lança nada: pense em infinito e em \"não é um número\".",
+  "q11": "Procure uma conta que produz `double` sendo guardada num tipo menor.",
+  "q12": "`null` concatenado vira o texto \"null\". Em cada linha, veja em que momento a primeira String aparece.",
+  "q13": "Qual dos três operadores tem a maior precedência?",
+  "q14": "Calcule cada opção com calma: divisão inteira e, no mesmo nível, da esquerda para a direita.",
+  "q15": "Dois sinais de menos lado a lado: um é subtração, o outro é o sinal do número. Multiplique primeiro."
+}

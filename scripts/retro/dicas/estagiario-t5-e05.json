@@ -1,0 +1,17 @@
+{
+  "q01": "Um dos operadores compara referências; o outro, os caracteres.",
+  "q02": "Literais iguais são o mesmo objeto; `new` cria sempre outro.",
+  "q03": "`s2` não é `final`: `s2 + \"va\"` é calculado na execução. E o `intern()` devolve o quê?",
+  "q04": "Uma variável `final` inicializada com um literal entra no cálculo das constantes.",
+  "q05": "Separe o que compara conteúdo do que compara referência, e lembre o que `equals(null)` devolve.",
+  "q06": "Qual é o valor de `perfil` quando o `equals` é chamado nele?",
+  "q07": "Procure o método que compara o conteúdo, não a referência.",
+  "q08": "Quando não há espaços nas pontas, o `trim()` precisa criar uma `String` nova?",
+  "q09": "Aspas simples delimitam um `char`, e só cabe um caractere nelas.",
+  "q10": "`a` e `b` são objetos diferentes; os dois `intern()` levam ao mesmo objeto do pool.",
+  "q11": "O `switch` com `String` compara usando `equals`.",
+  "q12": "No Java 7, o pool saiu da PermGen.",
+  "q13": "Uma chamada de método impede que a concatenação seja constante.",
+  "q14": "A chamada não pode ser feita numa referência que talvez seja nula.",
+  "q15": "Ignorando maiúsculas, os textos são iguais?"
+}

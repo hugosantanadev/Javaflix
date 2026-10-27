@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">O que o javac faz com cada chamada de varargs: media(7, 8, 10) vira media(new int[] {7, 8, 10}); media() vira media(new int[] {}), um array vazio; e um array pronto é passado como está</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <text x="30" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">você escreve</text>
+  <text x="250" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">o javac gera</text>
+  <text x="560" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">o método recebe</text>
+  <text x="30" y="76" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">media(7, 8, 10)</text>
+  <path d="M167 71 L242 71" stroke="#8a8277" stroke-width="1.4" fill="none" marker-end="url(#s)"/>
+  <text x="250" y="76" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#4fd68b">media(new int[] {7, 8, 10})</text>
+  <rect x="560" y="52" width="44" height="34" fill="#13221a" stroke="#4fd68b"/>
+  <text x="582" y="75" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">7</text>
+  <rect x="604" y="52" width="44" height="34" fill="#13221a" stroke="#4fd68b"/>
+  <text x="626" y="75" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">8</text>
+  <rect x="648" y="52" width="44" height="34" fill="#13221a" stroke="#4fd68b"/>
+  <text x="670" y="75" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">10</text>
+  <text x="560" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">length 3</text>
+  <text x="30" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">media()</text>
+  <path d="M98 147 L242 147" stroke="#8a8277" stroke-width="1.4" fill="none" marker-end="url(#s)"/>
+  <text x="250" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#4fd68b">media(new int[] {})</text>
+  <rect x="560" y="128" width="44" height="34" fill="none" stroke="#4fd68b" stroke-dasharray="4 3"/>
+  <text x="560" y="180" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">length 0, não null</text>
+  <text x="30" y="228" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">media(arr)</text>
+  <path d="M124 223 L242 223" stroke="#8a8277" stroke-width="1.4" fill="none" marker-end="url(#s)"/>
+  <text x="250" y="228" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#4fd68b">media(arr)</text>
+  <rect x="560" y="204" width="44" height="34" fill="#13221a" stroke="#4fd68b"/>
+  <text x="582" y="227" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">6</text>
+  <rect x="604" y="204" width="44" height="34" fill="#13221a" stroke="#4fd68b"/>
+  <text x="626" y="227" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">9</text>
+  <text x="560" y="256" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">o próprio arr</text>
+  <text x="30" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Dentro do método, notas é sempre um int[]. Cada chamada com valores soltos cria um array novo.</text>
+</svg>

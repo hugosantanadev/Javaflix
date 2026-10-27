@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`compareTo` devolve a diferença entre os caracteres; maiúsculas vêm antes das minúsculas.',
     '`concat` só aceita `String`: `"a".concat(\'b\')` não compila.',
   ],
+  ia: {
+    uso:
+      'A IA conhece bem a API de `String` e é útil para sugerir o método certo para cada tarefa de texto. Os erros dela se concentram em limites de `substring` e em expressões regulares escondidas em `split` e `replaceAll`, exatamente o que a prova cobra.',
+    pedido:
+      'Escreva em Java 21 um trecho que <descreva a tarefa de texto>.\n- Use só métodos de String, sem bibliotecas.\n- Para cada split ou replaceAll, diga se o argumento é uma expressão regular e se algum caractere precisa de escape.\n- Mostre a saída para estes exemplos: <cole dois ou três textos reais>, incluindo um vazio.',
+    erros: [
+      'Usa `replaceAll(".", ...)` ou `split(".")` querendo um ponto literal.',
+      'Erra o fim do `substring` por um, esquecendo que ele é excluído.',
+      'Supõe que `split` mantém as strings vazias do final.',
+    ],
+    conferir: [
+      'Rode o código com os exemplos reais, inclusive texto vazio e texto sem o separador.',
+      'Confira o tamanho de cada `substring`: fim menos início.',
+      'Troque `replaceAll` por `replace` quando o padrão for um texto fixo.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de String',
@@ -122,6 +138,82 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O `strip()` antes do `split` é essencial: com espaços no começo, o primeiro pedaço seria uma string vazia, e o `substring(0, 1)` lançaria exceção. A expressão `\\s+` trata vários espaços seguidos como um separador só. Para nomes como "da Silva", em que a preposição fica minúscula, seria preciso uma lista de exceções.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t5-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: incompatible types: char cannot be converted to String`.',
+      codigo: `public class Sigla {
+    public static void main(String[] args) {
+        String sigla = "BR";
+        sigla = sigla.concat('A');
+        System.out.println(sigla);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Sigla {
+    public static void main(String[] args) {
+        String sigla = "BR";
+        sigla = sigla.concat("A");
+        System.out.println(sigla);
+    }
+}`,
+      saidaCorrigida: 'BRA',
+      dica: 'Que tipo de argumento o `concat` aceita? E o que são aspas simples em Java?',
+      explicacao: 'O `concat` só aceita `String`, e `\'A\'` é um `char`. Diferente do operador `+`, que converte qualquer coisa em texto, o método não faz conversão nenhuma. Com aspas duplas, `"A"` é uma `String` e o código compila.',
+    },
+    {
+      id: 'estagiario-t5-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O domínio do e-mail deveria sair como `javaflix.com`, mas sai `@javaflix.com`.',
+      codigo: `public class Dominio {
+    public static void main(String[] args) {
+        String email = "bia@javaflix.com";
+        String dominio = email.substring(email.indexOf('@'));
+        System.out.println(dominio);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: '@javaflix.com' },
+      correcao: `public class Dominio {
+    public static void main(String[] args) {
+        String email = "bia@javaflix.com";
+        String dominio = email.substring(email.indexOf('@') + 1);
+        System.out.println(dominio);
+    }
+}`,
+      saidaCorrigida: 'javaflix.com',
+      dica: 'O `indexOf` devolve a posição do próprio `@`. O `substring` começa incluindo ou excluindo essa posição?',
+      explicacao: 'O início do `substring` é incluído, e o `indexOf(\'@\')` aponta para o `@`. Para começar logo depois dele, some 1. É o mesmo raciocínio dos cortes: o domínio começa no corte seguinte ao `@`.',
+    },
+    {
+      id: 'estagiario-t5-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O programa para com `ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0` ao ler a versão principal.',
+      codigo: `public class Versao {
+    public static void main(String[] args) {
+        String versao = "21.0.4";
+        String[] partes = versao.split(".");
+        int principal = Integer.parseInt(partes[0]);
+        System.out.println("Java " + principal);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
+      correcao: `public class Versao {
+    public static void main(String[] args) {
+        String versao = "21.0.4";
+        String[] partes = versao.split("\\\\.");
+        int principal = Integer.parseInt(partes[0]);
+        System.out.println("Java " + principal);
+    }
+}`,
+      saidaCorrigida: 'Java 21',
+      dica: 'O argumento do `split` é uma expressão regular. O que um `.` significa numa expressão regular?',
+      explicacao: 'Em expressão regular, `.` casa com qualquer caractere. Cada caractere de `"21.0.4"` vira separador, todos os pedaços ficam vazios e o `split` descarta os vazios do fim: sobra um array de tamanho 0. Escapando o ponto, `"\\\\."`, ele vira um ponto literal e o array tem 3 partes.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t5-e02-q01',
@@ -133,6 +225,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com um argumento, `substring` vai do índice informado até o fim. Os índices começam em 0: J0 a1 v2 a3 f4.',
+      dica: 'Com um só argumento, o `substring` vai do índice dado até o fim. Qual letra está no índice 4?',
     },
     {
       id: 'estagiario-t5-e02-q02',
@@ -146,6 +239,7 @@ System.out.println(s.lastIndexOf('a'));
 System.out.println(s.indexOf("gra"));`,
       resposta: 'rog\n5\n7\n3',
       explicacao: '`substring(1, 4)` pega as posições 1, 2 e 3 (o 4 é excluído). O primeiro \'a\' está na posição 5, e o último na 7. "gra" começa na posição 3.',
+      dica: 'O fim do `substring` é excluído; `indexOf` e `lastIndexOf` contam a partir de 0.',
     },
     {
       id: 'estagiario-t5-e02-q03',
@@ -162,6 +256,7 @@ System.out.println(s.indexOf("gra"));`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'StringIndexOutOfBoundsException' },
       explicacao: 'O início não pode ser maior que o fim. `substring` não inverte a ordem nem devolve vazio nesse caso: lança exceção.',
+      dica: 'O início pode ser maior que o fim?',
     },
     {
       id: 'estagiario-t5-e02-q04',
@@ -173,6 +268,7 @@ System.out.println(s.indexOf("gra"));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Cada método devolve uma `String` nova, sobre a qual o próximo é chamado: "Java", "Javaflix", "JAVAFLIX". O último devolve o tamanho, 8.',
+      dica: 'Siga a cadeia da esquerda para a direita e conte as letras no final.',
     },
     {
       id: 'estagiario-t5-e02-q05',
@@ -193,6 +289,7 @@ System.out.println(s.replace(".", "-").equals("a-b-c") + " " + s.replace('.', '-
         + s.replaceAll(".", "-").equals("a-b-c") + " " + s.replaceFirst(".", "-").equals("a-b-c") + " "
         + String.join("-", s.split(".")).equals("a-b-c"));`,
       explicacao: '`replace` é literal, nas duas versões (com `char` ou com texto). As outras três usam expressão regular, em que `.` casa com qualquer caractere: `replaceAll` dá "-----", `replaceFirst` dá "-.b.c" e o `split(".")` devolve um array vazio.',
+      dica: 'Quais opções tratam o ponto literalmente, sem expressão regular?',
     },
     {
       id: 'estagiario-t5-e02-q06',
@@ -204,6 +301,7 @@ System.out.println(s.replace(".", "-").equals("a-b-c") + " " + s.replace('.', '-
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os pedaços seriam "1", "2", "", "3", "" e "". O `split` descarta as strings vazias do final, mas mantém a do meio: sobram 4.',
+      dica: 'O `split` mantém os vazios do meio e descarta os do fim.',
     },
     {
       id: 'estagiario-t5-e02-q07',
@@ -219,6 +317,7 @@ System.out.println(s.replace(".", "-").equals("a-b-c") + " " + s.replace('.', '-
       respostas: ['indexOf', 'lastIndexOf'],
       saida: 'ana',
       explicacao: '`indexOf(\'@\')` devolve 3, e `substring(0, 3)` pega as posições 0, 1 e 2. Como só há um `@`, `lastIndexOf` daria o mesmo.',
+      dica: 'Procure o método que devolve a posição de um caractere.',
     },
     {
       id: 'estagiario-t5-e02-q08',
@@ -230,6 +329,7 @@ System.out.println(s.replace(".", "-").equals("a-b-c") + " " + s.replace('.', '-
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os primeiros caracteres já diferem: \'B\' (66) menos \'a\' (97) é −31. Por isso "Banana" vem antes de "abacaxi" na ordem natural: maiúsculas vêm antes das minúsculas.',
+      dica: 'Compare os primeiros caracteres: `\'B\'` e `\'a\'`. Qual é a diferença entre os códigos?',
     },
     {
       id: 'estagiario-t5-e02-q09',
@@ -246,6 +346,7 @@ System.out.println(s.replace(".", "-").equals("a-b-c") + " " + s.replace('.', '-
 }`,
       resposta: 5,
       explicacao: '`charAt` devolve um valor, não uma posição que possa receber atribuição. Para "trocar" uma letra, crie uma nova `String`: `s = "p" + s.substring(1)`.',
+      dica: 'Uma chamada de método pode ficar à esquerda de um `=`?',
     },
     {
       id: 'estagiario-t5-e02-q10',
@@ -257,6 +358,7 @@ System.out.println(s.replace(".", "-").equals("a-b-c") + " " + s.replace('.', '-
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`repeat(0)` devolve a string vazia; só um argumento negativo lança `IllegalArgumentException`. `"-".repeat(3)` é "---".',
+      dica: 'Repetir zero vezes dá que texto?',
     },
     {
       id: 'estagiario-t5-e02-q11',
@@ -269,6 +371,7 @@ System.out.println(s.indexOf("ss", 3));
 System.out.println(s.chars().filter(c -> c == 's').count());`,
       resposta: 'MiSSiSSippi\n5\n4',
       explicacao: '`replace` troca as duas ocorrências de "ss". `indexOf("ss", 3)` começa a procurar na posição 3: a ocorrência que começa na 2 fica para trás, e a próxima começa na 5. Há quatro letras s.',
+      dica: 'O `replace` troca todas as ocorrências; o `indexOf` com dois argumentos começa a procurar na posição 3.',
     },
     {
       id: 'estagiario-t5-e02-q12',
@@ -280,6 +383,7 @@ System.out.println(s.chars().filter(c -> c == 's').count());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`String.join` põe o separador só entre os elementos, nunca no começo ou no fim. Com uma coleção vazia, devolve a string vazia.',
+      dica: 'O `join` põe o separador só entre os elementos. E se não houver nenhum?',
     },
     {
       id: 'estagiario-t5-e02-q13',
@@ -296,6 +400,7 @@ System.out.println(s.chars().filter(c -> c == 's').count());`,
       respostas: [0, 1, 4],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Em `String`, o tamanho vem do método `length()`; o campo `length` é dos arrays. `concat` recebe uma `String`, e um `char` não é convertido automaticamente.',
+      dica: 'Lembre: `length()` é método e `concat` só aceita `String`.',
     },
     {
       id: 'estagiario-t5-e02-q14',
@@ -308,6 +413,7 @@ System.out.println(s.chars().filter(c -> c == 's').count());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A versão de `indexOf` com início e fim (Java 21) procura só no trecho entre as posições 3 (incluída) e 6 (excluída): o primeiro \'n\' nesse trecho está na posição 4. O \'n\' da posição 2 fica de fora.',
+      dica: 'No Java 21, o `indexOf` com três argumentos procura só entre o início (incluído) e o fim (excluído).',
     },
     {
       id: 'estagiario-t5-e02-q15',
@@ -317,6 +423,7 @@ System.out.println(s.chars().filter(c -> c == 's').count());`,
       opcoes: ['`strip()`', '`substring()`', '`replace(" ", "")`', '`split(" ")`'],
       resposta: 0,
       explicacao: '`strip()` (Java 11) remove espaços em branco Unicode das pontas. `trim()` faz algo parecido, mas só reconhece caracteres com código até 32. `replace(" ", "")` removeria também os espaços do meio.',
+      dica: 'Dois métodos removem espaços das pontas; só um conhece os espaços Unicode.',
     },
   ],
 };

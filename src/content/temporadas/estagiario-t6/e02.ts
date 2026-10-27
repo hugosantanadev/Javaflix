@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`Arrays.toString` de uma matriz mostra referências; o conteúdo vem com `Arrays.deepToString`.',
     'No for-each externo, a variável é uma linha inteira: `for (int[] linha : m)`.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a escrever percursos de matrizes (linhas, colunas, diagonais, vizinhos de uma célula) e a trocar uma matriz por um array plano. Os erros dela costumam estar nos limites, e só aparecem com matrizes que não são quadradas.',
+    pedido:
+      'Escreva em Java 21 um método que <descreva o percurso na matriz>.\n- A matriz é int[][] e pode ser irregular (linhas de tamanhos diferentes).\n- Use m[i].length como limite das colunas.\n- Mostre a saída para uma matriz 2 x 3 e para {{1}, {2, 3}, {}}.',
+    erros: [
+      'Usa `m.length` como limite das colunas.',
+      'Imprime a matriz com `Arrays.toString` em vez de `deepToString`.',
+      'Esquece que `new int[n][]` deixa as linhas `null`.',
+    ],
+    conferir: [
+      'Teste com uma matriz retangular, uma irregular e uma com linha vazia.',
+      'Confira se cada laço de colunas usa o tamanho da própria linha.',
+      'Imprima com `Arrays.deepToString` para ver o conteúdo.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JLS 15.10.1: Array Creation Expressions',
@@ -125,6 +141,92 @@ public class Planilha {
     comentarios:
       'O total por linha é uma variável local, zerada a cada vendedor; o total por coluna precisa de um array, porque as colunas são acumuladas ao longo de todas as linhas. O laço lê a matriz linha por linha, a ordem que aproveita o cache. Usar `vendas[i].length` no laço de dentro deixa o código correto até se as linhas tiverem tamanhos diferentes.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t6-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: incompatible types: int cannot be converted to int[]`.',
+      codigo: `public class Tabela {
+    public static void main(String[] args) {
+        int[][] m = new int[2][2];
+        m[0] = 5;
+        System.out.println(m[0][0]);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Tabela {
+    public static void main(String[] args) {
+        int[][] m = new int[2][2];
+        m[0][0] = 5;
+        System.out.println(m[0][0]);
+    }
+}`,
+      saidaCorrigida: '5',
+      dica: 'Com um índice só, `m[0]` é um número ou uma linha inteira?',
+      explicacao: 'Num `int[][]`, `m[0]` é a linha 0, do tipo `int[]`, e um `int` não cabe ali. Para chegar a um número, são dois índices: `m[0][0]`.',
+    },
+    {
+      id: 'estagiario-t6-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O programa para com `NullPointerException` ao gravar a primeira nota da segunda turma.',
+      codigo: `public class Turmas {
+    public static void main(String[] args) {
+        int[][] notas = new int[2][];
+        notas[0] = new int[] {7, 9};
+        notas[1][0] = 8;
+        System.out.println(notas[1][0]);
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `public class Turmas {
+    public static void main(String[] args) {
+        int[][] notas = new int[2][];
+        notas[0] = new int[] {7, 9};
+        notas[1] = new int[] {8};
+        System.out.println(notas[1][0]);
+    }
+}`,
+      saidaCorrigida: '8',
+      dica: 'O `new int[2][]` cria quais linhas? Quem criou a linha 1?',
+      explicacao: 'Com só a primeira dimensão, as linhas começam `null`. A linha 0 foi criada, a 1 não, e acessar `notas[1][0]` é acessar uma posição de `null`. A linha precisa existir antes de receber valores.',
+    },
+    {
+      id: 'estagiario-t6-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O total das vendas deveria ser 105, mas o programa mostra `Total: 50`.',
+      codigo: `public class Planilha {
+    public static void main(String[] args) {
+        int[][] vendas = {{10, 20, 30}, {5, 15, 25}};
+        int total = 0;
+        for (int i = 0; i < vendas.length; i++) {
+            for (int j = 0; j < vendas.length; j++) {
+                total += vendas[i][j];
+            }
+        }
+        System.out.println("Total: " + total);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'Total: 50' },
+      correcao: `public class Planilha {
+    public static void main(String[] args) {
+        int[][] vendas = {{10, 20, 30}, {5, 15, 25}};
+        int total = 0;
+        for (int i = 0; i < vendas.length; i++) {
+            for (int j = 0; j < vendas[i].length; j++) {
+                total += vendas[i][j];
+            }
+        }
+        System.out.println("Total: " + total);
+    }
+}`,
+      saidaCorrigida: 'Total: 105',
+      dica: 'A matriz tem 2 linhas e 3 colunas. O laço das colunas vai até quanto?',
+      explicacao: '`vendas.length` é o número de linhas, 2, e o laço interno usou esse valor como limite das colunas: a terceira coluna nunca foi somada. O limite das colunas é o tamanho da linha, `vendas[i].length`.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t6-e02-q01',
@@ -137,6 +239,7 @@ System.out.println(m.length + " " + m[0].length);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A primeira dimensão é a quantidade de linhas, `m.length`. Cada linha é um `int[]` de 5 posições.',
+      dica: '`m.length` conta as linhas; `m[0].length`, as colunas da primeira linha.',
     },
     {
       id: 'estagiario-t6-e02-q02',
@@ -147,6 +250,7 @@ System.out.println(m.length + " " + m[0].length);`,
 System.out.println(t.length + " " + t[1].length + " " + t[2][1]);`,
       resposta: '3 1 6',
       explicacao: 'São 3 linhas, de tamanhos 3, 1 e 2. A linha 2 é `{5, 6}`, e a posição 1 dela guarda o 6.',
+      dica: 'Conte as linhas, o tamanho da linha 1 e ache a coluna 1 da linha 2.',
     },
     {
       id: 'estagiario-t6-e02-q03',
@@ -163,6 +267,7 @@ System.out.println(t.length + " " + t[1].length + " " + t[2][1]);`,
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Só a primeira dimensão é obrigatória, e linhas de tamanhos diferentes são permitidas. `new int[][2]` omite a dimensão errada, e `new int[2]` cria um `int[]`, que não cabe numa variável `int[][]`.',
+      dica: 'Só a primeira dimensão é obrigatória, e o tipo dos dois lados precisa bater.',
     },
     {
       id: 'estagiario-t6-e02-q04',
@@ -181,6 +286,7 @@ System.out.println(m[0].length + m[1].length);`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: 'Só a linha 0 foi criada. A linha 1 continua `null`, e ler `length` de `null` lança `NullPointerException`.',
+      dica: 'A linha 1 foi criada?',
     },
     {
       id: 'estagiario-t6-e02-q05',
@@ -195,6 +301,7 @@ System.out.println(a.length);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 3 },
       explicacao: 'Os colchetes depois do nome valem só para `a`. `b` é um `int` comum e não pode receber um array.',
+      dica: 'Na linha 1, `b` é um `int` comum. Ele aceita um array?',
     },
     {
       id: 'estagiario-t6-e02-q06',
@@ -216,6 +323,7 @@ System.out.println(a.length);`,
       respostas: ['int[]', 'var'],
       saida: '15',
       explicacao: 'Cada elemento de um `int[][]` é um `int[]`, a linha inteira. Com `var`, o compilador deduz o mesmo tipo.',
+      dica: 'Cada elemento do array externo é uma linha. De que tipo?',
     },
     {
       id: 'estagiario-t6-e02-q07',
@@ -231,6 +339,7 @@ System.out.println(linha[1] + " " + m[0][1] + " " + m[1][0]);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`linha` aponta para o mesmo array da linha 0, então `linha[1] = 9` muda a matriz. Depois, a posição 0 da matriz passa a apontar para um array novo, mas `linha` continua no antigo.',
+      dica: '`linha` continua apontando para a linha antiga, mesmo depois de `m[0]` mudar.',
     },
     {
       id: 'estagiario-t6-e02-q08',
@@ -247,6 +356,7 @@ System.out.println(linha[1] + " " + m[0][1] + " " + m[1][0]);`,
 }`,
       resposta: 5,
       explicacao: 'A primeira dimensão é obrigatória: ela diz quantas linhas o array externo guarda. `new int[2][]` está certo; `new int[][4]` não.',
+      dica: 'Dá para informar só a segunda dimensão?',
     },
     {
       id: 'estagiario-t6-e02-q09',
@@ -264,6 +374,7 @@ System.out.println(linha[1] + " " + m[0][1] + " " + m[1][0]);`,
       codigoVerificacao: `int[][] m = {{1, 2}, {3, 4}};
 System.out.println(Arrays.deepToString(m));`,
       explicacao: '`Arrays.toString` imprime cada linha com o `toString` padrão, algo como `[I@1b6d3586`. Só o `deepToString` desce nos arrays internos.',
+      dica: 'Só um dos métodos desce nos arrays internos.',
     },
     {
       id: 'estagiario-t6-e02-q10',
@@ -282,6 +393,7 @@ for (int i = 0; i < m.length; i++) {
 System.out.println(diag + " " + m[2][0]);`,
       resposta: '15 7',
       explicacao: 'A diagonal principal tem linha igual à coluna: 1 + 5 + 9 = 15. `m[2][0]` é a primeira coluna da última linha.',
+      dica: 'A diagonal principal tem `i == j`: 1, 5 e 9.',
     },
     {
       id: 'estagiario-t6-e02-q11',
@@ -304,6 +416,7 @@ System.out.println("ok");`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
       explicacao: 'O laço de dentro usa `m.length`, que é 4, mas cada linha tem só 2 colunas. Em `m[0][2]`, o índice passa do limite. O certo é `j < m[i].length`.',
+      dica: 'O laço interno usa `m.length`, que vale 4. Quantas colunas cada linha tem?',
     },
     {
       id: 'estagiario-t6-e02-q12',
@@ -313,6 +426,7 @@ System.out.println("ok");`,
       opcoes: ['4', '1', '3', '12'],
       resposta: 0,
       explicacao: 'O array externo, com 3 referências, e as 3 linhas, cada uma um `int[4]` separado. Os 12 números não são objetos: ficam dentro das linhas.',
+      dica: 'Um objeto para o array externo e um para cada linha.',
     },
     {
       id: 'estagiario-t6-e02-q13',
@@ -328,6 +442,7 @@ System.out.println("ok");`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'Os pares de colchetes se somam, estejam depois do tipo ou do nome. Em `int[] y, x`, `x` é `int[]`. Em `int[][] y, x[]`, `x` ganha mais um par e vira `int[][][]`.',
+      dica: 'Some os colchetes do tipo com os do nome de cada variável.',
     },
     {
       id: 'estagiario-t6-e02-q14',
@@ -342,6 +457,7 @@ System.out.println("ok");`,
       ],
       resposta: 0,
       explicacao: 'O número de operações é o mesmo. Percorrer coluna por coluna salta para uma linha diferente a cada leitura, e cada salto pode custar uma ida à memória principal, muito mais lenta que o cache.',
+      dica: 'Pense em como os números de uma linha ficam guardados na memória.',
     },
     {
       id: 'estagiario-t6-e02-q15',
@@ -353,6 +469,7 @@ cubo[1][2][3] = 5;
 System.out.println(cubo.length + " " + cubo[0].length + " " + cubo[0][0].length + " " + cubo[1][2][3]);`,
       resposta: '2 3 4 5',
       explicacao: 'Cada nível é um array de arrays: 2 blocos, cada um com 3 linhas de 4 números. `cubo[1][2][3]` é a última posição de todas.',
+      dica: 'Cada dimensão tem o seu `length`; a posição atribuída guarda 5.',
     },
   ],
 };

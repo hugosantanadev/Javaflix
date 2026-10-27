@@ -1,0 +1,17 @@
+{
+  "q01": "É um dos dois wrappers cujo nome não é só o primitivo com maiúscula.",
+  "q02": "A soma `a + b` vem antes do texto; depois do `\"!\"`, tudo é concatenação.",
+  "q03": "O cache vai de -128 a 127. Onde ficam o 100 e o 1000?",
+  "q04": "Para somar, o `Integer` precisa ser desembrulhado. E se ele for `null`?",
+  "q05": "O autoboxing não alarga e embrulha ao mesmo tempo.",
+  "q06": "`remove(1)` usa o índice; `remove(Integer.valueOf(4))`, o valor.",
+  "q07": "Os métodos que convertem texto em número começam com `parse` ou `valueOf`.",
+  "q08": "Que tipo `Math.round(double)` devolve? Ele cabe num `int` sem cast?",
+  "q09": "O `round` leva o meio para o lado do +∞; o `floor`, sempre para baixo.",
+  "q10": "`pow` e `sqrt` devolvem `double`; `max` com um `long` devolve `long`.",
+  "q11": "O `random` nunca chega a 1.0, e o cast corta a parte decimal.",
+  "q12": "O `equals` entre wrappers exige o mesmo tipo; o `==` com um primitivo desembrulha.",
+  "q13": "O texto tem uma letra no meio do número.",
+  "q14": "Quais métodos de `Math` sempre devolvem `double`?",
+  "q15": "O positivo de `Integer.MIN_VALUE` cabe num `int`?"
+}

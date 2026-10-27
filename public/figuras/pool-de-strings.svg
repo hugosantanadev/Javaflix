@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">O pool de strings: a e b, criadas pelo mesmo literal, apontam para o mesmo objeto "java" dentro do pool; c, criada com new String, aponta para outro objeto no heap, fora do pool; c.intern() devolve o objeto do pool</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="s-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="s-laranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff9447"/></marker>
+    <marker id="s-azul" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#56a8f5"/></marker>
+  </defs>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">
+    <text x="30" y="34">String a = "java";</text>
+    <text x="230" y="34">String b = "java";</text>
+    <text x="430" y="34">String c = new String("java");</text>
+  </g>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700" text-anchor="middle">
+    <rect x="30" y="88" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="55" y="113" fill="#f3eee7">a</text>
+    <rect x="30" y="148" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="55" y="173" fill="#f3eee7">b</text>
+    <rect x="30" y="208" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="55" y="233" fill="#f3eee7">c</text>
+  </g>
+
+  <rect x="160" y="58" width="580" height="216" rx="8" fill="none" stroke="#43403a"/>
+  <text x="724" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">heap</text>
+  <rect x="190" y="84" width="250" height="122" rx="8" fill="#16201a" stroke="#4fd68b" stroke-dasharray="5 3"/>
+  <text x="206" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#4fd68b">pool de strings</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700" text-anchor="middle">
+    <rect x="270" y="122" width="120" height="46" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="330" y="151" fill="#4fd68b">"java"</text>
+    <rect x="540" y="204" width="120" height="46" rx="6" fill="#3a1d07" stroke="#ff7a1a"/><text x="600" y="233" fill="#ff9447">"java"</text>
+  </g>
+  <text x="540" y="268" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#ff9447">objeto novo, fora do pool</text>
+
+  <g stroke-width="1.8" fill="none">
+    <path d="M82 107 C 170 107, 200 136, 266 140" stroke="#4fd68b" marker-end="url(#s-verde)"/>
+    <path d="M82 167 C 170 167, 200 152, 266 150" stroke="#4fd68b" marker-end="url(#s-verde)"/>
+    <path d="M82 227 C 300 260, 440 236, 536 228" stroke="#ff9447" marker-end="url(#s-laranja)"/>
+    <path d="M600 202 C 600 150, 470 140, 394 144" stroke="#56a8f5" stroke-dasharray="5 3" marker-end="url(#s-azul)"/>
+  </g>
+  <text x="520" y="132" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#56a8f5">c.intern()</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <text x="30" y="306" fill="#4fd68b">a == b → true</text>
+    <text x="200" y="306" fill="#ff9447">a == c → false</text>
+    <text x="380" y="306" fill="#bcbec4">a.equals(c) → true</text>
+    <text x="580" y="306" fill="#56a8f5">a == c.intern() → true</text>
+  </g>
+</svg>

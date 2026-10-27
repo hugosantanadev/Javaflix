@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Contando as execuções de dois laços aninhados: com j menor que 5, cada uma das 4 linhas tem 5 execuções, 20 no total; com j menor que i, as linhas têm 0, 1, 2 e 3 execuções, 6 no total</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <line x1="380" y1="20" x2="380" y2="290" stroke="#2b2824"/>
+  <text x="40" y="40" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f3eee7">for (j = 0; j &lt; 5; j++)</text>
+  <text x="110.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=0</text>
+  <text x="150.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=1</text>
+  <text x="190.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=2</text>
+  <text x="230.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=3</text>
+  <text x="270.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=4</text>
+  <text x="80" y="112" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">i=0</text>
+  <rect x="92" y="92" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="110.0" y="112" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">1</text>
+  <rect x="132" y="92" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="150.0" y="112" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">2</text>
+  <rect x="172" y="92" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="190.0" y="112" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">3</text>
+  <rect x="212" y="92" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="230.0" y="112" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">4</text>
+  <rect x="252" y="92" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="270.0" y="112" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">5</text>
+  <text x="304" y="112" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">5</text>
+  <text x="80" y="146" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">i=1</text>
+  <rect x="92" y="126" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="110.0" y="146" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">6</text>
+  <rect x="132" y="126" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="150.0" y="146" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">7</text>
+  <rect x="172" y="126" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="190.0" y="146" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">8</text>
+  <rect x="212" y="126" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="230.0" y="146" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">9</text>
+  <rect x="252" y="126" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="270.0" y="146" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">10</text>
+  <text x="304" y="146" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">5</text>
+  <text x="80" y="180" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">i=2</text>
+  <rect x="92" y="160" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="110.0" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">11</text>
+  <rect x="132" y="160" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="150.0" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">12</text>
+  <rect x="172" y="160" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="190.0" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">13</text>
+  <rect x="212" y="160" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="230.0" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">14</text>
+  <rect x="252" y="160" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="270.0" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">15</text>
+  <text x="304" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">5</text>
+  <text x="80" y="214" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">i=3</text>
+  <rect x="92" y="194" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="110.0" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">16</text>
+  <rect x="132" y="194" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="150.0" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">17</text>
+  <rect x="172" y="194" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="190.0" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">18</text>
+  <rect x="212" y="194" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="230.0" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">19</text>
+  <rect x="252" y="194" width="36" height="30" rx="4" fill="#3a1d07" stroke="#ff9447"/>
+  <text x="270.0" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff9447" text-anchor="middle">20</text>
+  <text x="304" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">5</text>
+  <line x1="296" y1="230" x2="330" y2="230" stroke="#43403a"/>
+  <text x="304" y="250" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#ff9447">20</text>
+  <text x="40" y="282" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bcbec4">Limite fixo: 5 por linha, 4 × 5 = 20</text>
+  <text x="430" y="40" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f3eee7">for (j = 0; j &lt; i; j++)</text>
+  <text x="500.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=0</text>
+  <text x="540.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=1</text>
+  <text x="580.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=2</text>
+  <text x="620.0" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">j=3</text>
+  <text x="470" y="112" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">i=0</text>
+  <rect x="482" y="92" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <rect x="522" y="92" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <rect x="562" y="92" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <rect x="602" y="92" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <text x="654" y="112" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">0</text>
+  <text x="470" y="146" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">i=1</text>
+  <rect x="482" y="126" width="36" height="30" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="500.0" y="146" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#4fd68b" text-anchor="middle">1</text>
+  <rect x="522" y="126" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <rect x="562" y="126" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <rect x="602" y="126" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <text x="654" y="146" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">1</text>
+  <text x="470" y="180" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">i=2</text>
+  <rect x="482" y="160" width="36" height="30" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="500.0" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#4fd68b" text-anchor="middle">2</text>
+  <rect x="522" y="160" width="36" height="30" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="540.0" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#4fd68b" text-anchor="middle">3</text>
+  <rect x="562" y="160" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <rect x="602" y="160" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <text x="654" y="180" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">2</text>
+  <text x="470" y="214" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="end">i=3</text>
+  <rect x="482" y="194" width="36" height="30" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="500.0" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#4fd68b" text-anchor="middle">4</text>
+  <rect x="522" y="194" width="36" height="30" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="540.0" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#4fd68b" text-anchor="middle">5</text>
+  <rect x="562" y="194" width="36" height="30" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="580.0" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#4fd68b" text-anchor="middle">6</text>
+  <rect x="602" y="194" width="36" height="30" rx="4" fill="none" stroke="#2b2824" stroke-dasharray="3 3"/>
+  <text x="654" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">3</text>
+  <line x1="646" y1="230" x2="680" y2="230" stroke="#43403a"/>
+  <text x="654" y="250" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#4fd68b">6</text>
+  <text x="430" y="282" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bcbec4">Limite depende de i: 0 + 1 + 2 + 3 = 6</text>
+  <text x="30" y="318" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Os números mostram a ordem das execuções: o j percorre a linha inteira antes de o i mudar.</text>
+</svg>

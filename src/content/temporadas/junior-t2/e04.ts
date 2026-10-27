@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`Collections.unmodifiableList` é uma visão: mudanças na lista original aparecem nela.',
     '`clone()` de array copia as referências, não os objetos: é uma cópia rasa.',
   ],
+  ia: {
+    uso:
+      'A IA gera classes encapsuladas e imutáveis rapidamente e conhece a receita. O que ela mais esquece são as cópias defensivas e as regras de negócio dentro dos métodos. Use-a para revisar uma classe atrás de cada caminho por onde o estado pode mudar sem passar por uma regra.',
+    pedido:
+      'Revise esta classe Java 21, que deveria ser imutável.\n<cole a classe aqui>\n- Aponte cada caminho por onde o estado pode mudar depois da construção, inclusive por objetos mutáveis recebidos ou devolvidos.\n- Corrija com cópias defensivas na entrada e na saída, ou com List.copyOf.\n- Diga se algum método que "altera" deveria devolver um objeto novo.',
+    erros: [
+      'Esquece de copiar a lista ou o array recebido no construtor.',
+      'Devolve a coleção interna no getter.',
+      'Gera setters numa classe que deveria ser imutável.',
+    ],
+    conferir: [
+      'Altere o array ou a lista original depois de criar o objeto e veja se ele muda.',
+      'Tente alterar o que o getter devolve.',
+      'Confira se todo método que "muda" o objeto devolve um objeto novo.',
+    ],
+  },
   recursos: [
     {
       titulo: 'The Java Tutorials: A Strategy for Defining Immutable Objects',
@@ -163,6 +179,182 @@ public class Cozinha {
     comentarios:
       'O "refrigerante" acrescentado à lista original não aparece no pedido, graças à cópia no construtor. Como a cópia já é imutável, o getter pode devolvê-la sem copiar de novo. `p1` continua igual depois de `comItem`: as duas versões coexistem, e é isso que torna objetos imutáveis seguros para compartilhar.',
   },
+  bugs: [
+    {
+      id: 'junior-t2-e04-b01',
+      dificuldade: 2,
+      sintoma: 'O pedido aceita no máximo 2 itens, mas termina com `Itens: 3`.',
+      codigo: `import java.util.*;
+
+final class Pedido {
+    private final List<String> itens = new ArrayList<>();
+
+    void adicionar(String item) {
+        if (itens.size() < 2) itens.add(item);
+    }
+
+    List<String> getItens() {
+        return itens;
+    }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        Pedido p = new Pedido();
+        p.adicionar("caneta");
+        p.getItens().add("mochila");
+        p.getItens().add("estojo");
+        System.out.println("Itens: " + p.getItens().size());
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'Itens: 3' },
+      correcao: `import java.util.*;
+
+final class Pedido {
+    private final List<String> itens = new ArrayList<>();
+
+    void adicionar(String item) {
+        if (itens.size() < 2) itens.add(item);
+    }
+
+    List<String> getItens() {
+        return new ArrayList<>(itens);
+    }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        Pedido p = new Pedido();
+        p.adicionar("caneta");
+        p.getItens().add("mochila");
+        p.getItens().add("estojo");
+        System.out.println("Itens: " + p.getItens().size());
+    }
+}`,
+      saidaCorrigida: 'Itens: 1',
+      dica: 'A regra do limite está em `adicionar`. Existe outro caminho para pôr itens no pedido?',
+      explicacao: 'O getter entrega a lista interna, e quem a recebe adiciona itens direto nela, sem passar pela regra. Devolvendo uma cópia, os `add` de fora vão para a cópia e não alcançam o pedido. Com `List.copyOf`, a cópia seria imutável, e os `add` lançariam `UnsupportedOperationException`, o que também denuncia o uso indevido.',
+    },
+    {
+      id: 'junior-t2-e04-b02',
+      dificuldade: 2,
+      sintoma: 'A soma dos preços deveria dar 3550 centavos, mas o total sai `0`.',
+      codigo: `final class Dinheiro {
+    private final long centavos;
+
+    Dinheiro(long centavos) {
+        this.centavos = centavos;
+    }
+
+    Dinheiro somar(long outros) {
+        return new Dinheiro(centavos + outros);
+    }
+
+    long getCentavos() {
+        return centavos;
+    }
+}
+
+public class Caixa {
+    public static void main(String[] args) {
+        long[] precos = {1050, 2500};
+        Dinheiro total = new Dinheiro(0);
+        for (long preco : precos) {
+            total.somar(preco);
+        }
+        System.out.println(total.getCentavos());
+    }
+}`,
+      linha: 22,
+      efeito: { tipo: 'saida', saida: '0' },
+      correcao: `final class Dinheiro {
+    private final long centavos;
+
+    Dinheiro(long centavos) {
+        this.centavos = centavos;
+    }
+
+    Dinheiro somar(long outros) {
+        return new Dinheiro(centavos + outros);
+    }
+
+    long getCentavos() {
+        return centavos;
+    }
+}
+
+public class Caixa {
+    public static void main(String[] args) {
+        long[] precos = {1050, 2500};
+        Dinheiro total = new Dinheiro(0);
+        for (long preco : precos) {
+            total = total.somar(preco);
+        }
+        System.out.println(total.getCentavos());
+    }
+}`,
+      saidaCorrigida: '3550',
+      dica: '`Dinheiro` é imutável. O que o `somar` faz com o objeto original, e onde fica o resultado?',
+      explicacao: 'Num objeto imutável, `somar` não altera nada: devolve um `Dinheiro` novo. O laço jogava o resultado fora, e `total` continuava o objeto com zero. Como no `toUpperCase` da `String`, o retorno precisa ser guardado.',
+    },
+    {
+      id: 'junior-t2-e04-b03',
+      dificuldade: 3,
+      sintoma: 'A prova acertou 2 de 3 questões, mas a correção mostra `3 acertos`.',
+      codigo: `final class Gabarito {
+    private final char[] respostas;
+
+    Gabarito(char[] respostas) {
+        this.respostas = respostas;
+    }
+
+    int acertos(char[] prova) {
+        int n = 0;
+        for (int i = 0; i < prova.length; i++) if (prova[i] == respostas[i]) n++;
+        return n;
+    }
+}
+
+public class Correcao {
+    public static void main(String[] args) {
+        char[] oficial = {'a', 'b', 'c'};
+        Gabarito g = new Gabarito(oficial);
+        char[] prova = {'a', 'd', 'c'};
+        oficial[1] = 'd';
+        System.out.println(g.acertos(prova) + " acertos");
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: '3 acertos' },
+      correcao: `final class Gabarito {
+    private final char[] respostas;
+
+    Gabarito(char[] respostas) {
+        this.respostas = respostas.clone();
+    }
+
+    int acertos(char[] prova) {
+        int n = 0;
+        for (int i = 0; i < prova.length; i++) if (prova[i] == respostas[i]) n++;
+        return n;
+    }
+}
+
+public class Correcao {
+    public static void main(String[] args) {
+        char[] oficial = {'a', 'b', 'c'};
+        Gabarito g = new Gabarito(oficial);
+        char[] prova = {'a', 'd', 'c'};
+        oficial[1] = 'd';
+        System.out.println(g.acertos(prova) + " acertos");
+    }
+}`,
+      saidaCorrigida: '2 acertos',
+      dica: 'Depois de criado o gabarito, alguém mexeu no array `oficial`. O gabarito guarda uma cópia ou o mesmo array?',
+      explicacao: 'O construtor guardou a mesma referência que recebeu. Quando `oficial[1]` mudou, o gabarito mudou junto, e a resposta errada passou a valer. Com `clone()` no construtor, o gabarito fica com um array só dele, que nada de fora alcança.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t2-e04-q01',
@@ -177,6 +369,7 @@ public class Cozinha {
       ],
       resposta: 0,
       explicacao: 'Com os campos `private`, todo acesso passa por métodos da própria classe, que podem validar e manter as regras, como "o saldo nunca fica negativo".',
+      dica: 'Pense em quem pode mexer no estado e por qual caminho.',
     },
     {
       id: 'junior-t2-e04-q02',
@@ -203,6 +396,7 @@ t.setGraus(100);
 System.out.println(t.getGraus());`,
       resposta: '25',
       explicacao: 'O setter recusa valores fora da faixa, e o segundo ajuste é ignorado. Com o campo `private`, não há outro caminho para mudar a temperatura.',
+      dica: 'O segundo `setGraus` passa na validação?',
     },
     {
       id: 'junior-t2-e04-q03',
@@ -218,6 +412,7 @@ System.out.println(t.getGraus());`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'Campos `private final`, nenhum método que altere o estado e cópias defensivas, além de impedir subclasses. Métodos `static` não têm relação com imutabilidade, e campos públicos expõem a representação interna.',
+      dica: 'A receita fala de campos, de métodos que alteram e de objetos mutáveis.',
     },
     {
       id: 'junior-t2-e04-q04',
@@ -244,6 +439,7 @@ System.out.println(s.primeiro());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O construtor guardou a referência ao mesmo array de `base`, sem copiar. `final` só impede trocar a referência; o conteúdo continua alterável por quem tem o array.',
+      dica: 'O construtor guardou uma cópia ou a mesma referência de `base`?',
     },
     {
       id: 'junior-t2-e04-q05',
@@ -266,6 +462,7 @@ System.out.println(s.primeiro());`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 9 },
       explicacao: 'Um campo `final` só recebe valor uma vez, na construção. Numa classe imutável, `incrementar` deveria devolver `new Contador(valor + 1)`.',
+      dica: 'Um campo `final` pode ser incrementado?',
     },
     {
       id: 'junior-t2-e04-q06',
@@ -289,6 +486,7 @@ public class Painel {
       respostas: ['isAtivo'],
       saida: 'true',
       explicacao: 'Para propriedades `boolean`, a convenção usa o prefixo `is`. Para os outros tipos, `get`. Frameworks encontram as propriedades por esses nomes.',
+      dica: 'Para `boolean`, a convenção usa outro prefixo no lugar de `get`.',
     },
     {
       id: 'junior-t2-e04-q07',
@@ -310,6 +508,7 @@ public class Painel {
 }`,
       resposta: 11,
       explicacao: 'Um setter não combina com campos `final`. Numa classe imutável, a alternativa é `comR(int r)`, que devolve `new Cor(r, g, b)`.',
+      dica: 'Um campo `final` aceita uma atribuição num método comum?',
     },
     {
       id: 'junior-t2-e04-q08',
@@ -325,6 +524,7 @@ System.out.println(visao.size() + " " + copia.size());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A visão não deixa ninguém alterar a lista por ela, mas reflete as mudanças feitas na original. A cópia é independente.',
+      dica: 'A visão acompanha a original; a cópia, não.',
     },
     {
       id: 'junior-t2-e04-q09',
@@ -356,6 +556,7 @@ System.out.println(p.getPontos());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Cada `marcar` devolve um placar novo. Só o resultado da segunda chamada foi guardado em `p`; os outros dois objetos foram descartados.',
+      dica: 'Só a atribuição guarda o objeto novo; as outras chamadas descartam o resultado.',
     },
     {
       id: 'junior-t2-e04-q10',
@@ -370,6 +571,7 @@ System.out.println(p.getPontos());`,
       ],
       resposta: 0,
       explicacao: 'Uma subclasse mutável poderia ser usada onde se espera a classe imutável. Um construtor `private` com métodos de fábrica também resolve.',
+      dica: 'Uma subclasse poderia acrescentar o quê a uma classe imutável?',
     },
     {
       id: 'junior-t2-e04-q11',
@@ -400,6 +602,7 @@ System.out.println(a.getNomes());`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedOperationException' },
       explicacao: 'A lista guardada é imutável, e o getter pode entregá-la sem cópia: qualquer tentativa de alteração falha. É uma cópia defensiva feita uma única vez, no construtor.',
+      dica: '`List.copyOf` devolve uma lista que aceita `add`?',
     },
     {
       id: 'junior-t2-e04-q12',
@@ -413,6 +616,7 @@ v[0]++;
 System.out.println(sb + " " + v[0]);`,
       resposta: 'ab 2',
       explicacao: '`final` impede atribuir outro objeto às variáveis, não alterar os objetos para os quais elas apontam.',
+      dica: '`final` impede trocar a referência, não mexer no objeto.',
     },
     {
       id: 'junior-t2-e04-q13',
@@ -422,6 +626,7 @@ System.out.println(sb + " " + v[0]);`,
       opcoes: ['`String`', '`Integer`', '`LocalDate`', '`StringBuilder`', '`ArrayList`'],
       respostas: [0, 1, 2],
       explicacao: 'Os métodos de `String`, dos wrappers e de `LocalDate` devolvem objetos novos. `StringBuilder` e `ArrayList` existem justamente para serem alterados.',
+      dica: 'Quais delas não têm nenhum método que altera o objeto?',
     },
     {
       id: 'junior-t2-e04-q14',
@@ -436,6 +641,7 @@ System.out.println(sb + " " + v[0]);`,
       ],
       resposta: 0,
       explicacao: 'É a semântica de campos `final` do modelo de memória (JLS 17.5). Ela permite compartilhar objetos imutáveis entre threads sem travas, desde que o construtor não publique `this` antes de terminar.',
+      dica: 'Pense no modelo de memória e em outras threads.',
     },
     {
       id: 'junior-t2-e04-q15',
@@ -463,6 +669,7 @@ System.out.println(g.getNomes()[0]);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `clone()` copia o array, mas os elementos continuam sendo os mesmos `StringBuilder`. O `append` em `base[0]` altera o objeto que o grupo também guarda. Trocar um elemento da cópia devolvida não afeta o grupo.',
+      dica: 'O `clone` de array é raso: copia as setas, não os `StringBuilder`.',
     },
   ],
 };

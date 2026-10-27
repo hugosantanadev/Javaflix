@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Campos static e de instância: a classe Placar guarda um único total, igual a 3; cada objeto, a e b, guarda os próprios pontos, 2 e 1, e aponta para a mesma classe</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="s-cinza" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+    <marker id="s-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+  </defs>
+
+  <rect x="260" y="40" width="240" height="88" rx="8" fill="#2a2410" stroke="#f2c75c"/>
+  <text x="276" y="64" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#f2c75c">a classe Placar (uma só)</text>
+  <text x="276" y="102" font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700" fill="#f2c75c">static total = 3</text>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <rect x="150" y="196" width="180" height="70" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="164" y="216" fill="#7fae8f">objeto 1</text>
+    <rect x="430" y="196" width="180" height="70" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="444" y="216" fill="#7fae8f">objeto 2</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700" fill="#4fd68b">
+    <text x="164" y="248">pontos = 2</text>
+    <text x="444" y="248">pontos = 1</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.4" stroke-dasharray="5 3" fill="none" marker-end="url(#s-cinza)">
+    <path d="M240 194 C 250 160, 300 150, 330 132"/>
+    <path d="M520 194 C 510 160, 460 150, 430 132"/>
+  </g>
+  <text x="560" y="160" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">cada objeto sabe</text>
+  <text x="560" y="176" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">a sua classe</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" text-anchor="middle">
+    <rect x="40" y="212" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="65" y="237" fill="#f3eee7">a</text>
+    <rect x="670" y="212" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="695" y="237" fill="#f3eee7">b</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.8" fill="none" marker-end="url(#s-verde)">
+    <path d="M92 231 L146 231"/>
+    <path d="M668 231 L614 231"/>
+  </g>
+
+  <text x="30" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bcbec4">a.marcar() duas vezes e b.marcar() uma: cada um soma nos próprios pontos, e os três somam no mesmo total.</text>
+</svg>

@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     'O rótulo precisa envolver o `break` ou `continue`: não se salta para um laço que já terminou.',
     '`goto` é palavra reservada, mas não existe como comando.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a rastrear laços aninhados com `break` e `continue` volta a volta, e a decidir entre rótulo, variável de controle ou método com `return`. Confira sempre as contas dela rodando o código: a contagem de voltas em laços com saltos é exatamente onde os modelos erram com mais frequência.',
+    pedido:
+      'Explique, volta a volta, o que este código Java 21 faz.\n<cole o código aqui>\n- Monte uma tabela com i, j e o comando executado em cada volta (corpo, continue, break).\n- Diga para onde cada break e continue salta, incluindo os rotulados.\n- No fim, dê a saída exata e quantas vezes o corpo do laço interno rodou.',
+    erros: [
+      'Esquece que, no `for`, o `continue` executa a atualização antes do próximo teste.',
+      'Trata um `break` dentro de `switch` como se saísse do laço que envolve o `switch`.',
+      'Usa um `while` com `continue` antes do incremento e cria um laço infinito.',
+    ],
+    conferir: [
+      'Rode o código e compare a saída com a tabela que a IA montou.',
+      'Teste o caso em que o alvo da busca não existe: os laços precisam terminar sozinhos.',
+      'Num `while`, confira se nenhum `continue` pula a atualização da variável.',
+    ],
+  },
   recursos: [
     {
       titulo: 'The Java Tutorials: Branching Statements',
@@ -106,6 +122,118 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O `break` rotulado poupa as comparações restantes: sem ele, o laço externo continuaria depois de achar o par. Esta é a solução O(n²) do problema "Two Sum", que o seu curso resolve no módulo de Leetcode; com um `HashSet` dos valores já vistos, dá para resolvê-lo numa única passada, em O(n), como mostra a trilha Aprendiz no episódio de tabelas hash.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t4-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: continue outside of loop`.',
+      codigo: `public class Menu {
+    public static void main(String[] args) {
+        int opcao = 2;
+        switch (opcao) {
+            case 1:
+                System.out.println("Novo jogo");
+                continue;
+            case 2:
+                System.out.println("Carregar");
+                break;
+        }
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Menu {
+    public static void main(String[] args) {
+        int opcao = 2;
+        switch (opcao) {
+            case 1:
+                System.out.println("Novo jogo");
+                break;
+            case 2:
+                System.out.println("Carregar");
+                break;
+        }
+    }
+}`,
+      saidaCorrigida: 'Carregar',
+      dica: 'Este `switch` não está dentro de nenhum laço. Qual comando encerra um `case`?',
+      explicacao: 'O `continue` só existe dentro de laço: ele significa "próxima volta", e aqui não há volta nenhuma. Para encerrar o `case` e não cair no seguinte, o comando é `break`.',
+    },
+    {
+      id: 'estagiario-t4-e04-b02',
+      dificuldade: 2,
+      sintoma: 'O comando `"sair"` deveria encerrar a leitura, mas o programa conta 3 leituras em vez de 2.',
+      codigo: `public class Leitor {
+    public static void main(String[] args) {
+        String[] comandos = {"ler", "ler", "sair", "ler"};
+        int lidos = 0;
+        for (String c : comandos) {
+            switch (c) {
+                case "ler": lidos++; break;
+                case "sair": break;
+            }
+        }
+        System.out.println("Lidos: " + lidos);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'Lidos: 3' },
+      correcao: `public class Leitor {
+    public static void main(String[] args) {
+        String[] comandos = {"ler", "ler", "sair", "ler"};
+        int lidos = 0;
+        leitura: for (String c : comandos) {
+            switch (c) {
+                case "ler": lidos++; break;
+                case "sair": break leitura;
+            }
+        }
+        System.out.println("Lidos: " + lidos);
+    }
+}`,
+      saidaCorrigida: 'Lidos: 2',
+      dica: 'O `break` do `case "sair"` sai de quê: do `switch` ou do `for`?',
+      explicacao: 'Um `break` sem rótulo sai do comando mais interno que ele pode encerrar, e aqui é o `switch`. O laço segue para o próximo comando e conta o último "ler". Rotulando o `for` e usando `break leitura`, o "sair" encerra o laço de verdade.',
+    },
+    {
+      id: 'estagiario-t4-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O programa deveria contar as linhas sem números negativos, mas diz que as 3 linhas são válidas.',
+      codigo: `public class Linhas {
+    public static void main(String[] args) {
+        int[][] m = {{1, 2}, {-3, 4}, {5, 6}};
+        int validas = 0;
+        linhas:
+        for (int[] linha : m) {
+            for (int x : linha) {
+                if (x < 0) continue;
+            }
+            validas++;
+        }
+        System.out.println("Linhas sem negativos: " + validas);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'Linhas sem negativos: 3' },
+      correcao: `public class Linhas {
+    public static void main(String[] args) {
+        int[][] m = {{1, 2}, {-3, 4}, {5, 6}};
+        int validas = 0;
+        linhas:
+        for (int[] linha : m) {
+            for (int x : linha) {
+                if (x < 0) continue linhas;
+            }
+            validas++;
+        }
+        System.out.println("Linhas sem negativos: " + validas);
+    }
+}`,
+      saidaCorrigida: 'Linhas sem negativos: 2',
+      dica: 'O rótulo `linhas` foi declarado, mas quem o usa? Para onde vai o `continue` sem nome?',
+      explicacao: 'Sem rótulo, o `continue` vai para a próxima volta do laço interno, que já ia acabar de qualquer jeito: ele não pula o `validas++`. Com `continue linhas`, um negativo abandona a linha inteira e passa para a próxima, sem contá-la.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t4-e04-q01',
@@ -120,6 +248,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'O `continue` abandona a volta atual. Num `for`, a atualização ainda acontece antes do próximo teste. Quem encerra o laço é o `break`.',
+      dica: 'Pense no que acontece com o resto do corpo e com o laço depois do `continue`.',
     },
     {
       id: 'estagiario-t4-e04-q02',
@@ -133,6 +262,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: '0\n3\n6',
       explicacao: 'Os números que não são múltiplos de 3 são pulados. O 9 é múltiplo, mas é maior que 7, e o `break` encerra o laço antes de imprimi-lo.',
+      dica: 'Os não múltiplos de 3 são pulados. O `break` só é testado quando i é múltiplo de 3.',
     },
     {
       id: 'estagiario-t4-e04-q03',
@@ -152,6 +282,7 @@ System.out.println(conta);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Para cada i, o laço interno conta os j de 0 até i e, no primeiro j maior que i, o `continue fora` passa para o próximo i. São 1 + 2 + 3 = 6.',
+      dica: 'Para cada i, o laço interno conta os j de 0 até i antes do `continue fora`.',
     },
     {
       id: 'estagiario-t4-e04-q04',
@@ -171,6 +302,7 @@ System.out.println(total);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `break` sem rótulo sai só do laço interno. Em cada volta do externo, o interno soma 10 uma vez (j = 0) e para; depois, o `total++` do externo roda. 3 · 11 = 33.',
+      dica: 'Em cada volta do i, o interno soma 10 uma vez antes do `break`, e depois vem o `total++`.',
     },
     {
       id: 'estagiario-t4-e04-q05',
@@ -187,6 +319,7 @@ System.out.println(total);`,
       respostas: [0, 1],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: '`continue` só existe dentro de laço, e o seu rótulo precisa ser de um laço. `break` com rótulo funciona em qualquer bloco, e um `continue` dentro de um `switch` que está dentro de um laço vale para o laço.',
+      dica: 'O `continue` precisa de um laço em volta, e o rótulo dele precisa marcar um laço.',
     },
     {
       id: 'estagiario-t4-e04-q06',
@@ -204,6 +337,7 @@ System.out.println();`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'No `do-while`, o `continue` vai direto para o teste da condição. Como o incremento está no começo do corpo, nada é pulado além do `print` do 2.',
+      dica: 'No `do-while`, o `continue` vai direto para o teste da condição. O `i++` já rodou?',
     },
     {
       id: 'estagiario-t4-e04-q07',
@@ -230,6 +364,7 @@ System.out.println();`,
       respostas: ['achou'],
       saida: '0 0',
       explicacao: 'O `break achou` sai dos dois laços no primeiro par, o 8. Um `break` sem rótulo sairia só do laço interno, e a linha seguinte encontraria o 10, sobrescrevendo o resultado com `1 0`.',
+      dica: 'O `break` precisa do nome do rótulo que marca o laço externo.',
     },
     {
       id: 'estagiario-t4-e04-q08',
@@ -249,6 +384,7 @@ System.out.println(soma);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Dentro do `switch`, o `break` sai só do `switch`, e o laço continua. i = 0 soma 0, i = 1 não soma, i = 2 soma 100, i = 3 soma 3.',
+      dica: 'Cada `break` aqui sai só do `switch`; o `for` continua. Some o que cada i acrescenta.',
     },
     {
       id: 'estagiario-t4-e04-q09',
@@ -272,6 +408,7 @@ System.out.println(soma);`,
 }`,
       resposta: 11,
       explicacao: 'O rótulo `laco` só vale dentro do laço que ele marca. Na linha 11, o laço já terminou, e o `continue` também não está dentro de nenhum laço.',
+      dica: 'O `continue laco` está dentro do laço rotulado `laco`?',
     },
     {
       id: 'estagiario-t4-e04-q10',
@@ -292,6 +429,7 @@ System.out.println(n);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Para i = 1, o interno conta j = 0 e salta no j = 1; para i = 2, conta 0 e 1; para i = 3, conta 0, 1 e 2. 1 + 2 + 3 = 6. O `continue fora` vai para o teste do `while`, e o `i++` está no começo do corpo, então o laço termina.',
+      dica: 'Para cada i, o laço interno roda até `j == i`. Some quantas vezes o `n++` acontece.',
     },
     {
       id: 'estagiario-t4-e04-q11',
@@ -307,6 +445,7 @@ etapa: {
 System.out.println("C");`,
       resposta: 'A\nC',
       explicacao: 'Um `break` com rótulo pode sair de um bloco comum. Como x > 3, ele pula o resto do bloco, e a execução continua depois dele.',
+      dica: 'O `break etapa` sai do bloco rotulado, e o que vem depois dele continua.',
     },
     {
       id: 'estagiario-t4-e04-q12',
@@ -321,6 +460,7 @@ System.out.println("C");`,
       ],
       resposta: 0,
       explicacao: 'O `break rótulo` encerra o comando rotulado, mesmo que seja externo. Dois `break` seguidos não funcionam: o primeiro já sai do laço interno, e o segundo nunca é alcançado (e nem compila).',
+      dica: 'Um `break` sem rótulo sai só do laço mais interno.',
     },
     {
       id: 'estagiario-t4-e04-q13',
@@ -336,6 +476,7 @@ System.out.println("C");`,
       ],
       respostas: [0, 1],
       explicacao: 'O `break` rotulado funciona em qualquer comando rotulado. O `continue` ignora o `switch` e afeta o laço que o contém. `continue` não tem sentido num `switch`; `goto` não existe como comando; e rótulos de laços servem para os dois.',
+      dica: 'Lembre a tabela: onde cada comando é permitido e o que um `continue` faz dentro de um `switch`.',
     },
     {
       id: 'estagiario-t4-e04-q14',
@@ -353,6 +494,7 @@ for (int i = 0; i < 5; i++) {
 System.out.println(pulos);`,
       resposta: '3\n4\n3',
       explicacao: 'As voltas 0, 1 e 2 contam um pulo e vão para a próxima volta, com o `i++` do cabeçalho executado normalmente. As voltas 3 e 4 imprimem. Por fim, 3 pulos.',
+      dica: 'Os i menores que 3 contam um pulo e vão para a próxima volta sem imprimir.',
     },
     {
       id: 'estagiario-t4-e04-q15',
@@ -372,6 +514,7 @@ System.out.println(achado);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O laço para no primeiro valor maior que 10. Sem o `break`, o último maior que 10, o 20, sobrescreveria o resultado.',
+      dica: 'O laço para no primeiro elemento maior que 10.',
     },
   ],
 };

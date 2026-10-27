@@ -1,0 +1,17 @@
+{
+  "q01": "O objeto fica no heap. O que vai para a variável?",
+  "q02": "Campos começam com o valor padrão: `0` para `int` e `null` para objetos.",
+  "q03": "`a` e `b` são o mesmo copo; `c` é outro, que só copiou o número.",
+  "q04": "Variável local precisa de atribuição em todos os caminhos antes de ser lida.",
+  "q05": "Lembre os valores padrão de cada tipo de campo.",
+  "q06": "Qual é o valor padrão de um campo `String`? E o que acontece ao chamar método nele?",
+  "q07": "Que palavra reservada cria objetos?",
+  "q08": "`saldo` é um campo do objeto ou da classe?",
+  "q09": "`b` guardou a referência do segundo nó antes de `a.proximo` virar `null`.",
+  "q10": "Conte os `new`, não as variáveis.",
+  "q11": "`z` aponta para o mesmo contador de `x`.",
+  "q12": "Concatenar `null` dá o texto `\"null\"`, e o `double` padrão é `0.0`.",
+  "q13": "Lembre as três instruções: `new`, `dup` e `invokespecial`.",
+  "q14": "Variáveis locais sem atribuição não podem ser lidas; posições de array, sim.",
+  "q15": "Dois objetos diferentes: o `==` e o `equals` herdado comparam o quê?"
+}

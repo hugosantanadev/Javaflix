@@ -1,0 +1,17 @@
+{
+  "q01": "`a++` entrega o valor antigo à expressão; o incremento só aparece para quem lê `a` depois.",
+  "q02": "Troque cada `x++` pelo valor que ele entrega, da esquerda para a direita, anotando quanto `x` vale depois de cada um.",
+  "q03": "Troque cada incremento pelo seu valor, na ordem. A atribuição final grava por cima de tudo o que aconteceu com `i`.",
+  "q04": "`x = x++` grava de volta o valor antigo. Repetir isso muda alguma coisa?",
+  "q05": "O operador composto e o `++` têm um cast escondido; a forma longa, `b = b + 1`, não tem.",
+  "q06": "`x *= 2.5` equivale a `x = (int) (x * 2.5)`. O que o cast faz com a parte decimal?",
+  "q07": "200 não cabe num `byte`. Quanto sobra depois de dar a volta, tirando 256?",
+  "q08": "Para o resultado ser 12, quanto `x` precisa valer no momento da multiplicação?",
+  "q09": "A atribuição é associativa à direita: resolva `b *= 2` primeiro, lembrando que o `a` antigo já foi guardado.",
+  "q10": "O `++` precisa de uma variável. O que há dentro dos parênteses?",
+  "q11": "No `if` há um `=` sozinho. Qual é o valor de uma atribuição?",
+  "q12": "No `+=`, o valor antigo de `k` é guardado antes de o lado direito ser avaliado.",
+  "q13": "`char` é número: ande uma posição, depois mais uma, a partir de `'x'`.",
+  "q14": "Confira um por um: `x = x++` perde o incremento, e `=+` não é `+=`.",
+  "q15": "Pense no valor que cada forma entrega à expressão: o de antes ou o de depois do incremento?"
+}

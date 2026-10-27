@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Passagem por valor de uma referência: no alterar, o parâmetro sb é uma cópia da seta de texto e aponta para o mesmo StringBuilder, que recebe o append; no trocar, a cópia passa a apontar para um objeto novo, que o main nunca vê</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="s-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="s-laranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff9447"/></marker>
+  </defs>
+
+  <text x="30" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">pilha (um quadro por chamada)</text>
+  <text x="440" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">heap</text>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <rect x="30" y="48" width="290" height="62" rx="6" fill="none" stroke="#43403a"/>
+    <text x="42" y="66">main</text>
+    <rect x="30" y="126" width="290" height="62" rx="6" fill="none" stroke="#2f5a3f"/>
+    <text x="42" y="144">alterar(sb): sb é uma cópia de texto</text>
+    <rect x="30" y="204" width="290" height="62" rx="6" fill="none" stroke="#6b3a14"/>
+    <text x="42" y="222">trocar(sb): a cópia recebe outro objeto</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">
+    <text x="50" y="96">texto</text>
+    <text x="50" y="174">sb</text>
+    <text x="50" y="252">sb</text>
+  </g>
+  <g>
+    <rect x="200" y="76" width="70" height="28" rx="4" fill="#1b1916" stroke="#43403a"/><circle cx="235" cy="90" r="4" fill="#4fd68b"/>
+    <rect x="200" y="154" width="70" height="28" rx="4" fill="#1b1916" stroke="#43403a"/><circle cx="235" cy="168" r="4" fill="#4fd68b"/>
+    <rect x="200" y="232" width="70" height="28" rx="4" fill="#1b1916" stroke="#43403a"/><circle cx="235" cy="246" r="4" fill="#ff9447"/>
+  </g>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" text-anchor="middle">
+    <rect x="460" y="96" width="200" height="50" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="560" y="127" fill="#4fd68b">"olá mundo"</text>
+    <rect x="460" y="214" width="200" height="50" rx="6" fill="#3a1d07" stroke="#ff7a1a"/><text x="560" y="245" fill="#ff9447">"outro!"</text>
+  </g>
+  <g stroke-width="1.8" fill="none">
+    <path d="M239 90 C 340 90, 400 110, 456 116" stroke="#4fd68b" marker-end="url(#s-verde)"/>
+    <path d="M239 168 C 340 168, 400 136, 456 128" stroke="#4fd68b" marker-end="url(#s-verde)"/>
+    <path d="M239 246 C 340 246, 400 240, 456 240" stroke="#ff9447" marker-end="url(#s-laranja)"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="460" y="166" fill="#4fd68b">o append mexe no objeto que o main vê</text>
+    <text x="460" y="284" fill="#ff9447">objeto novo: ninguém fora do trocar o vê</text>
+  </g>
+  <text x="30" y="316" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bcbec4">Cada parâmetro é uma cópia da seta. Mudar o objeto aparece para quem chamou; mudar a seta, não.</text>
+</svg>

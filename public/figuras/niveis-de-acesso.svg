@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Os quatro níveis de acesso como caixas uma dentro da outra: private, só a própria classe; sem modificador, o pacote; protected, o pacote e as subclasses de outros pacotes; public, qualquer classe</title>
+  <rect width="760" height="320" fill="#13110f"/>
+
+  <rect x="30" y="30" width="700" height="260" rx="12" fill="#1a1612" stroke="#8a8277"/>
+  <rect x="60" y="74" width="640" height="196" rx="10" fill="#0f1b26" stroke="#56a8f5"/>
+  <rect x="90" y="118" width="580" height="132" rx="8" fill="#13221a" stroke="#4fd68b"/>
+  <rect x="120" y="162" width="520" height="68" rx="6" fill="#3a1d07" stroke="#ff7a1a"/>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700">
+    <text x="46" y="56" fill="#f3eee7">public</text>
+    <text x="76" y="100" fill="#56a8f5">protected</text>
+    <text x="106" y="144" fill="#4fd68b">sem modificador</text>
+    <text x="136" y="190" fill="#ff9447">private</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
+    <text x="130" y="56" fill="#bcbec4">qualquer classe, de qualquer pacote</text>
+    <text x="170" y="100" fill="#bcbec4">+ subclasses de outros pacotes, por this ou pelo próprio tipo</text>
+    <text x="250" y="144" fill="#bcbec4">+ todas as classes do mesmo pacote</text>
+    <text x="210" y="190" fill="#bcbec4">só o código da própria classe,</text>
+    <text x="210" y="210" fill="#bcbec4">inclusive lendo o private de outro objeto dela</text>
+  </g>
+
+  <text x="30" y="310" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Cada caixa amplia a de dentro: quem pode acessar um membro de pacote também pode acessar um protected.</text>
+</svg>

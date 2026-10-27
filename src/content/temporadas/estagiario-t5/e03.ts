@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`new StringBuilder(10)` cria um buffer vazio com capacidade 10, não o texto "10".',
     '`StringBuffer` tem os mesmos métodos, mas sincronizados.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a decidir entre `+`, `StringBuilder`, `String.join` e `Collectors.joining` para montar texto, e a estimar o custo de cada um. Peça a justificativa da escolha: se ela não falar em laço ou em tamanho dos dados, a resposta provavelmente é decorada.',
+    pedido:
+      'Este método Java 21 monta um texto grande em partes.\n<cole o método aqui>\n- Diga quantas Strings intermediárias ele cria para n itens e qual é a complexidade.\n- Reescreva com StringBuilder só se houver ganho real, e explique por quê.\n- Aponte qualquer comparação de StringBuilder com equals.',
+    erros: [
+      'Compara dois `StringBuilder` com `equals` esperando comparar o texto.',
+      'Troca `+` por `StringBuilder` em concatenações de uma linha, sem ganho e com menos legibilidade.',
+      'Reaproveita o mesmo `StringBuilder` em duas variáveis sem perceber que elas compartilham o buffer.',
+    ],
+    conferir: [
+      'Procure `equals` entre buffers e troque por `toString().equals` ou `compareTo`.',
+      'Meça com dados grandes: o ganho do `StringBuilder` aparece em laços com milhares de voltas.',
+      'Confira se cada variável que deveria ter o próprio texto tem o próprio `new StringBuilder`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de StringBuilder',
@@ -104,6 +120,96 @@ public class Tabela {
     comentarios:
       'Montar o texto inteiro num `StringBuilder` e imprimir uma vez é o padrão de quem gera relatórios, arquivos e respostas HTTP. Somar preços em `double` funciona aqui, mas, como você viu no episódio de ponto flutuante, valores de dinheiro de verdade pedem `BigDecimal`.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t5-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: incompatible types: String cannot be converted to StringBuilder`.',
+      codigo: `public class Recibo {
+    public static void main(String[] args) {
+        StringBuilder recibo = "Total: ";
+        recibo.append(42);
+        System.out.println(recibo);
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Recibo {
+    public static void main(String[] args) {
+        StringBuilder recibo = new StringBuilder("Total: ");
+        recibo.append(42);
+        System.out.println(recibo);
+    }
+}`,
+      saidaCorrigida: 'Total: 42',
+      dica: 'Um literal entre aspas é de que tipo? Ele vira `StringBuilder` sozinho?',
+      explicacao: 'Literais entre aspas são `String`, e não há conversão automática de `String` para `StringBuilder`. O buffer precisa ser criado com `new`, passando o texto inicial ao construtor.',
+    },
+    {
+      id: 'estagiario-t5-e03-b02',
+      dificuldade: 2,
+      sintoma: 'A senha digitada é igual à correta, mas o sistema responde `Senha incorreta`.',
+      codigo: `public class Senha {
+    public static void main(String[] args) {
+        StringBuilder digitada = new StringBuilder("ab").append("12");
+        String correta = "ab12";
+        if (digitada.equals(correta)) {
+            System.out.println("Acesso liberado");
+        } else {
+            System.out.println("Senha incorreta");
+        }
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'Senha incorreta' },
+      correcao: `public class Senha {
+    public static void main(String[] args) {
+        StringBuilder digitada = new StringBuilder("ab").append("12");
+        String correta = "ab12";
+        if (digitada.toString().equals(correta)) {
+            System.out.println("Acesso liberado");
+        } else {
+            System.out.println("Senha incorreta");
+        }
+    }
+}`,
+      saidaCorrigida: 'Acesso liberado',
+      dica: 'Qual `equals` está sendo chamado: o de `String` ou o de `StringBuilder`? E o que ele compara?',
+      explicacao: 'O `StringBuilder` herda o `equals` de `Object`, que só é verdadeiro para o mesmo objeto. Comparado com uma `String`, dá sempre falso. Convertendo o buffer com `toString()`, o `equals` chamado passa a ser o de `String`, que compara o texto.',
+    },
+    {
+      id: 'estagiario-t5-e03-b03',
+      dificuldade: 3,
+      sintoma: 'Cada pessoa deveria receber a própria saudação, mas as duas linhas saem `Olá, AnaBia`.',
+      codigo: `public class Saudacoes {
+    public static void main(String[] args) {
+        StringBuilder base = new StringBuilder("Olá, ");
+        StringBuilder ana = base;
+        ana.append("Ana");
+        StringBuilder bia = base;
+        bia.append("Bia");
+        System.out.println(ana);
+        System.out.println(bia);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'Olá, AnaBia\nOlá, AnaBia' },
+      correcao: `public class Saudacoes {
+    public static void main(String[] args) {
+        StringBuilder base = new StringBuilder("Olá, ");
+        StringBuilder ana = new StringBuilder(base);
+        ana.append("Ana");
+        StringBuilder bia = new StringBuilder(base);
+        bia.append("Bia");
+        System.out.println(ana);
+        System.out.println(bia);
+    }
+}`,
+      saidaCorrigida: 'Olá, Ana\nOlá, Bia',
+      dica: 'Quantos objetos `StringBuilder` existem neste programa? Conte os `new`.',
+      explicacao: 'Atribuir um `StringBuilder` a outra variável copia a referência, não o buffer: `base`, `ana` e `bia` são o mesmo objeto, e os dois `append` vão para ele. Com `new StringBuilder(base)`, cada pessoa ganha um buffer próprio, que começa com o texto da base.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t5-e03-q01',
@@ -118,6 +224,7 @@ public class Tabela {
       ],
       resposta: 0,
       explicacao: 'A `String` é imutável e todo método devolve um objeto novo; o `StringBuilder` muda no lugar. Por isso ele é a escolha para montar textos em muitos passos.',
+      dica: 'Pense no que acontece com o objeto quando um método é chamado nele.',
     },
     {
       id: 'estagiario-t5-e03-q02',
@@ -131,6 +238,7 @@ sb.reverse();
 System.out.println(sb);`,
       resposta: 'a-bcd3\n3dcb-a',
       explicacao: 'O encadeamento funciona porque cada método devolve o próprio `StringBuilder`: "abcd", depois "a-bcd" e "a-bcd3". O `reverse` altera o mesmo objeto.',
+      dica: 'Siga a cadeia: `append`, depois `insert` na posição 1, depois outro `append`. O `reverse` muda o mesmo buffer.',
     },
     {
       id: 'estagiario-t5-e03-q03',
@@ -145,6 +253,7 @@ System.out.println(a + " " + (a == b));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`append` devolve o próprio objeto, então `b` é o mesmo `StringBuilder` que `a`. Acrescentar "z" por `b` aparece em `a`.',
+      dica: 'O `append` devolve o próprio objeto. Quantos `StringBuilder` existem?',
     },
     {
       id: 'estagiario-t5-e03-q04',
@@ -156,6 +265,7 @@ System.out.println(a + " " + (a == b));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`delete(1, 3)` remove as posições 1 e 2 (b e c), deixando "adef". Depois, `insert(2, "XY")` insere antes da posição 2: "adXYef".',
+      dica: 'O `delete(1, 3)` remove as posições 1 e 2; o `insert` usa as posições do texto já encurtado.',
     },
     {
       id: 'estagiario-t5-e03-q05',
@@ -167,6 +277,7 @@ System.out.println(a + " " + (a == b));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`StringBuilder` herda o `equals` de `Object`, que compara referências. São dois objetos diferentes. Para comparar o conteúdo, use `toString().equals(...)` ou `compareTo`.',
+      dica: 'O `StringBuilder` sobrescreve o `equals` de `Object`?',
     },
     {
       id: 'estagiario-t5-e03-q06',
@@ -183,6 +294,7 @@ System.out.println(a + " " + (a == b));`,
       respostas: [0, 1],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: 'Um literal é `String`, e `String` e `StringBuilder` não se convertem na atribuição. O construtor com `int` define a capacidade, e `append` aceita qualquer tipo.',
+      dica: 'Não há conversão automática entre `String` e `StringBuilder` na atribuição.',
     },
     {
       id: 'estagiario-t5-e03-q07',
@@ -199,6 +311,7 @@ System.out.println(a + " " + (a == b));`,
       respostas: ['reverse'],
       saida: 'xilfavaj',
       explicacao: '`reverse()` inverte o próprio buffer, e por isso nem é preciso guardar o retorno. Com uma `String`, o mesmo exigiria criar uma nova.',
+      dica: 'O método tem o nome de inverter em inglês.',
     },
     {
       id: 'estagiario-t5-e03-q08',
@@ -212,6 +325,7 @@ System.out.println(sb);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`substring` é o método do `StringBuilder` que **não** altera o buffer: devolve uma `String` nova, que aqui foi descartada.',
+      dica: 'Dos métodos da tabela, qual devolve uma `String` sem alterar o buffer?',
     },
     {
       id: 'estagiario-t5-e03-q09',
@@ -228,6 +342,7 @@ System.out.println(sb);`,
 }`,
       resposta: 5,
       explicacao: '`reverse()` devolve o próprio `StringBuilder`, e `StringBuilder` não é atribuível a `String`. O certo é `String r = sb.reverse().toString();`.',
+      dica: 'Que tipo o `reverse()` devolve? Ele cabe numa variável `String`?',
     },
     {
       id: 'estagiario-t5-e03-q10',
@@ -238,6 +353,7 @@ System.out.println(sb);`,
 System.out.println(sb.length() + " " + sb.capacity());`,
       resposta: '3 19',
       explicacao: 'Criado a partir de um texto, o buffer recebe uma folga de 16 além do tamanho do texto: capacidade 3 + 16 = 19. O `length()` é só o texto que existe.',
+      dica: 'Com texto inicial, a capacidade é 16 mais o tamanho do texto.',
     },
     {
       id: 'estagiario-t5-e03-q11',
@@ -252,6 +368,7 @@ System.out.println(sb);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`setLength(4)` corta o buffer para os 4 primeiros caracteres. O `append` acrescenta depois deles.',
+      dica: 'O `setLength(4)` corta o buffer nos 4 primeiros caracteres.',
     },
     {
       id: 'estagiario-t5-e03-q12',
@@ -266,6 +383,7 @@ System.out.println(sb);`,
       ],
       resposta: 0,
       explicacao: 'Os dois têm a mesma API. O `StringBuffer` é do Java 1.0 e sincroniza cada chamada; o `StringBuilder`, do Java 5, não sincroniza e é a escolha padrão.',
+      dica: 'Lembre: um dos dois tem todos os métodos `synchronized`.',
     },
     {
       id: 'estagiario-t5-e03-q13',
@@ -281,6 +399,7 @@ StringJoiner sj = new StringJoiner(" ");
 for (Object o : r) sj.add(o.getClass().getSimpleName());
 System.out.println(sj);`,
       explicacao: '`toString` e `substring` devolvem `String`. Os métodos que alteram o buffer devolvem o próprio `StringBuilder`, para permitir o encadeamento.',
+      dica: 'Os métodos de alteração devolvem `this`; os outros dois devolvem texto novo.',
     },
     {
       id: 'estagiario-t5-e03-q14',
@@ -295,6 +414,7 @@ System.out.println(sb);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `repeat` do `StringBuilder` (Java 21) acrescenta o texto repetido no fim do buffer. Diferente do `repeat` da `String`, que devolve uma nova `String` com o texto original repetido.',
+      dica: 'No Java 21, o `repeat` acrescenta o texto n vezes ao fim do buffer.',
     },
     {
       id: 'estagiario-t5-e03-q15',
@@ -309,6 +429,7 @@ System.out.println(sb);`,
       ],
       resposta: 0,
       explicacao: 'Com `String`, a volta k copia os k pedaços anteriores: 1 + 2 + ... + n. O `StringBuilder` acrescenta no buffer, com crescimento geométrico, e o total fica O(n).',
+      dica: 'Quantas vezes o texto anterior é copiado a cada `+=`?',
     },
   ],
 };

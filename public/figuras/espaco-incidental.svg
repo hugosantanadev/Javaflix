@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Espaço incidental e essencial num text block: a menor indentação, aqui a do fechamento, com 6 espaços, é removida de todas as linhas; os espaços além dela ficam no resultado</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <line x1="430" y1="20" x2="430" y2="260" stroke="#2b2824"/>
+  <text x="40" y="60" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#bcbec4">String json = """</text>
+  <rect x="38" y="96" width="74" height="136" rx="3" fill="#3a1d07" opacity="0.7"/>
+  <circle cx="46.0" cy="113" r="2.2" fill="#ff9447"/>
+  <circle cx="58.0" cy="113" r="2.2" fill="#ff9447"/>
+  <circle cx="70.0" cy="113" r="2.2" fill="#ff9447"/>
+  <circle cx="82.0" cy="113" r="2.2" fill="#ff9447"/>
+  <circle cx="94.0" cy="113" r="2.2" fill="#ff9447"/>
+  <circle cx="106.0" cy="113" r="2.2" fill="#ff9447"/>
+  <circle cx="118.0" cy="113" r="2.2" fill="#4fd68b"/>
+  <circle cx="130.0" cy="113" r="2.2" fill="#4fd68b"/>
+  <text x="142.0" y="118" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">{</text>
+  <circle cx="46.0" cy="147" r="2.2" fill="#ff9447"/>
+  <circle cx="58.0" cy="147" r="2.2" fill="#ff9447"/>
+  <circle cx="70.0" cy="147" r="2.2" fill="#ff9447"/>
+  <circle cx="82.0" cy="147" r="2.2" fill="#ff9447"/>
+  <circle cx="94.0" cy="147" r="2.2" fill="#ff9447"/>
+  <circle cx="106.0" cy="147" r="2.2" fill="#ff9447"/>
+  <circle cx="118.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <circle cx="130.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <circle cx="142.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <circle cx="154.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <text x="166.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">&quot;</text>
+  <text x="178.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">n</text>
+  <text x="190.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">o</text>
+  <text x="202.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">m</text>
+  <text x="214.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">e</text>
+  <text x="226.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">&quot;</text>
+  <text x="238.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">:</text>
+  <circle cx="250.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <text x="262.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">&quot;</text>
+  <text x="274.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">A</text>
+  <text x="286.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">n</text>
+  <text x="298.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">a</text>
+  <text x="310.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">&quot;</text>
+  <circle cx="46.0" cy="181" r="2.2" fill="#ff9447"/>
+  <circle cx="58.0" cy="181" r="2.2" fill="#ff9447"/>
+  <circle cx="70.0" cy="181" r="2.2" fill="#ff9447"/>
+  <circle cx="82.0" cy="181" r="2.2" fill="#ff9447"/>
+  <circle cx="94.0" cy="181" r="2.2" fill="#ff9447"/>
+  <circle cx="106.0" cy="181" r="2.2" fill="#ff9447"/>
+  <circle cx="118.0" cy="181" r="2.2" fill="#4fd68b"/>
+  <circle cx="130.0" cy="181" r="2.2" fill="#4fd68b"/>
+  <text x="142.0" y="186" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">}</text>
+  <circle cx="46.0" cy="215" r="2.2" fill="#ff9447"/>
+  <circle cx="58.0" cy="215" r="2.2" fill="#ff9447"/>
+  <circle cx="70.0" cy="215" r="2.2" fill="#ff9447"/>
+  <circle cx="82.0" cy="215" r="2.2" fill="#ff9447"/>
+  <circle cx="94.0" cy="215" r="2.2" fill="#ff9447"/>
+  <circle cx="106.0" cy="215" r="2.2" fill="#ff9447"/>
+  <text x="118.0" y="220" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#cf8e6d" text-anchor="middle">&quot;</text>
+  <text x="130.0" y="220" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#cf8e6d" text-anchor="middle">&quot;</text>
+  <text x="142.0" y="220" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#cf8e6d" text-anchor="middle">&quot;</text>
+  <text x="154.0" y="220" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#cf8e6d" text-anchor="middle">;</text>
+  <line x1="112" y1="90" x2="112" y2="240" stroke="#f2c75c" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="40" y="262" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#ff9447">incidental: 6 espaços, saem</text>
+  <text x="40" y="280" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#4fd68b">essencial: o que passa do corte, fica</text>
+  <text x="118" y="88" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#f2c75c">corte: a menor indentação</text>
+  <text x="456" y="60" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">a String resultante</text>
+  <circle cx="462.0" cy="113" r="2.2" fill="#4fd68b"/>
+  <circle cx="474.0" cy="113" r="2.2" fill="#4fd68b"/>
+  <text x="486.0" y="118" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">{</text>
+  <text x="500" y="118" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#56a8f5">\n</text>
+  <circle cx="462.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <circle cx="474.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <circle cx="486.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <circle cx="498.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <text x="510.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">&quot;</text>
+  <text x="522.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">n</text>
+  <text x="534.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">o</text>
+  <text x="546.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">m</text>
+  <text x="558.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">e</text>
+  <text x="570.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">&quot;</text>
+  <text x="582.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">:</text>
+  <circle cx="594.0" cy="147" r="2.2" fill="#4fd68b"/>
+  <text x="606.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">&quot;</text>
+  <text x="618.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">A</text>
+  <text x="630.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">n</text>
+  <text x="642.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">a</text>
+  <text x="654.0" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">&quot;</text>
+  <text x="668" y="152" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#56a8f5">\n</text>
+  <circle cx="462.0" cy="181" r="2.2" fill="#4fd68b"/>
+  <circle cx="474.0" cy="181" r="2.2" fill="#4fd68b"/>
+  <text x="486.0" y="186" font-family="Cascadia Code, Consolas, monospace" font-size="16" fill="#f3eee7" text-anchor="middle">}</text>
+  <text x="500" y="186" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#56a8f5">\n</text>
+  <text x="456" y="220" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">O fechamento numa linha própria</text>
+  <text x="456" y="238" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">deixa um \n no fim do texto.</text>
+  <text x="30" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Mova o """ de fechamento para a esquerda e o corte vai junto: mais espaço essencial no resultado.</text>
+</svg>

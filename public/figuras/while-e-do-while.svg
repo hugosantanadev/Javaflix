@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="t">
+  <title id="t">Os fluxogramas do while e do do-while: no while, a condição vem antes do corpo e pode pular tudo; no do-while, o corpo roda primeiro e a condição decide se volta</title>
+  <rect width="760" height="340" fill="#13110f"/>
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/>
+    </marker>
+  </defs>
+  <line x1="380" y1="20" x2="380" y2="300" stroke="#2b2824"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700">
+    <text x="30" y="36" fill="#ff9447">while</text>
+    <text x="400" y="36" fill="#4fd68b">do-while</text>
+  </g>
+
+  <!-- while -->
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" text-anchor="middle">
+    <path d="M180 64 l64 30 l-64 30 l-64 -30 z" fill="#2a2410" stroke="#f2c75c"/>
+    <text x="180" y="99" fill="#f2c75c">condição?</text>
+    <rect x="120" y="164" width="120" height="40" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="180" y="189" fill="#f3eee7">corpo</text>
+    <rect x="120" y="248" width="120" height="36" rx="6" fill="#191714" stroke="#2b2824"/>
+    <text x="180" y="271" fill="#bdb5aa">depois do laço</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#seta)">
+    <line x1="180" y1="124" x2="180" y2="160"/>
+    <path d="M120 184 C 70 184, 60 94, 112 94"/>
+    <path d="M244 94 C 300 94, 300 266, 244 266"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="188" y="146" fill="#4fd68b">sim</text>
+    <text x="284" y="180" fill="#db5c5c">não</text>
+    <text x="30" y="150" fill="#bdb5aa">volta e</text>
+    <text x="30" y="166" fill="#bdb5aa">testa de novo</text>
+  </g>
+
+  <!-- do-while -->
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" text-anchor="middle">
+    <rect x="490" y="64" width="120" height="40" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="550" y="89" fill="#f3eee7">corpo</text>
+    <path d="M550 144 l64 30 l-64 30 l-64 -30 z" fill="#2a2410" stroke="#f2c75c"/>
+    <text x="550" y="179" fill="#f2c75c">condição?</text>
+    <rect x="490" y="248" width="120" height="36" rx="6" fill="#191714" stroke="#2b2824"/>
+    <text x="550" y="271" fill="#bdb5aa">depois do laço</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#seta)">
+    <line x1="550" y1="104" x2="550" y2="140"/>
+    <path d="M486 174 C 436 174, 430 84, 486 84"/>
+    <line x1="550" y1="204" x2="550" y2="244"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="412" y="118" fill="#4fd68b">sim: volta</text>
+    <text x="558" y="230" fill="#db5c5c">não</text>
+  </g>
+
+  <text x="30" y="318" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">No while, a condição falsa logo de cara pula o corpo. No do-while, o corpo roda antes de qualquer teste.</text>
+</svg>

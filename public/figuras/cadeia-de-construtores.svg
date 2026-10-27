@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">A cadeia de construtores do Retangulo: o construtor sem argumentos chama this(1), que chama this(lado, lado); o mais interno imprime primeiro, e cada um volta e imprime em seguida, na ordem inversa das chamadas</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="s-laranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff9447"/></marker>
+    <marker id="s-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+  </defs>
+  <text x="30" y="32" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f3eee7">new Retangulo()</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">
+    <rect x="80" y="52" width="300" height="48" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="96" y="82">Retangulo()</text>
+    <rect x="80" y="142" width="300" height="48" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="96" y="172">Retangulo(int lado)</text>
+    <rect x="80" y="232" width="300" height="48" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="96" y="262">Retangulo(int largura, int altura)</text>
+  </g>
+
+  <g stroke="#ff9447" stroke-width="1.8" fill="none">
+    <path d="M120 102 L120 138" marker-end="url(#s-laranja)"/>
+    <path d="M120 192 L120 228" marker-end="url(#s-laranja)"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12.5" fill="#ff9447">
+    <text x="132" y="125">this(1)</text>
+    <text x="132" y="215">this(lado, lado)</text>
+  </g>
+
+  <g stroke="#4fd68b" stroke-width="1.8" fill="none">
+    <path d="M340 228 L340 194" marker-end="url(#s-verde)"/>
+    <path d="M340 138 L340 104" marker-end="url(#s-verde)"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#4fd68b" text-anchor="end">
+    <text x="330" y="215">termina e volta</text>
+    <text x="330" y="125">termina e volta</text>
+  </g>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#13110f" text-anchor="middle">
+    <circle cx="430" cy="256" r="11" fill="#4fd68b"/><text x="430" y="260">1</text>
+    <circle cx="430" cy="166" r="11" fill="#4fd68b"/><text x="430" y="170">2</text>
+    <circle cx="430" cy="76" r="11" fill="#4fd68b"/><text x="430" y="80">3</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">
+    <text x="452" y="261">completo 1x1</text>
+    <text x="452" y="171">quadrado 1</text>
+    <text x="452" y="81">sem argumentos</text>
+  </g>
+  <text x="452" y="40" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">o que cada um imprime, e em que ordem</text>
+
+  <text x="30" y="308" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">As chamadas descem (laranja); as impressões acontecem na subida (verde), do mais interno para o de fora.</text>
+</svg>

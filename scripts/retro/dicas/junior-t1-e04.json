@@ -1,0 +1,17 @@
+{
+  "q01": "Um campo `static` pertence à classe, não aos objetos.",
+  "q02": "`local` é de cada placar; `total` é um só, somado pelos três `marcar()`.",
+  "q03": "Um método `static` tem `this`?",
+  "q04": "O compilador troca `c.modo` pelo nome da classe. O `null` chega a ser usado?",
+  "q05": "A ordem certa é `import static`, e o `import` comum só traz tipos.",
+  "q06": "Qual modificador faz o campo ser um só para todos os robôs?",
+  "q07": "As três chamadas incrementam o mesmo contador; `quadrado(9 - 16)` é o quadrado de -7.",
+  "q08": "Um `import` sem `static` pode trazer um método?",
+  "q09": "O `main` é `static`. Ele pode chamar um método de instância sem objeto?",
+  "q10": "Num contexto `static`, só o que é `static` está disponível direto.",
+  "q11": "`proximo++` usa o valor e depois incrementa; o `+= 10` muda o campo compartilhado.",
+  "q12": "Faz sentido criar um objeto de uma classe que só tem métodos `static`?",
+  "q13": "Somar 1 ao maior `int` dá a volta para o menor.",
+  "q14": "Um campo `final` pode receber outro valor depois de inicializado?",
+  "q15": "Métodos `static` não dependem de objeto: a decisão pode ser tomada antes de rodar."
+}

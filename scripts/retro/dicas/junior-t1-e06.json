@@ -1,0 +1,17 @@
+{
+  "q01": "Comece pelo que só a própria classe vê e termine no que todos veem.",
+  "q02": "`valor` é `private` em `Senha`. Quem pode lê-lo?",
+  "q03": "O `private` é por classe: um `Ponto` lê o `x` de outro `Ponto`.",
+  "q04": "Classes de topo aceitam só dois níveis de acesso.",
+  "q05": "Fora do pacote, `protected` só pelo `this` ou por referências do tipo da subclasse.",
+  "q06": "Qual declaração vai na primeira linha do arquivo para definir o pacote?",
+  "q07": "Uma classe de topo pode ser `private`?",
+  "q08": "Todos os acessos estão no mesmo pacote, e o `private` é lido pelo método da própria classe.",
+  "q09": "O acesso pela herança vale para `this` e para referências do próprio tipo da subclasse.",
+  "q10": "`default` é modificador de acesso?",
+  "q11": "O acesso de pacote não tem palavra própria.",
+  "q12": "A classe aninhada faz parte da externa, e as duas se enxergam por inteiro.",
+  "q13": "Para usar um membro, é preciso enxergar a classe primeiro.",
+  "q14": "A JVM confere o acesso de novo quando liga as classes.",
+  "q15": "Um membro só pode ter um modificador de acesso, e nunca repetido."
+}

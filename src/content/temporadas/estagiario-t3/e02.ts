@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     'O `default` pode estar em qualquer posição, e o fall-through também passa por ele.',
     '`switch` com `String` compara por `equals` e lança `NullPointerException` se o seletor for nulo.',
   ],
+  ia: {
+    uso:
+      'Use a IA para converter cadeias de `if` em `switch`, e o contrário, e para gerar treinos de fall-through. Peça sempre que ela diga onde estão os `break` e o que acontece com cada valor, e confira rodando: um `break` a menos compila e muda a saída.',
+    pedido:
+      'Estou estudando o switch clássico (com dois-pontos) para a certificação Java (Java 21). Monte 5 switch curtos com fall-through, default no meio e case com vários rótulos.\n- Não mostre as saídas.\n- Na correção, diga em que case a execução entra e por quais case ela passa até parar.\n- Use só int, char e String como seletor.',
+    erros: [
+      'Esquece um `break` ao converter uma cadeia de `if` em `switch`.',
+      'Propõe um `switch` sobre `long`, `double` ou `boolean`, que não compila sem pattern matching.',
+      'Diz que o `default` precisa ser o último ou que o fall-through não passa por ele.',
+    ],
+    conferir: [
+      'Rode o código com um valor que caia em cada `case` e um que não caia em nenhum.',
+      'Use o aviso de fall-through do IntelliJ para achar `case` sem `break`.',
+      'Confira os tipos aceitos no seletor na seção 14.11 da JLS.',
+    ],
+  },
   recursos: [
     {
       titulo: 'The Java Tutorials: The switch Statement',
@@ -107,6 +123,114 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O `return` encerra o método e, com ele, o `switch`: não há fall-through possível. A regra do ano bissexto é do calendário gregoriano de 1582: 1900 não foi bissexto, 2000 foi. Na prática, use `java.time.YearMonth.of(ano, mes).lengthOfMonth()`, que já sabe tudo isso, assunto da temporada de datas.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t3-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: incompatible types: String cannot be converted to int`.',
+      codigo: `public class Pedido {
+    public static void main(String[] args) {
+        int status = 2;
+        switch (status) {
+            case 1:
+                System.out.println("Recebido");
+                break;
+            case "2":
+                System.out.println("Enviado");
+                break;
+        }
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Pedido {
+    public static void main(String[] args) {
+        int status = 2;
+        switch (status) {
+            case 1:
+                System.out.println("Recebido");
+                break;
+            case 2:
+                System.out.println("Enviado");
+                break;
+        }
+    }
+}`,
+      saidaCorrigida: 'Enviado',
+      dica: 'Todo rótulo precisa ser do mesmo tipo do seletor. Compare o tipo de `status` com o de cada `case`.',
+      explicacao: 'O seletor é um `int`, e um rótulo `"2"` é uma `String`: o `switch` não converte um no outro. Aspas transformam o número em texto, e os rótulos precisam caber no tipo do seletor.',
+    },
+    {
+      id: 'estagiario-t3-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O `javac` recusa o programa com `error: constant expression required`.',
+      codigo: `public class Elevador {
+    public static void main(String[] args) {
+        int andar = 0;
+        int terreo = 0;
+        switch (andar) {
+            case terreo:
+                System.out.println("Térreo");
+                break;
+            default:
+                System.out.println("Andar " + andar);
+        }
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Elevador {
+    public static void main(String[] args) {
+        int andar = 0;
+        int terreo = 0;
+        switch (andar) {
+            case 0:
+                System.out.println("Térreo");
+                break;
+            default:
+                System.out.println("Andar " + andar);
+        }
+    }
+}`,
+      saidaCorrigida: 'Térreo',
+      dica: 'O rótulo de um `case` precisa ser conhecido na compilação. Uma variável comum é?',
+      explicacao: 'Os rótulos de `case` precisam ser constantes de compilação: literais ou variáveis `final` inicializadas com constante. Uma variável comum pode mudar, então o compilador não aceita. A correção usa o literal `0`; outra saída seria declarar `final int terreo = 0;` e manter o `case terreo:`.',
+    },
+    {
+      id: 'estagiario-t3-e02-b03',
+      dificuldade: 2,
+      sintoma: 'Para o plano prata, imprime `Frete grátis` e `Cashback de 5%`, mas o cashback é só do plano ouro.',
+      codigo: `public class Beneficios {
+    public static void main(String[] args) {
+        String plano = "prata";
+        switch (plano) {
+            case "prata":
+                System.out.println("Frete grátis");
+            case "ouro":
+                System.out.println("Cashback de 5%");
+                break;
+        }
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'Frete grátis\nCashback de 5%' },
+      correcao: `public class Beneficios {
+    public static void main(String[] args) {
+        String plano = "prata";
+        switch (plano) {
+            case "prata":
+                System.out.println("Frete grátis"); break;
+            case "ouro":
+                System.out.println("Cashback de 5%");
+                break;
+        }
+    }
+}`,
+      saidaCorrigida: 'Frete grátis',
+      dica: 'O que acontece depois do último comando do `case "prata"`? Existe algo que faça a execução parar ali?',
+      explicacao: 'Sem `break`, a execução desce para o `case "ouro"` sem testá-lo e entrega um benefício que não devia. Cada `case` que não deve continuar precisa terminar com `break`, ou com `return`.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t3-e02-q01',
@@ -116,6 +240,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['`long`', '`char`', '`String`', '`Integer`'],
       resposta: 0,
       explicacao: 'O `switch` aceita `int` e os tipos menores (`byte`, `short`, `char`), os wrappers deles, `String` e `enum`. `long` fica de fora, assim como `boolean`, `float` e `double`.',
+      dica: 'Lembre a tabela dos tipos aceitos no seletor: os inteiros pequenos, os wrappers deles, `String` e `enum`.',
     },
     {
       id: 'estagiario-t3-e02-q02',
@@ -136,6 +261,7 @@ switch (nivel) {
 }`,
       resposta: 'prata\nouro',
       explicacao: 'A execução entra no `case 2` e, sem `break`, cai no `case 3`, onde o `break` encerra. O `case 1` vem antes e não roda; o `default` vem depois do `break`.',
+      dica: 'A execução entra no `case 2`. Sem `break`, por onde ela continua?',
     },
     {
       id: 'estagiario-t3-e02-q03',
@@ -158,6 +284,7 @@ switch (x) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Nenhum `case` casa com 9, então a execução começa no `default`, que pode estar em qualquer posição. Sem `break`, cai no `case 2` e para no `break`.',
+      dica: 'Nenhum `case` casa com 9. Onde a execução começa, e o que vem logo abaixo?',
     },
     {
       id: 'estagiario-t3-e02-q04',
@@ -174,6 +301,7 @@ switch (x) {
       respostas: [0, 1],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: 'Rótulos repetidos e rótulos que não cabem no tipo do seletor são erros. `case 98` com seletor `char` é válido (98 é \'b\', diferente de \'a\'), um `default:` vazio no fim é permitido, e `k` é uma constante de compilação.',
+      dica: 'Rótulos repetidos não compilam, e o valor de um rótulo precisa caber no tipo do seletor.',
     },
     {
       id: 'estagiario-t3-e02-q05',
@@ -194,6 +322,7 @@ switch (cmd) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A comparação é por `equals`, que diferencia maiúsculas: "Sair" não é "sair" nem "SAIR". A execução começa no `default` e, sem `break`, cai no `case "SAIR"`.',
+      dica: 'O `switch` de `String` diferencia maiúsculas. Nenhum `case` casa com "Sair"?',
     },
     {
       id: 'estagiario-t3-e02-q06',
@@ -212,6 +341,7 @@ switch (s) {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: 'O `switch` de `String` começa calculando o `hashCode()` do seletor, e chamar um método em `null` lança exceção. O `default` não cobre o caso nulo.',
+      dica: 'Para comparar o seletor com os rótulos, o `switch` precisa chamar métodos dele. E se ele for `null`?',
     },
     {
       id: 'estagiario-t3-e02-q07',
@@ -236,6 +366,7 @@ switch (s) {
       respostas: ['break'],
       saida: 'dois',
       explicacao: 'Sem o `break`, a execução cairia no `case 3` e imprimiria "três" também. O `break` sai do `switch`.',
+      dica: 'Qual comando faz a execução sair do `switch` logo depois de imprimir?',
     },
     {
       id: 'estagiario-t3-e02-q08',
@@ -254,6 +385,7 @@ System.out.println(total);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A execução entra no `case 2` e, sem nenhum `break`, executa tudo dali para baixo: 2 + 3 + 10 = 15.',
+      dica: 'A execução entra no `case 2` e, sem `break`, soma tudo daí para baixo, inclusive o `default`.',
     },
     {
       id: 'estagiario-t3-e02-q09',
@@ -277,6 +409,7 @@ System.out.println(total);`,
 }`,
       resposta: 10,
       explicacao: '`ajuda` é uma variável comum, e o rótulo de um `case` precisa ser uma constante de compilação. `SAIR` funciona porque é `final` e foi inicializada com uma constante.',
+      dica: 'Rótulos precisam ser constantes. Qual dos dois é uma variável comum?',
     },
     {
       id: 'estagiario-t3-e02-q10',
@@ -297,6 +430,7 @@ System.out.println(total);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: '\'c\' vale 99, então `case \'c\'` e `case 99` são o mesmo rótulo, e rótulos repetidos não compilam. O seletor `c + 1` é um `int`, que é válido.',
+      dica: '`\'c\'` e `99` são o mesmo valor para um `char`. Dois rótulos iguais compilam?',
     },
     {
       id: 'estagiario-t3-e02-q11',
@@ -317,6 +451,7 @@ System.out.println(total);`,
 }`,
       resposta: 'jan 31\nabr 30\nfev 28',
       explicacao: 'Desde o Java 14, um `case` pode ter vários rótulos separados por vírgula. "jan" não casa com nenhum e cai no `default`.',
+      dica: 'Para cada mês, procure o `case` que casa; os que não casam vão para o `default`.',
     },
     {
       id: 'estagiario-t3-e02-q12',
@@ -326,6 +461,7 @@ System.out.println(total);`,
       opcoes: ['`String`', '`char`', '`Integer`', '`long`', '`boolean`', '`double`'],
       respostas: [0, 1, 2],
       explicacao: '`String`, os inteiros até `int` (com os seus wrappers) e `enum`. `long`, `boolean`, `float` e `double` não são aceitos.',
+      dica: 'Sem pattern matching, valem os inteiros pequenos, os wrappers deles, `String` e `enum`.',
     },
     {
       id: 'estagiario-t3-e02-q13',
@@ -340,6 +476,7 @@ System.out.println(total);`,
       ],
       resposta: 0,
       explicacao: 'Com valores próximos, o `javac` gera `tableswitch`: o valor vira um índice numa tabela de endereços. Com valores espalhados, gera `lookupswitch`, com busca binária. Nos dois casos, não há teste sequencial.',
+      dica: 'Com valores próximos, a JVM pode montar uma tabela e pular direto para a posição certa.',
     },
     {
       id: 'estagiario-t3-e02-q14',
@@ -361,6 +498,7 @@ switch (nota) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `case \'B\'` casa e o `break` impede a queda no `default`. `char` é um seletor válido.',
+      dica: 'Qual `case` casa com `\'B\'`, e o que vem logo depois dele?',
     },
     {
       id: 'estagiario-t3-e02-q15',
@@ -391,6 +529,7 @@ switch (nota) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '9 % 3 é 0. Em Java, −4 % 3 é −1 (o resto tem o sinal do dividendo), que cai no `case -1` e é agrupado com o `case 1`. 5 % 3 é 2: `default`. O `return` dispensa o `break`.',
+      dica: 'O resto em Java tem o sinal do dividendo: quanto dá `-4 % 3`? E `return` encerra o método na hora.',
     },
   ],
 };

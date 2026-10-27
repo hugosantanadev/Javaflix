@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`Math.round(double)` devolve `long`; `pow`, `sqrt`, `floor` e `ceil` devolvem `double`.',
     '`Math.round(-2.5)` é -2: o meio é arredondado para cima, no sentido do infinito positivo.',
   ],
+  ia: {
+    uso:
+      'A IA explica bem quando o compilador embrulha e desembrulha valores, e qual método de `Math` devolve qual tipo. Use-a para revisar código com wrappers atrás de `==`, de unboxing de `null` e de `remove` ambíguo em listas de números.',
+    pedido:
+      'Revise o uso de wrappers e de Math neste código Java 21.\n<cole o código aqui>\n- Marque cada ponto em que acontece autoboxing ou unboxing e diga se o valor pode ser null ali.\n- Aponte comparações de Integer, Long ou Double com ==.\n- Para cada chamada de Math, diga o tipo devolvido e se cabe na variável que o recebe.',
+    erros: [
+      'Compara wrappers com `==`, o que passa nos testes com números pequenos.',
+      'Chama `remove(int)` numa `List<Integer>` querendo remover um valor.',
+      'Esquece que `Math.round(double)` devolve `long` e que `pow` devolve `double`.',
+    ],
+    conferir: [
+      'Teste comparações de wrappers com valores acima de 127.',
+      'Rode o código com `null` nos wrappers que vêm de mapas, bancos ou formulários.',
+      'Confira o tipo de retorno de cada método de `Math` com **Ctrl + Q** na IDE.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Autoboxing and Unboxing',
@@ -154,6 +170,94 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'A soma é 30.75 e a média, 7.6875; multiplicada por 10, dá 76.875, que o `round` leva a 77, um `long`. Dividir por `10.0` transforma de volta em `double`: 7.7. Começar com os infinitos garante que a primeira nota válida vira o maior e o menor, sem caso especial. Para dinheiro, use `BigDecimal`, como no episódio de [ponto flutuante](/assistir/aprendiz-t3-e03).',
   },
+  bugs: [
+    {
+      id: 'estagiario-t6-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: incompatible types: int cannot be converted to Long`.',
+      codigo: `public class Contador {
+    public static void main(String[] args) {
+        Long visitas = 0;
+        visitas += 5;
+        System.out.println(visitas);
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Contador {
+    public static void main(String[] args) {
+        Long visitas = 0L;
+        visitas += 5;
+        System.out.println(visitas);
+    }
+}`,
+      saidaCorrigida: '5',
+      dica: 'O literal `0` é um `int`. O autoboxing consegue alargar para `long` e embrulhar num passo só?',
+      explicacao: 'O autoboxing não faz duas conversões de uma vez: `0` é `int`, e embrulhá-lo dá um `Integer`, não um `Long`. Com o sufixo, `0L` já é `long`, e basta embrulhar.',
+    },
+    {
+      id: 'estagiario-t6-e04-b02',
+      dificuldade: 2,
+      sintoma: 'A senha atendida era a 3, mas quem saiu da fila foi a 40: o programa mostra `[10, 20, 3]`.',
+      codigo: `import java.util.*;
+
+public class Fila {
+    public static void main(String[] args) {
+        List<Integer> senhas = new ArrayList<>(List.of(10, 20, 3, 40));
+        int atendida = 3;
+        senhas.remove(atendida);
+        System.out.println(senhas);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: '[10, 20, 3]' },
+      correcao: `import java.util.*;
+
+public class Fila {
+    public static void main(String[] args) {
+        List<Integer> senhas = new ArrayList<>(List.of(10, 20, 3, 40));
+        int atendida = 3;
+        senhas.remove(Integer.valueOf(atendida));
+        System.out.println(senhas);
+    }
+}`,
+      saidaCorrigida: '[10, 20, 40]',
+      dica: 'A lista tem dois `remove`: um recebe um índice `int`, o outro um objeto. Qual deles um `int` escolhe?',
+      explicacao: 'Com um `int`, o compilador escolhe `remove(int índice)`, que não precisa de autoboxing, e remove a posição 3, onde está o 40. Para remover o valor 3, o argumento precisa ser um objeto: `Integer.valueOf(atendida)`.',
+    },
+    {
+      id: 'estagiario-t6-e04-b03',
+      dificuldade: 3,
+      sintoma: 'Os dois times fizeram 150 pontos, mas o placar diz `Alguém venceu`.',
+      codigo: `public class Placar {
+    public static void main(String[] args) {
+        Integer casa = 150;
+        Integer visitante = 150;
+        if (casa == visitante) {
+            System.out.println("Empate");
+        } else {
+            System.out.println("Alguém venceu");
+        }
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'Alguém venceu' },
+      correcao: `public class Placar {
+    public static void main(String[] args) {
+        Integer casa = 150;
+        Integer visitante = 150;
+        if (casa.equals(visitante)) {
+            System.out.println("Empate");
+        } else {
+            System.out.println("Alguém venceu");
+        }
+    }
+}`,
+      saidaCorrigida: 'Empate',
+      dica: 'O 150 está na faixa do cache do `Integer`? O `==` entre dois objetos compara o quê?',
+      explicacao: 'O cache só vai de -128 a 127. Cada `150` virou um objeto próprio, e o `==` entre objetos compara referências. Com placares menores o código "funcionaria", o que torna o bug traiçoeiro. O `equals` compara os valores.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t6-e04-q01',
@@ -163,6 +267,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['`Character`', '`Char`', '`String`', '`CharSequence`'],
       resposta: 0,
       explicacao: '`Character` e `Integer` são os dois wrappers cujo nome não é só o primitivo com inicial maiúscula. Os outros seis seguem a regra: `Byte`, `Short`, `Long`, `Float`, `Double` e `Boolean`.',
+      dica: 'É um dos dois wrappers cujo nome não é só o primitivo com maiúscula.',
     },
     {
       id: 'estagiario-t6-e04-q02',
@@ -174,6 +279,7 @@ Integer b = Integer.valueOf("30");
 System.out.println(a + b + "!" + a + b);`,
       resposta: '42!1230',
       explicacao: 'Os dois números viram números de verdade. Da esquerda para a direita, `a + b` é soma (42); depois do `"!"`, tudo é concatenação de texto.',
+      dica: 'A soma `a + b` vem antes do texto; depois do `"!"`, tudo é concatenação.',
     },
     {
       id: 'estagiario-t6-e04-q03',
@@ -187,6 +293,7 @@ System.out.println((x == y) + " " + (p == q) + " " + p.equals(q));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '100 está no cache de -128 a 127, e os dois autoboxings devolvem o mesmo objeto. 1000 está fora, e cada autoboxing cria um objeto novo. `equals` compara o valor e dá `true` nos dois casos.',
+      dica: 'O cache vai de -128 a 127. Onde ficam o 100 e o 1000?',
     },
     {
       id: 'estagiario-t6-e04-q04',
@@ -206,6 +313,7 @@ System.out.println(total);`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: 'Para somar, o compilador desembrulha `pontos` com `pontos.intValue()`, e chamar um método em `null` lança a exceção. Não há concatenação, porque nenhum dos lados é `String`.',
+      dica: 'Para somar, o `Integer` precisa ser desembrulhado. E se ele for `null`?',
     },
     {
       id: 'estagiario-t6-e04-q05',
@@ -222,6 +330,7 @@ System.out.println(total);`,
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'O autoboxing embrulha o valor no wrapper do **próprio** tipo. `5` é `int`: vira `Integer`, ou é alargado para `long` quando o destino é primitivo. Alargar e embrulhar ao mesmo tempo, como em `Long d = 5` e `Double e = 5`, não é permitido.',
+      dica: 'O autoboxing não alarga e embrulha ao mesmo tempo.',
     },
     {
       id: 'estagiario-t6-e04-q06',
@@ -236,6 +345,7 @@ System.out.println(v);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`remove(1)` chama `remove(int)` e tira o elemento do índice 1, o 3. `remove(Integer.valueOf(4))` chama `remove(Object)` e tira o valor 4. Sobra `[2, 1]`.',
+      dica: '`remove(1)` usa o índice; `remove(Integer.valueOf(4))`, o valor.',
     },
     {
       id: 'estagiario-t6-e04-q07',
@@ -252,6 +362,7 @@ System.out.println(v);`,
       respostas: ['parseInt', 'valueOf'],
       saida: '26',
       explicacao: '`parseInt` devolve um `int` direto. `valueOf` devolve um `Integer`, que é desembrulhado ao ser guardado na variável `int`: também funciona, com um objeto a mais no caminho.',
+      dica: 'Os métodos que convertem texto em número começam com `parse` ou `valueOf`.',
     },
     {
       id: 'estagiario-t6-e04-q08',
@@ -269,6 +380,7 @@ System.out.println(v);`,
 }`,
       resposta: 6,
       explicacao: '`Math.round(double)` devolve `long`, que não cabe num `int` sem cast. Já `Math.round(float)` devolve `int`, por isso a linha 5 compila.',
+      dica: 'Que tipo `Math.round(double)` devolve? Ele cabe num `int` sem cast?',
     },
     {
       id: 'estagiario-t6-e04-q09',
@@ -280,6 +392,7 @@ System.out.println(v);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`round` leva o meio para cima, no sentido do infinito positivo: -3.5 vira -3. `floor` vai para o inteiro abaixo (-4.0) e `ceil` para o de cima (-3.0), ambos como `double`.',
+      dica: 'O `round` leva o meio para o lado do +∞; o `floor`, sempre para baixo.',
     },
     {
       id: 'estagiario-t6-e04-q10',
@@ -289,6 +402,7 @@ System.out.println(v);`,
       codigo: `System.out.println(Math.pow(3, 2) + " " + Math.max(4, 9L) + " " + Math.sqrt(2.25));`,
       resposta: '9.0 9 1.5',
       explicacao: '`pow` sempre devolve `double`. `max` com um `int` e um `long` usa a versão de `long` e devolve 9, sem ponto. `sqrt` também é `double`.',
+      dica: '`pow` e `sqrt` devolvem `double`; `max` com um `long` devolve `long`.',
     },
     {
       id: 'estagiario-t6-e04-q11',
@@ -298,6 +412,7 @@ System.out.println(v);`,
       opcoes: ['Os inteiros de 0 a 9', 'Os inteiros de 1 a 10', 'Os inteiros de 0 a 10', 'Qualquer `double` de 0 a 10'],
       resposta: 0,
       explicacao: '`Math.random()` vai de 0.0 até quase 1.0, nunca 1.0. Multiplicado por 10, vai de 0.0 até quase 10.0, e o cast corta a parte decimal: de 0 a 9. Para 1 a 10, some 1.',
+      dica: 'O `random` nunca chega a 1.0, e o cast corta a parte decimal.',
     },
     {
       id: 'estagiario-t6-e04-q12',
@@ -311,6 +426,7 @@ System.out.println(a.equals(10L) + " " + a.equals(b) + " " + (a == 10));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `equals` dos wrappers exige o mesmo tipo: um `Long` nunca é igual a um `Integer`, mesmo com o mesmo valor. Já `a == 10` compara wrapper com primitivo: `a` é desembrulhado e a comparação é numérica.',
+      dica: 'O `equals` entre wrappers exige o mesmo tipo; o `==` com um primitivo desembrulha.',
     },
     {
       id: 'estagiario-t6-e04-q13',
@@ -329,6 +445,7 @@ System.out.println(n);`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NumberFormatException' },
       explicacao: '`parseInt` exige que o texto inteiro seja um número válido; ele não aproveita o começo. O compilador não confere o conteúdo da `String`, então o erro só aparece na execução.',
+      dica: 'O texto tem uma letra no meio do número.',
     },
     {
       id: 'estagiario-t6-e04-q14',
@@ -346,6 +463,7 @@ System.out.println(n);`,
       verificar: { tipo: 'executa', saida: '8.0 3.0 7.0 3 4' },
       codigoVerificacao: `System.out.println(Math.pow(2, 3) + " " + Math.sqrt(9) + " " + Math.floor(7) + " " + Math.max(2, 3) + " " + Math.abs(-4));`,
       explicacao: '`pow`, `sqrt` e `floor` só existem na versão de `double`: o `int` é alargado e o resultado é `double`. `max` e `abs` têm versões para `int`, e devolvem `int`.',
+      dica: 'Quais métodos de `Math` sempre devolvem `double`?',
     },
     {
       id: 'estagiario-t6-e04-q15',
@@ -357,6 +475,7 @@ System.out.println(n);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Em complemento de dois, o menor `int` não tem positivo correspondente: 2147483648 não cabe. Negá-lo dá a volta e devolve o próprio valor. Para receber uma exceção, existe `Math.absExact`.',
+      dica: 'O positivo de `Integer.MIN_VALUE` cabe num `int`?',
     },
   ],
 };

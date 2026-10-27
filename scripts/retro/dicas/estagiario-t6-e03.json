@@ -1,0 +1,17 @@
+{
+  "q01": "O que o `Arrays.sort` devolve?",
+  "q02": "O `sort` muda o próprio array; depois, a posição 0 tem o menor.",
+  "q03": "O 30 está na posição 2. O 25 entraria em qual posição? Aplique `-(posição) - 1`.",
+  "q04": "O array está ordenado? O que a documentação diz nesse caso?",
+  "q05": "A ordem é a dos códigos: dígitos, depois maiúsculas, depois minúsculas.",
+  "q06": "O prefixo mais curto vem antes; o primeiro elemento diferente decide.",
+  "q07": "A lista é uma janela para o array, com tamanho fixo.",
+  "q08": "O método de `Arrays` que compara o conteúdo tem o mesmo nome do de `Object`.",
+  "q09": "O `copyOf` completa com o valor padrão; o `copyOfRange` exclui o fim.",
+  "q10": "Arrays têm métodos de instância como `sort`?",
+  "q11": "O `set` funciona; e o `add`, numa lista de tamanho fixo?",
+  "q12": "A lista está apoiada no array. O que ela vê depois do `sort`?",
+  "q13": "O intervalo do `fill` inclui o início e exclui o fim.",
+  "q14": "Pense na estabilidade: o que acontece com a ordem de elementos iguais?",
+  "q15": "Origem e destino são o mesmo array: as posições 0, 1 e 2 vão para 1, 2 e 3."
+}

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">A marcação do coletor de lixo: a partir das raízes (variáveis da pilha e campos static), ele segue as referências e marca B, C, D e E como vivos; A, sem referência, e a ilha X e Y, que só apontam um para o outro, ficam sem marca e são elegíveis</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="s-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="s-cinza" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b645b"/></marker>
+  </defs>
+
+  <text x="30" y="40" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#f2c75c">raízes</text>
+  <text x="214" y="40" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">heap</text>
+  <rect x="200" y="50" width="540" height="220" rx="8" fill="none" stroke="#43403a"/>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12.5" fill="#f2c75c">
+    <rect x="30" y="66" width="130" height="40" rx="4" fill="#2a2410" stroke="#f2c75c"/><text x="42" y="91">pilha: a</text>
+    <rect x="30" y="136" width="130" height="40" rx="4" fill="#2a2410" stroke="#f2c75c"/><text x="42" y="161">pilha: c</text>
+    <rect x="30" y="206" width="130" height="40" rx="4" fill="#2a2410" stroke="#f2c75c"/><text x="42" y="231">static: cache</text>
+  </g>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" text-anchor="middle">
+    <rect x="240" y="66" width="80" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="280" y="91" fill="#4fd68b">B</text>
+    <rect x="240" y="136" width="80" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="280" y="161" fill="#4fd68b">C</text>
+    <rect x="240" y="206" width="80" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="280" y="231" fill="#4fd68b">D</text>
+    <rect x="390" y="206" width="80" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="430" y="231" fill="#4fd68b">E</text>
+    <rect x="390" y="76" width="80" height="40" rx="6" fill="none" stroke="#6b645b" stroke-dasharray="5 3"/><text x="430" y="101" fill="#6b645b">A</text>
+    <rect x="530" y="136" width="70" height="40" rx="6" fill="none" stroke="#6b645b" stroke-dasharray="5 3"/><text x="565" y="161" fill="#6b645b">X</text>
+    <rect x="650" y="136" width="70" height="40" rx="6" fill="none" stroke="#6b645b" stroke-dasharray="5 3"/><text x="685" y="161" fill="#6b645b">Y</text>
+  </g>
+
+  <g stroke="#4fd68b" stroke-width="1.8" fill="none" marker-end="url(#s-verde)">
+    <path d="M162 86 L236 86"/>
+    <path d="M162 156 L236 156"/>
+    <path d="M162 226 L236 226"/>
+    <path d="M322 226 L386 226"/>
+  </g>
+  <g stroke="#6b645b" stroke-width="1.6" fill="none" marker-end="url(#s-cinza)">
+    <path d="M602 146 C 620 130, 630 130, 646 146"/>
+    <path d="M648 168 C 630 184, 620 184, 604 168"/>
+  </g>
+  <text x="530" y="118" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">ilha: um aponta para o outro,</text>
+  <text x="530" y="200" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">mas nenhuma raiz chega neles</text>
+  <text x="390" y="68" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">ninguém aponta</text>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13">
+    <rect x="30" y="288" width="14" height="14" rx="3" fill="#13221a" stroke="#4fd68b"/>
+    <text x="52" y="300" fill="#4fd68b">alcançado a partir de uma raiz: vivo</text>
+    <rect x="330" y="288" width="14" height="14" rx="3" fill="none" stroke="#6b645b" stroke-dasharray="3 2"/>
+    <text x="352" y="300" fill="#8a8277">sem marca: elegível para a coleta</text>
+  </g>
+</svg>

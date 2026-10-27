@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Classes de topo só podem ser `public` ou sem modificador; variáveis locais não aceitam modificador de acesso.',
     'Um membro `public` de uma classe sem modificador não é visível fora do pacote.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a escolher o acesso de cada membro e a explicar por que um acesso não compila, inclusive o caso de `protected` entre pacotes. Peça que ela proponha o acesso mais restrito que funcione e justifique cada membro aberto: isso evita as classes cheias de `public` que ela costuma gerar.',
+    pedido:
+      'Revise os modificadores de acesso desta classe Java 21.\n<cole a classe aqui>\n- Proponha o acesso mais restrito que funcione para cada campo e método, e justifique cada um que ficar public ou protected.\n- Aponte campos que podem ser alterados de fora sem passar por uma regra.\n- Não gere getters e setters para todos os campos automaticamente.',
+    erros: [
+      'Gera getters e setters `public` para todos os campos.',
+      'Diz que uma subclasse de outro pacote acessa `protected` por qualquer referência.',
+      'Usa `default` como se fosse o modificador do acesso de pacote.',
+    ],
+    conferir: [
+      'Compile o caso de `protected` com as classes em pacotes diferentes de verdade.',
+      'Para cada `public`, pergunte quem de fora precisa daquilo.',
+      'Rode a inspeção "Declaration access can be weaker" da IDE.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: More on Classes, Controlling Access to Members of a Class',
@@ -160,6 +176,148 @@ public class Casa {
     comentarios:
       'Esconder os campos garante que nenhum código de fora deixe o termostato num estado inválido, como 50 graus: toda mudança passa pela validação. Os métodos `getAlvo` e `getAjustes` seguem a convenção de nomes dos *getters*, que a próxima temporada aprofunda junto com a imutabilidade.',
   },
+  bugs: [
+    {
+      id: 'junior-t1-e06-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: saldo has private access in Cofre`.',
+      codigo: `class Cofre {
+    private int saldo = 100;
+
+    int ver() {
+        return saldo;
+    }
+}
+
+public class Banco {
+    public static void main(String[] args) {
+        Cofre c = new Cofre();
+        System.out.println(c.saldo);
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `class Cofre {
+    private int saldo = 100;
+
+    int ver() {
+        return saldo;
+    }
+}
+
+public class Banco {
+    public static void main(String[] args) {
+        Cofre c = new Cofre();
+        System.out.println(c.ver());
+    }
+}`,
+      saidaCorrigida: '100',
+      dica: 'O campo é `private`. A classe `Cofre` oferece outro jeito de ler o saldo?',
+      explicacao: 'Um membro `private` só é visível dentro da própria classe, mesmo para outra classe do mesmo arquivo. O `Cofre` expõe o saldo pelo método `ver()`, que é de pacote: é por ele que o `Banco` deve ler.',
+    },
+    {
+      id: 'junior-t1-e06-b02',
+      dificuldade: 2,
+      sintoma: 'A conta tinha 50 e não deveria permitir saque maior que o saldo, mas termina com `-30.0`.',
+      codigo: `class Conta {
+    double saldo;
+
+    void sacar(double valor) {
+        if (valor <= saldo) saldo -= valor;
+    }
+}
+
+public class Caixa {
+    public static void main(String[] args) {
+        Conta c = new Conta();
+        c.saldo = 50;
+        c.saldo -= 80;
+        c.sacar(10);
+        System.out.println(c.saldo);
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'saida', saida: '-30.0' },
+      correcao: `class Conta {
+    double saldo;
+
+    void sacar(double valor) {
+        if (valor <= saldo) saldo -= valor;
+    }
+}
+
+public class Caixa {
+    public static void main(String[] args) {
+        Conta c = new Conta();
+        c.saldo = 50;
+        c.sacar(80);
+        c.sacar(10);
+        System.out.println(c.saldo);
+    }
+}`,
+      saidaCorrigida: '40.0',
+      dica: 'A regra que impede o saldo negativo está em `sacar`. O primeiro saque passou por ela?',
+      explicacao: 'O campo `saldo` está aberto para o pacote, e o primeiro saque foi feito direto nele, sem passar pela regra de `sacar`. Usando o método, o saque de 80 é recusado. É o motivo de campos assim serem `private`: com ele, a linha com o bug nem compilaria.',
+    },
+    {
+      id: 'junior-t1-e06-b03',
+      dificuldade: 3,
+      sintoma: 'O quarto deveria copiar a temperatura da sala, 22, mas os dois terminam em `19 19`.',
+      codigo: `class Termostato {
+    private int alvo;
+
+    Termostato(int alvo) {
+        this.alvo = alvo;
+    }
+
+    void copiarDe(Termostato outro) {
+        outro.alvo = alvo;
+    }
+
+    int alvo() {
+        return alvo;
+    }
+}
+
+public class Casa {
+    public static void main(String[] args) {
+        Termostato sala = new Termostato(22);
+        Termostato quarto = new Termostato(19);
+        quarto.copiarDe(sala);
+        System.out.println(sala.alvo() + " " + quarto.alvo());
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: '19 19' },
+      correcao: `class Termostato {
+    private int alvo;
+
+    Termostato(int alvo) {
+        this.alvo = alvo;
+    }
+
+    void copiarDe(Termostato outro) {
+        alvo = outro.alvo;
+    }
+
+    int alvo() {
+        return alvo;
+    }
+}
+
+public class Casa {
+    public static void main(String[] args) {
+        Termostato sala = new Termostato(22);
+        Termostato quarto = new Termostato(19);
+        quarto.copiarDe(sala);
+        System.out.println(sala.alvo() + " " + quarto.alvo());
+    }
+}`,
+      saidaCorrigida: '22 22',
+      dica: 'Em `quarto.copiarDe(sala)`, quem é `this` e quem é `outro`? Em qual dos dois a atribuição escreve?',
+      explicacao: 'Dentro da classe, um objeto lê e escreve o `private` de outro objeto dela, e o compilador não reclama de nenhuma direção. A atribuição estava invertida: gravava o alvo do quarto (`this`) na sala (`outro`). O certo é `alvo = outro.alvo`.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t1-e06-q01',
@@ -174,6 +332,7 @@ public class Casa {
       ],
       resposta: 0,
       explicacao: 'Sem modificador, o acesso é de pacote. `protected` inclui o pacote e acrescenta as subclasses de outros pacotes, por isso é mais aberto.',
+      dica: 'Comece pelo que só a própria classe vê e termine no que todos veem.',
     },
     {
       id: 'junior-t1-e06-q02',
@@ -194,6 +353,7 @@ public class Login {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 8 },
       explicacao: '`valor` é `private` de `Senha`. Estar no mesmo arquivo não muda nada: `Login` é outra classe.',
+      dica: '`valor` é `private` em `Senha`. Quem pode lê-lo?',
     },
     {
       id: 'junior-t1-e06-q03',
@@ -219,6 +379,7 @@ public class Login {
 }`,
       resposta: '7 10',
       explicacao: 'O acesso `private` é por classe: o código de `Ponto` lê o `x` de qualquer `Ponto`, inclusive de `outro` e de `b` no `main`.',
+      dica: 'O `private` é por classe: um `Ponto` lê o `x` de outro `Ponto`.',
     },
     {
       id: 'junior-t1-e06-q04',
@@ -235,6 +396,7 @@ public class Login {
       respostas: [0, 1],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Uma classe de topo só pode ser `public` ou ter acesso de pacote. `private`, `protected` e `static` só fazem sentido para classes aninhadas, dentro de outra.',
+      dica: 'Classes de topo aceitam só dois níveis de acesso.',
     },
     {
       id: 'junior-t1-e06-q05',
@@ -263,6 +425,7 @@ public class Oferta extends Produto {
       opcoes: ['A e B', 'Só A', 'A, B e C', 'Nenhuma'],
       resposta: 0,
       explicacao: 'Fora do pacote, `Oferta` acessa `preco` pela herança: em si mesma (A) e em outra `Oferta` (B). Pela referência `p`, do tipo `Produto`, não: poderia ser um produto de qualquer outra hierarquia.',
+      dica: 'Fora do pacote, `protected` só pelo `this` ou por referências do tipo da subclasse.',
     },
     {
       id: 'junior-t1-e06-q06',
@@ -279,6 +442,7 @@ public class Caixa {
       respostas: ['package'],
       saida: 'loja.Caixa',
       explicacao: 'A declaração `package` vem antes de tudo no arquivo, e o nome completo da classe passa a incluir o pacote: `loja.Caixa`.',
+      dica: 'Qual declaração vai na primeira linha do arquivo para definir o pacote?',
     },
     {
       id: 'junior-t1-e06-q07',
@@ -298,6 +462,7 @@ private class Auditoria {
 }`,
       resposta: 9,
       explicacao: 'Uma classe de topo só pode ser `public` ou ter acesso de pacote. `private` só faz sentido para uma classe aninhada, escondida dentro de outra.',
+      dica: 'Uma classe de topo pode ser `private`?',
     },
     {
       id: 'junior-t1-e06-q08',
@@ -326,6 +491,7 @@ public class Deposito {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'No mesmo pacote, acesso de pacote e `protected` são livres. `perdido` é `private`, mas só `disponivel`, da própria classe, o lê: 8 - 3 - 1 = 4.',
+      dica: 'Todos os acessos estão no mesmo pacote, e o `private` é lido pelo método da própria classe.',
     },
     {
       id: 'junior-t1-e06-q09',
@@ -341,6 +507,7 @@ public class Deposito {
       ],
       respostas: [0, 1, 2],
       explicacao: 'O que vale é o tipo da referência: `B` ou uma subclasse dela. `new A().x` e `((A) this).x` usam referências do tipo `A`, e o cast muda o tipo da expressão, mesmo apontando para o próprio objeto.',
+      dica: 'O acesso pela herança vale para `this` e para referências do próprio tipo da subclasse.',
     },
     {
       id: 'junior-t1-e06-q10',
@@ -358,6 +525,7 @@ public class Deposito {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: 'O acesso de pacote não tem palavra: basta não escrever modificador. `default` é usado em métodos de interface e no `switch`, não em campos.',
+      dica: '`default` é modificador de acesso?',
     },
     {
       id: 'junior-t1-e06-q11',
@@ -372,6 +540,7 @@ public class Deposito {
       ],
       resposta: 0,
       explicacao: 'A ausência de modificador é o acesso de pacote. `protected` também abre para subclasses de outros pacotes.',
+      dica: 'O acesso de pacote não tem palavra própria.',
     },
     {
       id: 'junior-t1-e06-q12',
@@ -395,6 +564,7 @@ public class Deposito {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O limite do `private` é a classe de topo inteira, incluindo as classes aninhadas: elas formam um ninho, e cada uma enxerga os membros `private` das outras.',
+      dica: 'A classe aninhada faz parte da externa, e as duas se enxergam por inteiro.',
     },
     {
       id: 'junior-t1-e06-q13',
@@ -409,6 +579,7 @@ public class Deposito {
       ],
       resposta: 0,
       explicacao: 'Para usar um membro, é preciso enxergar a classe dele primeiro. Uma classe com acesso de pacote é invisível fora do pacote, e nem o `import` funciona.',
+      dica: 'Para usar um membro, é preciso enxergar a classe primeiro.',
     },
     {
       id: 'junior-t1-e06-q14',
@@ -423,6 +594,7 @@ public class Deposito {
       ],
       resposta: 0,
       explicacao: 'A JVM confere o acesso de novo ao ligar as classes. Por isso, reduzir a visibilidade de algo público é uma mudança incompatível para quem já usa a biblioteca.',
+      dica: 'A JVM confere o acesso de novo quando liga as classes.',
     },
     {
       id: 'junior-t1-e06-q15',
@@ -439,6 +611,7 @@ public class Deposito {
       respostas: [0, 1],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: 'Um membro tem no máximo um modificador de acesso, e repetir um modificador também é erro. Combinar o acesso com `static` e `final` é normal.',
+      dica: 'Um membro só pode ter um modificador de acesso, e nunca repetido.',
     },
   ],
 };

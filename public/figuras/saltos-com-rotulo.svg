@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="340" viewBox="0 0 800 340" role="img" aria-labelledby="t">
+  <title id="t">Para onde cada salto leva em dois laços aninhados: continue vai para o j++, continue externo vai para o i++, break sai do laço interno e break externo sai dos dois</title>
+  <rect width="800" height="340" fill="#13110f"/>
+  <defs>
+    <marker id="s-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="s-azul" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#56a8f5"/></marker>
+    <marker id="s-laranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff9447"/></marker>
+    <marker id="s-vermelho" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff6b6b"/></marker>
+  </defs>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">
+    <text x="30" y="40" fill="#f2c75c">externo:</text>
+    <text x="30" y="64"><tspan fill="#cf8e6d">for</tspan> (int i = 0; i &lt; 3; <tspan fill="#56a8f5" font-weight="700">i++</tspan>) {</text>
+    <text x="61" y="88"><tspan fill="#cf8e6d">for</tspan> (int j = 0; j &lt; 3; <tspan fill="#4fd68b" font-weight="700">j++</tspan>) {</text>
+    <text x="92" y="112">if (a) <tspan fill="#4fd68b">continue;</tspan></text>
+    <text x="92" y="136">if (b) <tspan fill="#56a8f5">continue externo;</tspan></text>
+    <text x="92" y="160">if (c) <tspan fill="#ff6b6b">break externo;</tspan></text>
+    <text x="92" y="184">if (d) <tspan fill="#ff9447">break;</tspan></text>
+    <text x="92" y="208">System.out.println(i + "," + j);</text>
+    <text x="61" y="232">}</text>
+    <text x="61" y="256">System.out.println("fim de i");</text>
+    <text x="30" y="280">}</text>
+    <text x="30" y="304">System.out.println("fim");</text>
+  </g>
+
+  <g fill="none" stroke-width="1.8">
+    <path d="M362 108 C 420 108, 420 84, 366 84" stroke="#4fd68b" marker-end="url(#s-verde)"/>
+    <path d="M362 132 C 470 132, 470 60, 366 60" stroke="#56a8f5" marker-end="url(#s-azul)"/>
+    <path d="M362 180 C 420 180, 420 252, 366 252" stroke="#ff9447" marker-end="url(#s-laranja)"/>
+    <path d="M362 156 C 470 156, 470 300, 366 300" stroke="#ff6b6b" marker-end="url(#s-vermelho)"/>
+  </g>
+  <g fill="#8a8277">
+    <circle cx="358" cy="108" r="3"/><circle cx="358" cy="132" r="3"/><circle cx="358" cy="156" r="3"/><circle cx="358" cy="180" r="3"/>
+  </g>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
+    <text x="500" y="76"><tspan fill="#56a8f5" font-weight="700">continue externo</tspan><tspan fill="#bcbec4">: roda o i++ e testa i</tspan></text>
+    <text x="500" y="100"><tspan fill="#4fd68b" font-weight="700">continue</tspan><tspan fill="#bcbec4">: roda o j++ e testa j</tspan></text>
+    <text x="500" y="244"><tspan fill="#ff9447" font-weight="700">break</tspan><tspan fill="#bcbec4">: sai só do laço do j</tspan></text>
+    <text x="500" y="292"><tspan fill="#ff6b6b" font-weight="700">break externo</tspan><tspan fill="#bcbec4">: sai dos dois laços</tspan></text>
+  </g>
+  <text x="30" y="330" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Sem rótulo, o salto vale para o laço mais interno. Com rótulo, para o laço marcado.</text>
+</svg>

@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`System.gc()` é só uma sugestão, e `finalize()` pode nunca ser chamado.',
     '`try` com recursos só aceita tipos que implementam `AutoCloseable`, e fecha na ordem inversa.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a desenhar as referências linha a linha e a contar objetos elegíveis, e explica bem as gerações e os coletores da HotSpot. Use-a também para revisar código que abre recursos: é onde um `close` esquecido custa caro, e onde ela às vezes propõe atalhos errados, como confiar no GC.',
+    pedido:
+      'Analise este trecho Java 21.\n<cole o código aqui>\n- Depois de cada linha, liste as setas de cada variável e diga quais objetos ficaram sem referência alcançável.\n- Aponte recursos (arquivos, conexões, streams) abertos fora de try com recursos.\n- Não use System.gc() nem finalize na resposta.',
+    erros: [
+      'Afirma que `System.gc()` garante a coleta.',
+      'Recomenda atribuir `null` a variáveis locais para ajudar o GC.',
+      'Fecha recursos com `close()` no fim do bloco, sem `try` com recursos, e a exceção pula o fechamento.',
+    ],
+    conferir: [
+      'Refaça o desenho das setas você mesmo e compare a contagem.',
+      'Procure todo recurso aberto e confira se está num `try` com recursos.',
+      'Desconfie de qualquer resposta que dependa de quando o GC vai rodar.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Creating and Using Objects, The Garbage Collector',
@@ -174,6 +190,136 @@ public class Coletor {
     comentarios:
       'É exatamente a fase de marcação de um coletor real: o que não foi alcançado é lixo, sem precisar olhar o lixo um a um. Repare que 3 e 4 se referenciam e mesmo assim são lixo no primeiro caso, a ilha de isolamento. Coletores de verdade não usam recursão, que estouraria a pilha com grafos grandes: usam uma pilha explícita de objetos a visitar.',
   },
+  bugs: [
+    {
+      id: 'junior-t1-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: variable linha is already defined in method main(String[])`.',
+      codigo: `public class Relatorio {
+    public static void main(String[] args) {
+        StringBuilder linha = null;
+        for (int i = 1; i <= 2; i++) {
+            StringBuilder linha = new StringBuilder("item " + i);
+        }
+        System.out.println(linha);
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Relatorio {
+    public static void main(String[] args) {
+        StringBuilder linha = null;
+        for (int i = 1; i <= 2; i++) {
+            linha = new StringBuilder("item " + i);
+        }
+        System.out.println(linha);
+    }
+}`,
+      saidaCorrigida: 'item 2',
+      dica: 'Dentro do laço, a linha 5 atribui à variável de fora ou declara outra?',
+      explicacao: 'Com o tipo na frente, a linha 5 declara uma nova variável `linha`, e o Java não deixa uma local esconder outra do mesmo método. A intenção era atribuir à variável de fora, que continua existindo depois do laço: basta tirar o tipo.',
+    },
+    {
+      id: 'junior-t1-e03-b02',
+      dificuldade: 2,
+      sintoma: 'A auditoria deveria registrar `login;logout;`, mas só aparece `login;`.',
+      codigo: `class Log implements AutoCloseable {
+    StringBuilder texto = new StringBuilder();
+    boolean aberto = true;
+
+    void escrever(String s) {
+        if (aberto) texto.append(s).append(';');
+    }
+
+    public void close() {
+        aberto = false;
+    }
+}
+
+public class Auditoria {
+    public static void main(String[] args) {
+        Log log = new Log();
+        try (log) {
+            log.escrever("login");
+        }
+        log.escrever("logout");
+        System.out.println(log.texto);
+    }
+}`,
+      linha: 20,
+      efeito: { tipo: 'saida', saida: 'login;' },
+      correcao: `class Log implements AutoCloseable {
+    StringBuilder texto = new StringBuilder();
+    boolean aberto = true;
+
+    void escrever(String s) {
+        if (aberto) texto.append(s).append(';');
+    }
+
+    public void close() {
+        aberto = false;
+    }
+}
+
+public class Auditoria {
+    public static void main(String[] args) {
+        Log log = new Log();
+        try (log) {
+            log.escrever("login");
+            log.escrever("logout");
+        }
+        System.out.println(log.texto);
+    }
+}`,
+      saidaCorrigida: 'login;logout;',
+      dica: 'Em que momento o `try` com recursos chama o `close()`? O `logout` vem antes ou depois disso?',
+      explicacao: 'O `try` com recursos fecha o recurso assim que o bloco termina. O `logout` é escrito depois do fechamento, e o `Log` já fechado ignora a escrita. Todo uso do recurso precisa ficar dentro do bloco.',
+    },
+    {
+      id: 'junior-t1-e03-b03',
+      dificuldade: 2,
+      sintoma: 'O programa processa a primeira linha e depois para com `NullPointerException`.',
+      codigo: `import java.util.*;
+
+public class Importacao {
+    static List<String> buffer = new ArrayList<>();
+
+    static void processar(String linha) {
+        buffer.add(linha.toUpperCase());
+    }
+
+    public static void main(String[] args) {
+        processar("ana");
+        System.out.println(buffer);
+        buffer = null;
+        processar("bia");
+        System.out.println(buffer);
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `import java.util.*;
+
+public class Importacao {
+    static List<String> buffer = new ArrayList<>();
+
+    static void processar(String linha) {
+        buffer.add(linha.toUpperCase());
+    }
+
+    public static void main(String[] args) {
+        processar("ana");
+        System.out.println(buffer);
+        buffer.clear();
+        processar("bia");
+        System.out.println(buffer);
+    }
+}`,
+      saidaCorrigida: '[ANA]\n[BIA]',
+      dica: 'A ideia era esvaziar o buffer entre os lotes. O que `buffer = null` faz com a variável?',
+      explicacao: 'Atribuir `null` não esvazia a lista: tira a única referência que o programa tinha para ela, e a próxima chamada usa `null`. Para reaproveitar o buffer, `clear()` remove os elementos e mantém a lista. Atribuir `null` "para ajudar o GC" raramente é necessário.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t1-e03-q01',
@@ -188,6 +334,7 @@ public class Coletor {
       ],
       resposta: 0,
       explicacao: 'Os objetos ficam no heap. A pilha guarda os quadros dos métodos, com parâmetros e variáveis locais, que apontam para o heap.',
+      dica: 'A pilha guarda variáveis locais; os objetos ficam numa área compartilhada.',
     },
     {
       id: 'junior-t1-e03-q02',
@@ -201,6 +348,7 @@ b = null;`,
       opcoes: ['1', '0', '2', 'Não é possível saber'],
       resposta: 0,
       explicacao: 'Na linha 3, `a` passa a apontar para "y", e ninguém mais aponta para "x": ele fica elegível. Na linha 4, "y" perde a referência de `b`, mas continua sendo apontado por `a`.',
+      dica: 'Depois de `a = b`, quem ainda aponta para o objeto "x"?',
     },
     {
       id: 'junior-t1-e03-q03',
@@ -222,6 +370,7 @@ b = null;`,
       opcoes: ['0', '2', '3', '1'],
       resposta: 0,
       explicacao: 'Os três formam um ciclo, e `c` ainda aponta para o terceiro nó, que aponta para o primeiro, que aponta para o segundo. Tudo continua alcançável. Só com `c = null` os três virariam uma ilha elegível.',
+      dica: '`c` ainda aponta para um dos nós, e o ciclo liga os três.',
     },
     {
       id: 'junior-t1-e03-q04',
@@ -237,6 +386,7 @@ y = null;
 System.out.println(x + " " + z);`,
       resposta: 'dois um!',
       explicacao: '`y` guardou o primeiro objeto antes de `x` ser reatribuído. O `append` altera esse primeiro objeto, que depois passa para `z`. Nenhum dos dois objetos ficou elegível.',
+      dica: '`y` e depois `z` guardam a referência do "um"; o `x` passou a apontar para outro.',
     },
     {
       id: 'junior-t1-e03-q05',
@@ -252,6 +402,7 @@ System.out.println(x + " " + z);`,
       ],
       respostas: [0, 1],
       explicacao: 'O momento da coleta é decisão da JVM. `finalize` está obsoleto justamente por não ter garantia nenhuma, e `null` só remove uma referência.',
+      dica: 'Elegível não é coletado, e nem `gc` nem `finalize` dão garantias.',
     },
     {
       id: 'junior-t1-e03-q06',
@@ -266,6 +417,7 @@ System.out.println(msg);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 4 },
       explicacao: 'A variável `msg` só existe dentro do bloco do `if`. Fora dele, o nome é desconhecido. E o objeto que ela apontava fica elegível no fim do bloco.',
+      dica: 'Até onde vai o escopo de uma variável declarada dentro de um bloco?',
     },
     {
       id: 'junior-t1-e03-q07',
@@ -288,6 +440,7 @@ public class Leitura {
       respostas: ['AutoCloseable', 'java.io.Closeable'],
       saida: 'lendo\nfechado',
       explicacao: '`AutoCloseable` é a interface exigida pelo `try` com recursos. `java.io.Closeable` também serve, porque estende `AutoCloseable`. O `close` roda no fim do bloco, mesmo se houver exceção.',
+      dica: 'Qual interface o `try` com recursos exige?',
     },
     {
       id: 'junior-t1-e03-q08',
@@ -309,6 +462,7 @@ public class App {
 }`,
       resposta: 9,
       explicacao: '`Tela` não implementa `AutoCloseable`, e o compilador não teria o que chamar no fim do bloco. Um `try` comum, sem parênteses, compilaria.',
+      dica: '`Tela` pode ser usada num `try` com recursos?',
     },
     {
       id: 'junior-t1-e03-q09',
@@ -337,6 +491,7 @@ public class App {
       ],
       resposta: 0,
       explicacao: 'Quando `processar` termina, as variáveis locais somem. O "A" fica sem referências, mas o "B" continua apontado pelo campo `static`, uma das raízes do GC.',
+      dica: 'Quais referências sobrevivem ao fim do método? Uma delas foi guardada num `static`.',
     },
     {
       id: 'junior-t1-e03-q10',
@@ -351,6 +506,7 @@ public class App {
       ],
       resposta: 0,
       explicacao: 'A HotSpot marca tudo o que alcança a partir das raízes (variáveis locais, campos `static` e referências internas). O que não foi marcado é lixo, com ou sem referências apontando para ele.',
+      dica: 'O GC parte das raízes e segue as referências.',
     },
     {
       id: 'junior-t1-e03-q11',
@@ -375,6 +531,7 @@ try (Recurso a = new Recurso("a"); Recurso b = new Recurso("b")) {
 System.out.println();`,
       resposta: 'uso-b-a',
       explicacao: 'Os recursos são fechados no fim do bloco, na ordem inversa da abertura: o último aberto, `b`, fecha primeiro.',
+      dica: 'Os recursos são fechados na ordem inversa da abertura, depois do corpo.',
     },
     {
       id: 'junior-t1-e03-q12',
@@ -384,6 +541,7 @@ System.out.println();`,
       opcoes: ['G1', 'Serial', 'ZGC', 'Contagem de referências'],
       resposta: 0,
       explicacao: 'O G1 divide o heap em regiões e mira uma meta de pausa. A JVM ainda escolhe o Serial em máquinas muito pequenas, e o ZGC precisa ser pedido com `-XX:+UseZGC`.',
+      dica: 'É o coletor padrão desde o Java 9, que divide o heap em regiões.',
     },
     {
       id: 'junior-t1-e03-q13',
@@ -413,6 +571,7 @@ System.out.println(bia.nome + " " + (bia.amigo == null));`,
       resposta: 0,
       verificar: { tipo: 'executa', saida: 'Bia true' },
       explicacao: 'A Ana aponta para a Bia, mas a Bia não aponta para ninguém. Quando `ana` vira `null`, nada mais alcança a Ana. A Bia continua alcançável pela variável `bia`.',
+      dica: 'A Bia continua alcançável por `bia`. E a Ana?',
     },
     {
       id: 'junior-t1-e03-q14',
@@ -428,6 +587,7 @@ System.out.println(bia.nome + " " + (bia.amigo == null));`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'Parâmetros e variáveis locais ficam nos quadros da pilha, e campos `static` pertencem às classes. Campos de instância só contam se o objeto que os tem for alcançável.',
+      dica: 'As raízes são referências que o programa usa diretamente, não as de dentro de objetos.',
     },
     {
       id: 'junior-t1-e03-q15',
@@ -442,6 +602,7 @@ System.out.println(bia.nome + " " + (bia.amigo == null));`,
       ],
       resposta: 0,
       explicacao: 'É a hipótese geracional. Coletar a geração jovem é barato, porque sobra pouca coisa viva para copiar; os sobreviventes de várias coletas vão para a velha, revisada com menos frequência.',
+      dica: 'Pense na hipótese geracional: quanto tempo vive a maioria dos objetos?',
     },
   ],
 };

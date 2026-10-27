@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Variáveis declaradas num bloco não existem depois dele.',
     'A variável do `instanceof` com padrão funciona depois de `&&`, mas não depois de `||`.',
   ],
+  ia: {
+    uso:
+      'A IA é útil para transformar uma regra de negócio escrita em português numa cadeia de `if`, e para listar os casos de teste de cada faixa. O cuidado é com a ordem das condições e com o que fica de fora: peça sempre os valores de fronteira e rode cada um.',
+    pedido:
+      'Escreva em Java 21 a regra abaixo como uma cadeia de if e else if, com chaves em todos os blocos.\n<cole a regra aqui, por exemplo: frete grátis acima de R$ 200, R$ 15 entre R$ 100 e R$ 200, R$ 25 abaixo disso>\n- Antes do código, liste as faixas e diga em que ordem as condições precisam aparecer e por quê.\n- Depois, liste os valores de fronteira que eu devo testar, como 99,99, 100 e 200.\n- Não use bibliotecas nem métodos auxiliares.',
+    erros: [
+      'Reordena uma cadeia de `else if` "para ficar mais legível" e muda qual ramo vence.',
+      'Esquece um valor de fronteira: escreve `> 100` numa ponta e `< 100` na outra, e o 100 exato não cai em nenhuma faixa.',
+      'Usa a variável de um `instanceof` com padrão depois de um `||`, onde ela não existe.',
+    ],
+    conferir: [
+      'Teste um valor de dentro de cada faixa e cada valor de fronteira.',
+      'Reformate com Ctrl + Alt + L para ver a estrutura real dos blocos.',
+      'Desenhe as faixas numa reta numérica e confira que não há buracos nem sobreposições.',
+    ],
+  },
   recursos: [
     {
       titulo: 'The Java Tutorials: The if-then and if-then-else Statements',
@@ -131,6 +147,92 @@ public class Imc {
     comentarios:
       'Repare que os testes usam `< 25` e `< 30`, e não `<= 24.9` e `<= 29.9`: com ponto flutuante, um IMC de 24,95 escaparia de todas as faixas na versão com `<=`. Como cada `else if` só roda quando os anteriores falharam, basta testar o limite superior. E a variável `faixa` é declarada antes do `if` e recebe valor em todos os ramos, o que satisfaz a regra de atribuição definida do compilador.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t3-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: incompatible types: int cannot be converted to boolean`.',
+      codigo: `public class Notificacoes {
+    public static void main(String[] args) {
+        int naoLidas = 3;
+        if (naoLidas) {
+            System.out.println("Você tem mensagens novas");
+        }
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Notificacoes {
+    public static void main(String[] args) {
+        int naoLidas = 3;
+        if (naoLidas > 0) {
+            System.out.println("Você tem mensagens novas");
+        }
+    }
+}`,
+      saidaCorrigida: 'Você tem mensagens novas',
+      dica: 'De que tipo precisa ser o que vai entre os parênteses de um `if`? E de que tipo é `naoLidas`?',
+      explicacao: 'Em Java, a condição do `if` precisa ser `boolean`. Um número não vira verdadeiro ou falso sozinho, como em C ou JavaScript. A pergunta "tem mensagens?" vira a comparação `naoLidas > 0`.',
+    },
+    {
+      id: 'estagiario-t3-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O `javac` recusa o programa com `error: cannot find symbol` apontando para `taxa`.',
+      codigo: `public class Frete {
+    public static void main(String[] args) {
+        double peso = 12.5;
+        if (peso > 10) {
+            double taxa = 15.0;
+        }
+        System.out.println("Taxa extra: " + taxa);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Frete {
+    public static void main(String[] args) {
+        double peso = 12.5;
+        if (peso > 10) {
+            double taxa = 15.0;
+            System.out.println("Taxa extra: " + taxa);
+        }
+    }
+}`,
+      saidaCorrigida: 'Taxa extra: 15.0',
+      dica: 'Onde a variável `taxa` nasce, e onde ela morre? A linha que a usa está dentro ou fora desse trecho?',
+      explicacao: 'Uma variável declarada dentro de um bloco só existe até o `}` dele. Aqui, a taxa só faz sentido para frete pesado, então o `println` vai para dentro do bloco. Se o valor fosse preciso depois do `if`, a variável teria de ser declarada antes dele, com um valor para o caso em que o `if` não entra.',
+    },
+    {
+      id: 'estagiario-t3-e01-b03',
+      dificuldade: 2,
+      sintoma: 'Imprime `Atenção: saldo negativo!` mesmo com o saldo positivo de R$ 120.',
+      codigo: `public class Saldo {
+    public static void main(String[] args) {
+        int saldo = 120;
+        if (saldo < 0);
+        {
+            System.out.println("Atenção: saldo negativo!");
+        }
+        System.out.println("Saldo: " + saldo);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'Atenção: saldo negativo!\nSaldo: 120' },
+      correcao: `public class Saldo {
+    public static void main(String[] args) {
+        int saldo = 120;
+        if (saldo < 0)
+        {
+            System.out.println("Atenção: saldo negativo!");
+        }
+        System.out.println("Saldo: " + saldo);
+    }
+}`,
+      saidaCorrigida: 'Saldo: 120',
+      dica: 'Olhe o fim da linha do `if`. O que está servindo de corpo para ele?',
+      explicacao: 'O `;` logo depois da condição é um comando vazio, e ele vira o corpo do `if`. O bloco entre chaves logo abaixo deixa de pertencer ao `if` e roda sempre. Sem o `;`, o bloco volta a ser o corpo.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t3-e01-q01',
@@ -147,6 +249,7 @@ if (x % 2 == 0) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '7 % 2 é 1, então a condição é falsa e o `else` executa. Só um dos dois ramos roda.',
+      dica: 'Qual é o resto de 7 dividido por 2?',
     },
     {
       id: 'estagiario-t3-e01-q02',
@@ -163,6 +266,7 @@ if (temperatura > 20) {
 }`,
       resposta: 'agradável',
       explicacao: 'A cadeia para na primeira condição verdadeira: 35 > 20, então imprime "agradável" e pula o resto, mesmo que 35 > 30 também seja verdadeiro. A condição mais restritiva deveria vir primeiro.',
+      dica: 'Numa cadeia de `else if`, vale a primeira condição verdadeira. 35 já passa no primeiro teste?',
     },
     {
       id: 'estagiario-t3-e01-q03',
@@ -178,6 +282,7 @@ System.out.println("fim");`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem chaves, o `if` controla só o primeiro `println`. O segundo, apesar da indentação, está fora do `if` e roda sempre. Um bug real: a compra "aprovada" sem saldo.',
+      dica: 'Sem chaves, o `if` controla só o próximo comando. A indentação não conta para o compilador.',
     },
     {
       id: 'estagiario-t3-e01-q04',
@@ -195,6 +300,7 @@ System.out.println("fim");`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `else` pertence ao `if (b > 0)`, o mais próximo, apesar da indentação. Como `a > 0` é falso, todo o `if` interno (com o seu `else`) é pulado. A mensagem "a não é positivo" nunca aparece justamente quando deveria.',
+      dica: 'Um `else` pertence ao `if` mais próximo que ainda não tem `else`, não importa a indentação.',
     },
     {
       id: 'estagiario-t3-e01-q05',
@@ -211,6 +317,7 @@ System.out.println("fim");`,
       respostas: [0, 1],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: 'A condição precisa ser `boolean`, e o corpo sem chaves não pode ser uma declaração. `if (b = true)` é uma atribuição de `boolean` (compila, mas provavelmente é bug), e `if (1 > 0) ;` tem um corpo vazio válido.',
+      dica: 'Procure uma condição que não é `boolean` e um corpo sem chaves que é uma declaração.',
     },
     {
       id: 'estagiario-t3-e01-q06',
@@ -223,6 +330,7 @@ System.out.println("x");`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O corpo do `if` é o comando vazio `;`. O `println` está depois do `if` e roda sempre. E `if (false)` não gera erro de código inalcançável: é a exceção que a linguagem permite para desligar trechos.',
+      dica: 'O `;` logo depois da condição é o corpo do `if`. O que vem na linha seguinte?',
     },
     {
       id: 'estagiario-t3-e01-q07',
@@ -242,6 +350,7 @@ System.out.println("x");`,
       respostas: ['%'],
       saida: 'par',
       explicacao: 'O resto da divisão por 2 é 0 para números pares. Com `/`, seria 5 == 0, falso.',
+      dica: 'Um número é par quando o resto da divisão por 2 é zero.',
     },
     {
       id: 'estagiario-t3-e01-q08',
@@ -260,6 +369,7 @@ System.out.println("x");`,
 }`,
       resposta: 8,
       explicacao: '`bonus` foi declarada dentro do bloco do `if` e deixou de existir no `}`. `total`, declarada antes do `if`, continua visível.',
+      dica: 'Onde a variável `bonus` é declarada, e até onde ela existe?',
     },
     {
       id: 'estagiario-t3-e01-q09',
@@ -275,6 +385,7 @@ System.out.println(x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'São dois `if` independentes. O primeiro dobra x para 6. O segundo testa o novo valor: 6 > 5, então soma 1. O `else` pertence só ao segundo `if`.',
+      dica: 'Execute os dois `if` em sequência: o segundo usa o `x` que o primeiro deixou.',
     },
     {
       id: 'estagiario-t3-e01-q10',
@@ -288,6 +399,7 @@ else System.out.println("outro");`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `42` foi guardado como `Integer`. O teste de tipo passa, a variável `i` já é um `Integer`, e o lado direito do `&&` só é avaliado depois do teste verdadeiro, então pode usá-la.',
+      dica: 'Com `&&`, o lado direito só roda se o teste de tipo passou, e aí a variável existe.',
     },
     {
       id: 'estagiario-t3-e01-q11',
@@ -304,6 +416,7 @@ else System.out.println("outro");`,
       respostas: [0, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'A variável do padrão existe onde o teste é certamente verdadeiro: dentro do `if`, e depois de um `if` que sai do método quando o teste falha. Depois do `||`, o lado direito roda quando o teste falhou; depois de um `if` comum, o teste pode ter falhado. E padrões de tipo primitivo não existem no Java padrão.',
+      dica: 'A variável do padrão existe só onde o teste com certeza deu verdadeiro.',
     },
     {
       id: 'estagiario-t3-e01-q12',
@@ -320,6 +433,7 @@ System.out.println(faixa);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '65 não é menor que 18 nem que 60, então cai no `else` final. Como todos os ramos atribuem `faixa`, o compilador sabe que ela tem valor no `println`.',
+      dica: 'Siga a cadeia: 65 não é menor que 18 nem menor que 60. E todos os caminhos dão valor a `faixa`?',
     },
     {
       id: 'estagiario-t3-e01-q13',
@@ -337,6 +451,7 @@ if (a + b > 10) r += "E";
 System.out.println(r);`,
       resposta: 'ACE',
       explicacao: 'a > 3: acrescenta A. Dentro, b < 5 é falso e b < 8 é verdadeiro: acrescenta C. O `else` com D é do `if (a > 3)` e não roda. Por fim, 4 + 7 = 11 > 10: acrescenta E.',
+      dica: 'Siga os `if` aninhados com calma e vá juntando as letras na ordem em que entram.',
     },
     {
       id: 'estagiario-t3-e01-q14',
@@ -353,6 +468,7 @@ for (int x = 0; x <= 30; x++) {
 }
 System.out.println(ok);`,
       explicacao: '"Entre 10 e 20" é `x >= 10 && x <= 20`. Negando com De Morgan: `x < 10 || x > 20`. Com `&&`, nenhum número satisfaz as duas. As outras duas erram nas bordas 10 e 20.',
+      dica: 'Fora do intervalo quer dizer abaixo do mínimo ou acima do máximo. Os extremos 10 e 20 contam como dentro.',
     },
     {
       id: 'estagiario-t3-e01-q15',
@@ -362,6 +478,7 @@ System.out.println(ok);`,
       opcoes: ['`boolean` (ou `Boolean`)', 'Qualquer tipo numérico', '`int`', 'Qualquer tipo'],
       resposta: 0,
       explicacao: 'O Java exige um valor verdadeiro ou falso. Um `Boolean` também serve, por *unboxing*, mas lança `NullPointerException` se for nulo. Números não são convertidos para verdadeiro ou falso, como em C.',
+      dica: 'Pense no que o `if` precisa decidir: só dois resultados possíveis.',
     },
   ],
 };

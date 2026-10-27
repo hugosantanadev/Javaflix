@@ -1,0 +1,17 @@
+{
+  "q01": "Lembre a regra 4 da promoção: o que acontece com `byte`, `short` e `char` em qualquer conta?",
+  "q02": "`short` mais `char` é conta, não concatenação. Qual é o código de `'a'`?",
+  "q03": "Uma variável comum não pode ir para `byte` sem cast; uma constante `final` que cabe, pode.",
+  "q04": "Calcule cada cast separadamente: 200 em 8 bits e 70.000 em 16 bits. Depois some.",
+  "q05": "O cast vale só para o que vem logo depois dele. E de `double` para inteiro, ele trunca em direção a zero.",
+  "q06": "O `float` guarda uns 7 dígitos significativos. 123.456.789 tem quantos?",
+  "q07": "Na primeira parte, o cast vem antes da divisão; na segunda, depois. Calcule as duas separadamente.",
+  "q08": "Converta antes de dividir, senão a divisão inteira já cortou a parte decimal.",
+  "q09": "Siga as setas da ampliação: qual atribuição vai no sentido contrário?",
+  "q10": "Percorra as linhas: em qual delas um tipo maior vai para um menor sem cast?",
+  "q11": "Um `double` grande demais para `long` não dá a volta: ele satura num valor específico.",
+  "q12": "Na primeira linha, tudo é `int`; na segunda, o `double` aparece antes da multiplicação.",
+  "q13": "A multiplicação acontece em `int` antes de virar `long`. O que acontece com o maior `int` vezes 2?",
+  "q14": "O resultado é `double` quando algum operando é `double`.",
+  "q15": "Pense nas instruções que a JVM tem para somar: existe uma para `byte`?"
+}

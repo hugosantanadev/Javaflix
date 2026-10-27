@@ -1,0 +1,17 @@
+{
+  "q01": "Antes de comparar, o Java promove os dois lados para o mesmo tipo.",
+  "q02": "Em cada linha, o lado esquerdo decide sozinho? Se decidir, o `x++` nem roda.",
+  "q03": "`&&` tem precedência maior que `||`: agrupe o `&&` primeiro.",
+  "q04": "O primeiro teste já é verdadeiro? Lembre que `i++` compara o valor antigo e só depois incrementa.",
+  "q05": "Java não encadeia comparações nem compara `boolean` com número.",
+  "q06": "O `|` sozinho não faz curto-circuito. O lado direito roda com `s` nulo?",
+  "q07": "Qual é o valor de `10 / 4` com dois inteiros?",
+  "q08": "Qual operador para de avaliar quando o lado esquerdo já é falso?",
+  "q09": "O OU exclusivo é verdadeiro quando os dois lados são diferentes. Resolva da esquerda para a direita.",
+  "q10": "Procure uma comparação encadeada, do jeito que se escreve na matemática.",
+  "q11": "Toda comparação com `NaN` dá `false`, com uma única exceção.",
+  "q12": "Na primeira linha, o `&` avalia os dois lados; na segunda, veja se o lado esquerdo já decide.",
+  "q13": "Qual dos operadores não tem curto-circuito?",
+  "q14": "Aplique De Morgan: negue cada comparação e troque o `&&` por `||`. A negação de `>` é `<=`.",
+  "q15": "Pense no que aconteceria com `pedido.getTotal()` se `pedido` fosse `null`."
+}

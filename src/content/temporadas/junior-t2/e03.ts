@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Varargs é a última fase da sobrecarga: `m(5)` prefere `m(int)` a `m(int...)`.',
     '`m(int...)` e `m(Integer...)` tornam `m(1)` ambígua.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a desenhar APIs com varargs e a decidir quando eles valem a pena. O ponto fraco dela são os casos de borda: chamada sem argumentos, `null` e arrays passados para `Object...`. Peça sempre o `length` que o método recebe em cada chamada.',
+    pedido:
+      'Para cada chamada deste método Java 21 com varargs, diga o que o parâmetro recebe.\n<cole o método e as chamadas>\n- Diga o length do array e cada elemento, ou se ele é null.\n- Aponte chamadas que lançariam exceção dentro do método, como acessar a posição 0 de um array vazio.\n- Se o método exige pelo menos um valor, proponha a assinatura com um parâmetro fixo antes do varargs.',
+    erros: [
+      'Diz que a chamada sem argumentos passa `null`.',
+      'Não percebe que um `String[]` passado para `Object...` vira vários argumentos.',
+      'Acessa `valores[0]` sem tratar o array vazio.',
+    ],
+    conferir: [
+      'Chame o método sem argumentos, com um e com vários.',
+      'Imprima `length` do parâmetro em cada caso.',
+      'Teste com `null` e com um array passado para `Object...`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Calling Methods and Constructors, Arbitrary Number of Arguments',
@@ -139,6 +155,104 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Separar o primeiro valor do resto transforma uma regra de negócio ("ao menos um") numa regra de compilação, sem `if` e sem exceção. A própria biblioteca faz parecido: `String.join` é quase o seu `juntar`, e `EnumSet.of(E primeiro, E... resto)` usa o mesmo truque do `maximo`.',
   },
+  bugs: [
+    {
+      id: 'junior-t2-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa: `method media in class Media cannot be applied to given types`.',
+      codigo: `public class Media {
+    static double media(double[] valores) {
+        double soma = 0;
+        for (double v : valores) soma += v;
+        return soma / valores.length;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(media(7.0, 8.0, 9.0));
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Media {
+    static double media(double[] valores) {
+        double soma = 0;
+        for (double v : valores) soma += v;
+        return soma / valores.length;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(media(new double[] {7.0, 8.0, 9.0}));
+    }
+}`,
+      saidaCorrigida: '8.0',
+      dica: 'O parâmetro é `double[]` ou `double...`? Qual dos dois aceita valores soltos?',
+      explicacao: 'Só um parâmetro varargs aceita valores separados por vírgula. Com `double[]`, quem chama precisa passar um array pronto. A outra correção possível seria trocar a declaração para `double... valores`.',
+    },
+    {
+      id: 'junior-t2-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O maior de `3, 9, 4` sai certo, mas a segunda chamada para com `ArrayIndexOutOfBoundsException`.',
+      codigo: `public class Maximo {
+    static int maior(int... valores) {
+        int max = valores[0];
+        for (int v : valores) if (v > max) max = v;
+        return max;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(maior(3, 9, 4));
+        System.out.println(maior());
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
+      correcao: `public class Maximo {
+    static int maior(int primeiro, int... resto) {
+        int max = primeiro;
+        for (int v : resto) if (v > max) max = v;
+        return max;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(maior(3, 9, 4));
+        System.out.println(maior(5));
+    }
+}`,
+      saidaCorrigida: '9\n5',
+      dica: 'O que o método recebe quando é chamado sem argumentos? Faz sentido pedir o maior de nenhum número?',
+      explicacao: 'Sem argumentos, `valores` é um array vazio, e `valores[0]` não existe. Como o maior só faz sentido com pelo menos um número, a assinatura pode exigir isso: um parâmetro fixo antes do varargs. A chamada vazia passa a nem compilar.',
+    },
+    {
+      id: 'junior-t2-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O lote de etiquetas deveria contar como um dado só, mas o registro mostra `lote: 3 dado(s)`.',
+      codigo: `public class Auditoria {
+    static void registrar(String acao, Object... dados) {
+        System.out.println(acao + ": " + dados.length + " dado(s)");
+    }
+
+    public static void main(String[] args) {
+        String[] tags = {"urgente", "financeiro", "revisar"};
+        registrar("lote", tags);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'lote: 3 dado(s)' },
+      correcao: `public class Auditoria {
+    static void registrar(String acao, Object... dados) {
+        System.out.println(acao + ": " + dados.length + " dado(s)");
+    }
+
+    public static void main(String[] args) {
+        String[] tags = {"urgente", "financeiro", "revisar"};
+        registrar("lote", (Object) tags);
+    }
+}`,
+      saidaCorrigida: 'lote: 1 dado(s)',
+      dica: 'Um `String[]` é um `Object[]`. Quando ele chega sozinho num `Object...`, vira um argumento ou o array inteiro de argumentos?',
+      explicacao: 'Um `String[]` pode ser usado como `Object[]`, então o compilador o passa como o próprio array de varargs, e cada etiqueta vira um dado. Com o cast para `Object`, o array inteiro vira um único elemento.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t2-e03-q01',
@@ -148,6 +262,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['`int[]`', '`int`', '`List<Integer>`', '`Integer...`, um tipo especial'],
       resposta: 0,
       explicacao: 'Varargs é um array: tem `length`, índices e pode ser percorrido com for-each.',
+      dica: 'Por dentro, o varargs é de que tipo?',
     },
     {
       id: 'junior-t2-e03-q02',
@@ -165,6 +280,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: '4',
       explicacao: 'Os tamanhos são 0, 1 e 3. Como são números, a soma acontece antes de imprimir.',
+      dica: 'Some os tamanhos: zero, um e três.',
     },
     {
       id: 'junior-t2-e03-q03',
@@ -181,6 +297,7 @@ const episodio: EpisodioConteudo = {
       respostas: [0, 1, 4],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'O varargs pode vir depois de parâmetros comuns, mas precisa ser o último e o único. O `main` aceita `String...` no lugar de `String[]`.',
+      dica: 'O varargs precisa ser o último, e só pode haver um.',
     },
     {
       id: 'junior-t2-e03-q04',
@@ -201,6 +318,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 8 },
       explicacao: 'Só um varargs aceita valores soltos. Com `int[] v`, quem chama precisa montar o array. Trocando para `int... v`, as duas chamadas funcionariam.',
+      dica: 'Um parâmetro `int[]` aceita valores soltos?',
     },
     {
       id: 'junior-t2-e03-q05',
@@ -219,6 +337,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Varargs é a última fase da resolução: com um `int`, a versão fixa serve sem ele. Zero ou dois argumentos só cabem no varargs.',
+      dica: 'Varargs é a última fase da escolha: `m(5)` acha uma versão antes.',
     },
     {
       id: 'junior-t2-e03-q06',
@@ -239,6 +358,7 @@ const episodio: EpisodioConteudo = {
       respostas: ['...'],
       saida: '10',
       explicacao: 'As reticências depois do tipo fazem do parâmetro um varargs. Com `int[]`, a chamada com quatro valores soltos não compilaria.',
+      dica: 'Qual símbolo transforma o parâmetro em varargs?',
     },
     {
       id: 'junior-t2-e03-q07',
@@ -256,6 +376,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: 6,
       explicacao: 'O varargs precisa ser o último parâmetro. Bastaria trocar a ordem: `linha(char separador, String... campos)`.',
+      dica: 'Pode haver parâmetro depois do varargs?',
     },
     {
       id: 'junior-t2-e03-q08',
@@ -275,6 +396,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem argumentos, o array é vazio. O cast para `Object` faz o `null` virar um elemento; o cast para `Object[]` faz dele o próprio array. Com dois argumentos, o `null` é só o segundo elemento.',
+      dica: 'O cast decide se o `null` é um elemento ou o array inteiro.',
     },
     {
       id: 'junior-t2-e03-q09',
@@ -299,6 +421,7 @@ public class T {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Na primeira chamada, o método recebe o próprio array e o altera. Na segunda, o compilador monta um array novo com cópias dos valores, e dobrá-lo não afeta `dados`.',
+      dica: 'O primeiro `dobrar` recebe o próprio array; o segundo, um array novo com cópias.',
     },
     {
       id: 'junior-t2-e03-q10',
@@ -317,6 +440,7 @@ public class T {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'As duas versões servem na fase de varargs, e nenhuma é mais específica: `int` e `Integer` não são subtipos um do outro. A chamada é ambígua.',
+      dica: '`int...` e `Integer...`: algum é mais específico que o outro?',
     },
     {
       id: 'junior-t2-e03-q11',
@@ -326,6 +450,7 @@ public class T {
       opcoes: ['Um array vazio', '`null`', 'Um array com um zero', 'A chamada não compila'],
       resposta: 0,
       explicacao: 'O compilador monta `new int[0]`. Por isso `v.length` funciona e vale 0, sem risco de `NullPointerException`.',
+      dica: 'Sem argumentos, o compilador monta que array?',
     },
     {
       id: 'junior-t2-e03-q12',
@@ -353,6 +478,7 @@ public class T {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Entre `int...` e `long...`, `int...` é mais específico, inclusive sem argumentos. Com um só `int`, a versão `Object` serve na segunda fase, por autoboxing, antes de os varargs serem considerados.',
+      dica: '`m(1)` acha `m(Object)` por boxing, antes da fase dos varargs; entre `int...` e `long...`, vale o mais específico.',
     },
     {
       id: 'junior-t2-e03-q13',
@@ -374,6 +500,7 @@ public class T {
 }`,
       resposta: '<1-2-3><>',
       explicacao: 'O primeiro argumento vai para o parâmetro fixo; o resto, para o varargs. Na segunda chamada, o varargs é vazio e o laço não roda.',
+      dica: 'O separador entra só antes do segundo número em diante; sem números, sobram os sinais.',
     },
     {
       id: 'junior-t2-e03-q14',
@@ -389,6 +516,7 @@ public class T {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Zero ou mais `String`, ou um `String[]` pronto. Um `int` não é `String`, e um `Object[]` não é um `String[]`, mesmo que só contenha strings.',
+      dica: 'O varargs aceita nada, valores soltos ou um array do mesmo tipo.',
     },
     {
       id: 'junior-t2-e03-q15',
@@ -403,6 +531,7 @@ public class T {
       ],
       resposta: 0,
       explicacao: 'Varargs é açúcar sintático resolvido na compilação. O método tem um parâmetro array comum e uma flag, `ACC_VARARGS`, que só o compilador usa. Cada chamada aloca um array novo.',
+      dica: 'Varargs é escrita abreviada: o array é montado na chamada.',
     },
   ],
 };

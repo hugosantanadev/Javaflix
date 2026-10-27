@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Um int[] de 4 elementos na memória: cabeçalho de 12 bytes, o campo length na posição 12 e os elementos de 4 bytes a partir da posição 16; o elemento de índice 2 fica em início + 16 + 2 × 4</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="s-cinza" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+    <marker id="s-laranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff9447"/></marker>
+  </defs>
+  <text x="30" y="36" font-family="Cascadia Code, Consolas, monospace" font-size="15" fill="#f3eee7">int[] primos = {2, 3, 5, 7};</text>
+
+  <rect x="30" y="104" width="76" height="42" rx="4" fill="#1b1916" stroke="#43403a"/>
+  <text x="68" y="130" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#f3eee7" text-anchor="middle">primos</text>
+  <path d="M108 125 L 136 125" stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#s-cinza)"/>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" text-anchor="middle">
+    <rect x="140" y="100" width="150" height="50" fill="#1b1916" stroke="#43403a"/>
+    <text x="215" y="122" fill="#8a8277">cabeçalho</text>
+    <text x="215" y="139" fill="#8a8277">(classe [I, hash...)</text>
+    <rect x="290" y="100" width="70" height="50" fill="#1b1916" stroke="#43403a"/>
+    <text x="325" y="120" fill="#8a8277">length</text>
+  </g>
+  <text x="325" y="140" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#56a8f5" text-anchor="middle">4</text>
+
+  <g>
+    <rect x="360" y="100" width="80" height="50" fill="#13221a" stroke="#4fd68b"/>
+    <rect x="440" y="100" width="80" height="50" fill="#13221a" stroke="#4fd68b"/>
+    <rect x="520" y="100" width="80" height="50" fill="#3a1d07" stroke="#ff7a1a" stroke-width="2"/>
+    <rect x="600" y="100" width="80" height="50" fill="#13221a" stroke="#4fd68b"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="18" font-weight="700" text-anchor="middle">
+    <text x="400" y="132" fill="#4fd68b">2</text><text x="480" y="132" fill="#4fd68b">3</text>
+    <text x="560" y="132" fill="#ff9447">5</text><text x="640" y="132" fill="#4fd68b">7</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#bcbec4" text-anchor="middle">
+    <text x="400" y="90">[0]</text><text x="480" y="90">[1]</text><text x="560" y="90">[2]</text><text x="640" y="90">[3]</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#f2c75c" text-anchor="middle">
+    <text x="140" y="168">0</text><text x="290" y="168">12</text><text x="360" y="168">16</text><text x="440" y="168">20</text>
+    <text x="520" y="168">24</text><text x="600" y="168">28</text><text x="680" y="168">32</text>
+  </g>
+  <text x="700" y="168" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#f2c75c">bytes</text>
+
+  <text x="140" y="222" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#ff9447">primos[2] → início + 16 + 2 × 4 = início + 24</text>
+  <path d="M520 208 C 540 196, 552 184, 556 156" stroke="#ff9447" stroke-width="1.6" fill="none" marker-end="url(#s-laranja)"/>
+  <text x="140" y="246" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bcbec4">Uma conta e um acesso, seja qual for o índice: por isso ler v[i] é O(1).</text>
+
+  <text x="30" y="286" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#8a8277">Os tamanhos são os de uma JVM de 64 bits com referências comprimidas, o padrão do HotSpot.</text>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">O fall-through de um switch com dia valendo 3: a execução pula direto para o case 3, imprime quarta, desce para o case 4 sem testá-lo, imprime quinta e para no break</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <text x="30" y="32" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7">switch (dia)   com dia = 3</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14">
+    <rect x="60" y="52" width="300" height="38" rx="6" fill="#191714" stroke="#2b2824"/>
+    <text x="76" y="76"><tspan fill="#5c5750">case 1:</tspan><tspan fill="#5c5750">  println("segunda")</tspan></text>
+    <rect x="60" y="98" width="300" height="38" rx="6" fill="#191714" stroke="#2b2824"/>
+    <text x="76" y="122"><tspan fill="#5c5750">case 2:</tspan><tspan fill="#5c5750">  println("terça")</tspan></text>
+    <rect x="60" y="144" width="300" height="38" rx="6" fill="#3a1d07" stroke="#ff7a1a"/>
+    <text x="76" y="168"><tspan fill="#ff9447">case 3:</tspan><tspan fill="#f3eee7">  println("quarta")</tspan></text>
+    <rect x="60" y="190" width="300" height="60" rx="6" fill="#2a1d10" stroke="#ff7a1a" stroke-dasharray="5 4"/>
+    <text x="76" y="214"><tspan fill="#ff9447">case 4:</tspan><tspan fill="#f3eee7">  println("quinta")</tspan></text>
+    <text x="146" y="238" fill="#db5c5c" font-weight="700">break;</text>
+    <rect x="60" y="258" width="300" height="38" rx="6" fill="#191714" stroke="#2b2824"/>
+    <text x="76" y="282"><tspan fill="#5c5750">case 5:</tspan><tspan fill="#5c5750">  println("sexta")</tspan></text>
+  </g>
+
+  <!-- salto direto -->
+  <path d="M30 40 C 18 90, 18 140, 54 162" fill="none" stroke="#ff7a1a" stroke-width="2"/>
+  <path d="M54 162 l-9 -2 m9 2 l-4 -8" fill="none" stroke="#ff7a1a" stroke-width="2"/>
+  <!-- desce sem testar -->
+  <path d="M372 164 C 392 176, 392 200, 372 212" fill="none" stroke="#f2c75c" stroke-width="2"/>
+  <path d="M372 212 l9 -2 m-9 2 l4 -8" fill="none" stroke="#f2c75c" stroke-width="2"/>
+  <!-- sai no break -->
+  <path d="M206 234 h170 C 420 234, 420 300, 440 300" fill="none" stroke="#db5c5c" stroke-width="2"/>
+  <path d="M440 300 l-8 -4 m8 4 l-8 4" fill="none" stroke="#db5c5c" stroke-width="2"/>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
+    <text x="400" y="120" fill="#ff9447">1. o valor 3 pula direto para o case 3,</text>
+    <text x="400" y="136" fill="#ff9447">sem testar o 1 e o 2</text>
+    <text x="400" y="186" fill="#f2c75c">2. sem break, a execução desce para o</text>
+    <text x="400" y="202" fill="#f2c75c">case 4, que nem é testado</text>
+    <text x="450" y="296" fill="#db5c5c">3. o break sai do switch</text>
+  </g>
+  <text x="400" y="56" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bdb5aa">saída: quarta</text>
+  <text x="400" y="74" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bdb5aa">       quinta</text>
+</svg>

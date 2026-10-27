@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'É `import static`, nunca `static import`; e `import` comum não importa métodos nem campos.',
     'Um `import static` de um nome traz todas as versões sobrecarregadas dele.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a decidir o que deve ser `static` e o que deve ser de cada objeto, e explica os erros de contexto estático. Peça sempre a justificativa de cada `static` que ela propuser: é a pergunta que separa uma constante legítima de um estado global escondido.',
+    pedido:
+      'Revise o uso de static nesta classe Java 21.\n<cole a classe aqui>\n- Para cada campo static, diga se o valor é o mesmo para todos os objetos e para a aplicação inteira.\n- Aponte coleções static que só crescem.\n- Aponte acessos a membros static por meio de uma referência e troque pelo nome da classe.',
+    erros: [
+      'Torna `static` um campo que é de cada objeto, como nome ou saldo.',
+      'Cria uma lista ou um mapa `static` como cache e nunca o limpa.',
+      'Resolve o erro de contexto estático tornando tudo `static`, em vez de criar um objeto.',
+    ],
+    conferir: [
+      'Crie dois objetos com valores diferentes e confira se cada um mantém os seus.',
+      'Procure campos `static` que não são `final` e pergunte quem os altera.',
+      'Aceite a sugestão da IDE de acessar membros `static` pelo nome da classe.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: More on Classes, Understanding Class Members',
@@ -149,6 +165,122 @@ public class Loja {
     comentarios:
       'O `resumo()` funciona antes de qualquer pedido existir, porque os campos `static` pertencem à classe. O `id` é de instância e `final`: cada pedido tem o seu, fixo. Guardar dinheiro em centavos inteiros evita os erros de arredondamento do `double`. Num sistema com várias threads, `proximoId++` precisaria de sincronização, assunto da temporada de concorrência.',
   },
+  bugs: [
+    {
+      id: 'junior-t1-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: non-static method somar(int,int) cannot be referenced from a static context`.',
+      codigo: `public class Calculadora {
+    int somar(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(somar(2, 3));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Calculadora {
+    int somar(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(new Calculadora().somar(2, 3));
+    }
+}`,
+      saidaCorrigida: '5',
+      dica: 'O `main` é `static`: existe algum objeto `Calculadora` ali para chamar o método?',
+      explicacao: 'Um método de instância precisa de um objeto, e o `main`, sendo `static`, não tem `this`. Ou se cria um objeto e se chama o método por ele, ou se declara `somar` como `static`, já que ele não usa nenhum campo.',
+    },
+    {
+      id: 'junior-t1-e04-b02',
+      dificuldade: 2,
+      sintoma: 'Foram cadastradas a Ana e a Bia, mas o programa mostra `Bia e Bia`.',
+      codigo: `class Cliente {
+    static String nome;
+
+    Cliente(String nome) {
+        Cliente.nome = nome;
+    }
+}
+
+public class Cadastro {
+    public static void main(String[] args) {
+        Cliente a = new Cliente("Ana");
+        Cliente b = new Cliente("Bia");
+        System.out.println(a.nome + " e " + b.nome);
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'saida', saida: 'Bia e Bia' },
+      correcao: `class Cliente {
+    String nome;
+
+    Cliente(String nome) {
+        this.nome = nome;
+    }
+}
+
+public class Cadastro {
+    public static void main(String[] args) {
+        Cliente a = new Cliente("Ana");
+        Cliente b = new Cliente("Bia");
+        System.out.println(a.nome + " e " + b.nome);
+    }
+}`,
+      saidaCorrigida: 'Ana e Bia',
+      dica: 'Quantas cópias do campo `nome` existem, com dois clientes criados?',
+      explicacao: 'Um campo `static` existe uma vez só, na classe. O segundo construtor sobrescreveu o nome do primeiro, e `a.nome` e `b.nome` leem o mesmo campo. O nome é de cada cliente: campo de instância, atribuído com `this.nome`.',
+    },
+    {
+      id: 'junior-t1-e04-b03',
+      dificuldade: 2,
+      sintoma: 'Cada pedido deveria ganhar um número novo, 1, 2 e 3, mas todos saem com o número 1.',
+      codigo: `class Pedido {
+    int contador;
+    int numero;
+
+    Pedido() {
+        contador++;
+        numero = contador;
+    }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        Pedido p1 = new Pedido();
+        Pedido p2 = new Pedido();
+        Pedido p3 = new Pedido();
+        System.out.println(p1.numero + " " + p2.numero + " " + p3.numero);
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'saida', saida: '1 1 1' },
+      correcao: `class Pedido {
+    static int contador;
+    int numero;
+
+    Pedido() {
+        contador++;
+        numero = contador;
+    }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        Pedido p1 = new Pedido();
+        Pedido p2 = new Pedido();
+        Pedido p3 = new Pedido();
+        System.out.println(p1.numero + " " + p2.numero + " " + p3.numero);
+    }
+}`,
+      saidaCorrigida: '1 2 3',
+      dica: 'O contador é de cada pedido ou da loja inteira? Quanto ele vale quando um pedido novo nasce?',
+      explicacao: 'Como campo de instância, cada pedido nasce com o seu próprio `contador` valendo 0, e todos chegam a 1. O contador precisa ser compartilhado entre todos os pedidos: `static`. O `numero`, sim, é de cada pedido.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t1-e04-q01',
@@ -158,6 +290,7 @@ public class Loja {
       opcoes: ['Uma, compartilhada por todos', 'Dez, uma por objeto', 'Onze', 'Nenhuma, até algum método `static` ser chamado'],
       resposta: 0,
       explicacao: 'O campo `static` pertence à classe. Existe uma única cópia, mesmo que nenhum objeto seja criado.',
+      dica: 'Um campo `static` pertence à classe, não aos objetos.',
     },
     {
       id: 'junior-t1-e04-q02',
@@ -184,6 +317,7 @@ public class Loja {
 }`,
       resposta: '2 1 3',
       explicacao: 'Cada objeto tem o seu `local`; o `total` é um só, incrementado nas três chamadas.',
+      dica: '`local` é de cada placar; `total` é um só, somado pelos três `marcar()`.',
     },
     {
       id: 'junior-t1-e04-q03',
@@ -205,6 +339,7 @@ public class Loja {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Um método `static` não roda sobre objeto nenhum, então não existe `this`. Seria preciso receber um `Teste` como parâmetro ou tornar o método de instância.',
+      dica: 'Um método `static` tem `this`?',
     },
     {
       id: 'junior-t1-e04-q04',
@@ -223,6 +358,7 @@ public class Loja {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Para membros `static`, o compilador usa só o tipo da variável e troca `c.modo` por `Config.modo`. O valor de `c` nunca é consultado.',
+      dica: 'O compilador troca `c.modo` pelo nome da classe. O `null` chega a ser usado?',
     },
     {
       id: 'junior-t1-e04-q05',
@@ -238,6 +374,7 @@ public class Loja {
       ],
       respostas: [0, 1, 2],
       explicacao: 'A sintaxe é `import static`, com o nome de um membro ou `*`. A ordem invertida não compila, e o `import` comum só aceita tipos, não métodos.',
+      dica: 'A ordem certa é `import static`, e o `import` comum só traz tipos.',
     },
     {
       id: 'junior-t1-e04-q06',
@@ -261,6 +398,7 @@ public class Loja {
       respostas: ['static'],
       saida: '3',
       explicacao: 'Com `static`, há um único `criados`, que cada construtor incrementa. Sem ele, o `main` nem compilaria, porque não poderia ler um campo de instância.',
+      dica: 'Qual modificador faz o campo ser um só para todos os robôs?',
     },
     {
       id: 'junior-t1-e04-q07',
@@ -287,6 +425,7 @@ public class Loja {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'As três formas chamam o mesmo método `static`: pela referência, pela classe e pelo nome sozinho. `quadrado(9 - 16)` é 49, e 9 + 16 + 49 = 74 antes de virar texto.',
+      dica: 'As três chamadas incrementam o mesmo contador; `quadrado(9 - 16)` é o quadrado de -7.',
     },
     {
       id: 'junior-t1-e04-q08',
@@ -303,6 +442,7 @@ public class Limites {
 }`,
       resposta: 2,
       explicacao: 'O `import` comum procura um **tipo** chamado `min` dentro de `java.lang.Math`, e ele não existe. Para importar o método, seria `import static java.lang.Math.min;`.',
+      dica: 'Um `import` sem `static` pode trazer um método?',
     },
     {
       id: 'junior-t1-e04-q09',
@@ -322,6 +462,7 @@ public class Limites {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 7 },
       explicacao: '`saudar` é de instância, e `main` é `static`. Seria preciso um objeto: `new App().saudar();`.',
+      dica: 'O `main` é `static`. Ele pode chamar um método de instância sem objeto?',
     },
     {
       id: 'junior-t1-e04-q10',
@@ -337,6 +478,7 @@ public class Limites {
       ],
       respostas: [0, 1],
       explicacao: 'Membros `static` existem sem objeto e podem ser usados direto. Membros de instância precisam de um objeto, e `this` não existe num contexto `static`.',
+      dica: 'Num contexto `static`, só o que é `static` está disponível direto.',
     },
     {
       id: 'junior-t1-e04-q11',
@@ -363,6 +505,7 @@ public class Banco {
 }`,
       resposta: '100 101 112 113',
       explicacao: 'O pós-incremento entrega o valor atual e depois soma 1. Depois de `b`, `proximo` vale 102, e o `+= 10` o leva a 112. `a.proximo` é o mesmo campo único, já em 113.',
+      dica: '`proximo++` usa o valor e depois incrementa; o `+= 10` muda o campo compartilhado.',
     },
     {
       id: 'junior-t1-e04-q12',
@@ -377,6 +520,7 @@ public class Banco {
       ],
       resposta: 0,
       explicacao: 'Um objeto `Math` não teria estado nenhum. Com o construtor `private`, `new Math()` não compila fora da classe, deixando claro que ela é só um conjunto de funções.',
+      dica: 'Faz sentido criar um objeto de uma classe que só tem métodos `static`?',
     },
     {
       id: 'junior-t1-e04-q13',
@@ -396,6 +540,7 @@ public class Limite {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `import static` traz a constante `MAX_VALUE`. Somar 1 a ela dá a volta, pelo complemento de dois, e chega ao menor `int`.',
+      dica: 'Somar 1 ao maior `int` dá a volta para o menor.',
     },
     {
       id: 'junior-t1-e04-q14',
@@ -414,6 +559,7 @@ public class Limite {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: '`final` impede uma nova atribuição. Uma constante `static final` recebe o valor uma única vez, na declaração ou num bloco `static`.',
+      dica: 'Um campo `final` pode receber outro valor depois de inicializado?',
     },
     {
       id: 'junior-t1-e04-q15',
@@ -428,6 +574,7 @@ public class Limite {
       ],
       resposta: 0,
       explicacao: 'Sem objeto, não há o que consultar na execução: o método é fixado na compilação. É por isso que métodos `static` não são sobrescritos, só escondidos, como você verá na temporada de herança.',
+      dica: 'Métodos `static` não dependem de objeto: a decisão pode ser tomada antes de rodar.',
     },
   ],
 };

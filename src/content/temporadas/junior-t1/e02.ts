@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Inicializadores de campo rodam uma vez, no construtor que não começa com `this(...)`.',
     '`this` não existe em métodos `static`.',
   ],
+  ia: {
+    uso:
+      'A IA gera construtores e cadeias de `this(...)` em segundos, a partir dos campos. Use-a também para revisar uma classe e dizer, para cada construtor, em que estado o objeto fica no fim: é o jeito mais rápido de achar um campo esquecido ou uma validação que só existe num dos caminhos.',
+    pedido:
+      'Revise os construtores desta classe Java 21.\n<cole a classe aqui>\n- Para cada construtor, diga o valor de cada campo no fim dele.\n- Aponte atribuições sem this. em que o parâmetro tem o nome do campo.\n- Se houver validação, garanta que todos os construtores passem por ela, encadeando com this(...).',
+    erros: [
+      'Valida os dados em um construtor e esquece os outros.',
+      'Copia a mesma lógica em vários construtores em vez de encadear com `this(...)`.',
+      'Escreve `campo = campo` sem `this.` quando o parâmetro tem o mesmo nome.',
+    ],
+    conferir: [
+      'Crie um objeto com cada construtor e imprima todos os campos.',
+      'Passe valores inválidos para cada construtor, não só para o principal.',
+      'Procure o aviso "assigned to itself" da IDE.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Providing Constructors for your Classes',
@@ -154,6 +170,136 @@ public class Relogio {
     comentarios:
       'Com a validação num único construtor, não existe caminho para criar uma hora inválida: todo `new` passa por ela. `somar` devolve um objeto novo em vez de alterar o atual, o que torna `Hora` quase imutável, uma ideia que a próxima temporada aprofunda. No Java 25, daria para validar também os minutos negativos em `Hora(int minutos)`, antes do `this(...)`.',
   },
+  bugs: [
+    {
+      id: 'junior-t1-e02-b01',
+      dificuldade: 2,
+      sintoma: 'O fone custa R$ 99,90, mas a vitrine mostra `Fone: R$ 0.0`.',
+      codigo: `class Produto {
+    String nome;
+    double preco;
+
+    Produto(String nome, double preco) {
+        this.nome = nome;
+        preco = preco;
+    }
+}
+
+public class Vitrine {
+    public static void main(String[] args) {
+        Produto p = new Produto("Fone", 99.9);
+        System.out.println(p.nome + ": R$ " + p.preco);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'Fone: R$ 0.0' },
+      correcao: `class Produto {
+    String nome;
+    double preco;
+
+    Produto(String nome, double preco) {
+        this.nome = nome;
+        this.preco = preco;
+    }
+}
+
+public class Vitrine {
+    public static void main(String[] args) {
+        Produto p = new Produto("Fone", 99.9);
+        System.out.println(p.nome + ": R$ " + p.preco);
+    }
+}`,
+      saidaCorrigida: 'Fone: R$ 99.9',
+      dica: 'Dentro do construtor, `preco` sozinho é o campo ou o parâmetro?',
+      explicacao: 'O parâmetro `preco` esconde o campo de mesmo nome, e `preco = preco` atribui o parâmetro a ele mesmo. O campo fica com o valor padrão, `0.0`. Com `this.preco`, a atribuição vai para o campo do objeto.',
+    },
+    {
+      id: 'junior-t1-e02-b02',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: constructor Pedido in class Pedido cannot be applied to given types`.',
+      codigo: `class Pedido {
+    int numero;
+
+    Pedido(int numero) {
+        this.numero = numero;
+    }
+}
+
+public class Caixa {
+    public static void main(String[] args) {
+        Pedido p = new Pedido();
+        System.out.println(p.numero);
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `class Pedido {
+    int numero;
+
+    Pedido(int numero) {
+        this.numero = numero;
+    }
+}
+
+public class Caixa {
+    public static void main(String[] args) {
+        Pedido p = new Pedido(1);
+        System.out.println(p.numero);
+    }
+}`,
+      saidaCorrigida: '1',
+      dica: 'A classe declara algum construtor? Então o compilador ainda cria o construtor sem parâmetros?',
+      explicacao: 'O construtor padrão só existe quando a classe não declara nenhum. Como `Pedido` declara um que recebe o número, `new Pedido()` não tem construtor correspondente. Passe o número ou declare também um construtor sem parâmetros.',
+    },
+    {
+      id: 'junior-t1-e02-b03',
+      dificuldade: 3,
+      sintoma: 'Nenhuma temperatura pode ficar abaixo do zero absoluto (-273.15 °C), mas o sensor registra `-573.3333333333334`.',
+      codigo: `class Temperatura {
+    double celsius;
+
+    Temperatura(double celsius) {
+        if (celsius < -273.15) celsius = -273.15;
+        this.celsius = celsius;
+    }
+
+    Temperatura(double valor, boolean fahrenheit) {
+        this.celsius = fahrenheit ? (valor - 32) * 5 / 9 : valor;
+    }
+}
+
+public class Sensor {
+    public static void main(String[] args) {
+        Temperatura t = new Temperatura(-1000, true);
+        System.out.println(t.celsius);
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: '-573.3333333333334' },
+      correcao: `class Temperatura {
+    double celsius;
+
+    Temperatura(double celsius) {
+        if (celsius < -273.15) celsius = -273.15;
+        this.celsius = celsius;
+    }
+
+    Temperatura(double valor, boolean fahrenheit) {
+        this(fahrenheit ? (valor - 32) * 5 / 9 : valor);
+    }
+}
+
+public class Sensor {
+    public static void main(String[] args) {
+        Temperatura t = new Temperatura(-1000, true);
+        System.out.println(t.celsius);
+    }
+}`,
+      saidaCorrigida: '-273.15',
+      dica: 'A regra do zero absoluto está nos dois construtores ou só em um?',
+      explicacao: 'A validação existe só no primeiro construtor, e o segundo grava o campo direto, sem passar por ela. Encadeando com `this(...)`, o segundo construtor converte o valor e entrega ao primeiro, e toda temperatura passa pela mesma regra.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t1-e02-q01',
@@ -168,6 +314,7 @@ public class Relogio {
       ],
       resposta: 0,
       explicacao: 'Construtor tem o nome da classe e nenhum tipo de retorno. Com `void`, é um método comum. Construtores também não podem ser `static`: eles sempre trabalham sobre um objeto novo.',
+      dica: 'Construtor: o mesmo nome da classe e nenhum tipo de retorno, nem `void`.',
     },
     {
       id: 'junior-t1-e02-q02',
@@ -188,6 +335,7 @@ Jogador j = new Jogador("Rex", 5);
 System.out.println(j.nome + " " + j.nivel);`,
       resposta: 'Rex 1',
       explicacao: 'Sem `this`, `nivel = nivel` atribui o parâmetro a ele mesmo. O campo fica com o valor do inicializador, 1.',
+      dica: 'Na linha `nivel = nivel`, qual `nivel` recebe o valor?',
     },
     {
       id: 'junior-t1-e02-q03',
@@ -213,6 +361,7 @@ Aluno b = new Aluno();`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 10 },
       explicacao: 'Como a classe declarou um construtor, o compilador não cria o padrão, sem parâmetros. Para `new Aluno()` funcionar, ele precisa ser declarado explicitamente.',
+      dica: 'A classe declara um construtor. O padrão sem parâmetros ainda existe?',
     },
     {
       id: 'junior-t1-e02-q04',
@@ -242,6 +391,7 @@ System.out.println(new Caixa().log);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Cada construtor chama o próximo antes de fazer o seu trabalho. O mais interno termina primeiro e escreve "C"; depois o de um parâmetro continua com "B", e o sem parâmetros, com "A".',
+      dica: 'O mais interno termina primeiro; cada um acrescenta a sua letra na volta.',
     },
     {
       id: 'junior-t1-e02-q05',
@@ -259,6 +409,7 @@ System.out.println(new Caixa().log);`,
       provas: ['829', '830'],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: '`A` encadeia construtores corretamente, e `B` é válida mesmo sem construtor sem parâmetros. `C` chama a si mesmo, um ciclo. `D` é um método `void` tentando devolver um valor. Em `E`, até o Java 21, o `this()` precisa vir primeiro.',
+      dica: 'Procure ciclos de `this(...)`, retornos indevidos e comandos antes de `this(...)`.',
     },
     {
       id: 'junior-t1-e02-q06',
@@ -281,6 +432,7 @@ public class Loja {
       respostas: ['this'],
       saida: 'Teclado',
       explicacao: 'Dentro do construtor, o parâmetro `nome` esconde o campo. `this.nome` é o campo do objeto que está sendo criado.',
+      dica: 'Qual palavra se refere ao objeto que está sendo construído?',
     },
     {
       id: 'junior-t1-e02-q07',
@@ -302,6 +454,7 @@ public class Loja {
       resposta: 10,
       provas: ['829', '830'],
       explicacao: 'Até o Java 21, a chamada a outro construtor tem de ser o primeiro comando. Bastaria `this(20.0);`. No Java 25, este código compila, porque a linha 9 não usa o objeto em construção.',
+      dica: 'Até o Java 21, o que precisa vir primeiro num construtor que chama outro?',
     },
     {
       id: 'junior-t1-e02-q08',
@@ -322,6 +475,7 @@ System.out.println(l.acesa);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com `void`, `Lampada()` é um método, não um construtor. O `new` usa o construtor padrão, e o método nunca é chamado: `acesa` fica com o valor padrão.',
+      dica: 'Com `void`, aquilo ainda é um construtor? Alguém chamou o método?',
     },
     {
       id: 'junior-t1-e02-q09',
@@ -342,6 +496,7 @@ Contador d = c.mais(5);
 System.out.println(c.total + " " + d.total + " " + (c == d));`,
       resposta: '10 10 true',
       explicacao: '`mais` devolve o próprio objeto, então todas as chamadas trabalham no mesmo contador. `d` é outro nome para ele.',
+      dica: 'Todas as chamadas devolvem o mesmo objeto.',
     },
     {
       id: 'junior-t1-e02-q10',
@@ -356,6 +511,7 @@ System.out.println(c.total + " " + d.total + " " + (c == d));`,
       ],
       resposta: 0,
       explicacao: 'Qualquer construtor declarado, com qualquer lista de parâmetros, impede a criação do padrão.',
+      dica: 'Basta declarar um construtor para o padrão sumir.',
     },
     {
       id: 'junior-t1-e02-q11',
@@ -388,6 +544,7 @@ System.out.println(f.min + " " + f.max);`,
       provas: ['831'],
       verificar: { tipo: 'saida' },
       explicacao: 'O Java 25 (JEP 513) aceita comandos antes de `this(...)`, desde que não usem o objeto em construção. Validar o argumento é o uso típico. Nas versões anteriores, a resposta seria "não compila".',
+      dica: 'No Java 25, comandos antes de `this(...)` são permitidos se não usarem o objeto.',
     },
     {
       id: 'junior-t1-e02-q12',
@@ -417,6 +574,7 @@ System.out.println(a.valor + b.valor);`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'IllegalArgumentException' },
       explicacao: 'Um construtor que lança exceção impede o objeto de existir: o `new` não devolve nada, e a linha seguinte nem chega a rodar. É a forma de garantir que só existam objetos válidos.',
+      dica: 'O segundo `new` passa um valor que a validação recusa.',
     },
     {
       id: 'junior-t1-e02-q13',
@@ -432,6 +590,7 @@ System.out.println(a.valor + b.valor);`,
       ],
       respostas: [0, 1],
       explicacao: '`this` é uma referência somente leitura para o objeto atual, que não existe em contexto `static`. A forma `this(...)` só vale dentro de construtores.',
+      dica: '`this` é uma referência ao objeto atual, e só existe em código de instância.',
     },
     {
       id: 'junior-t1-e02-q14',
@@ -456,6 +615,7 @@ System.out.println(new Teste().x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O inicializador `x = 10` roda uma única vez, no construtor que não começa com `this(...)`: `x` vale 10, depois 15. De volta ao construtor sem parâmetros, soma 1.',
+      dica: 'O inicializador `x = 10` não é copiado para o construtor que começa com `this(...)`; ele roda no outro.',
     },
     {
       id: 'junior-t1-e02-q15',
@@ -470,6 +630,7 @@ System.out.println(new Teste().x);`,
       ],
       resposta: 0,
       explicacao: 'O `javap -c` mostra os construtores como `<init>`. A instrução `new` só aloca; quem roda o construtor é o `invokespecial` que chama o `<init>`, e os inicializadores de campo são copiados para dentro dele.',
+      dica: 'O nome especial no bytecode tem sinais de menor e maior.',
     },
   ],
 };

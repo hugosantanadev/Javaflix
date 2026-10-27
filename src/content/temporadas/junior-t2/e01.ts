@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'O compilador exige `return` em todos os caminhos pela estrutura do código, sem avaliar as condições.',
     'Código depois de `return` é inalcançável e não compila.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a prever o efeito de cada chamada de método, desde que você peça a análise linha por linha. Use-a também para revisar métodos com efeitos colaterais escondidos, como ordenar ou limpar um array ou uma lista recebidos, que quem chamou não esperava.',
+    pedido:
+      'Analise este método Java 21 e a chamada a ele.\n<cole o código aqui>\n- Para cada linha do método, diga se ela altera o objeto recebido ou só a variável local.\n- Diga o que quem chamou enxerga depois da chamada.\n- Aponte efeitos colaterais que quem chamou pode não esperar e proponha uma versão sem eles.',
+    erros: [
+      'Explica que objetos são passados por referência e conclui que reatribuir o parâmetro muda quem chamou.',
+      'Espera que um método que recebe `String` consiga alterá-la.',
+      'Ordena ou altera dentro do método um array que quem chamou precisava intacto.',
+    ],
+    conferir: [
+      'Imprima a variável de quem chamou antes e depois da chamada.',
+      'Procure reatribuições de parâmetros e pergunte qual era a intenção.',
+      'Para `String` e wrappers, confira se o resultado volta pelo `return`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Calling Methods and Constructors, Passing Reference Data Type Arguments',
@@ -135,6 +151,114 @@ public class Descontos {
     comentarios:
       '`comDesconto` é uma função pura: só lê a entrada e devolve um resultado, o que a torna fácil de testar e segura de chamar de qualquer lugar. `aplicarDesconto` tem efeito colateral, útil quando copiar sairia caro, mas quem chama precisa saber disso. `zerar` só reatribuiu a cópia local da referência; para zerar de fato, seria preciso escrever em cada posição, por exemplo com `Arrays.fill(precos, 0)`.',
   },
+  bugs: [
+    {
+      id: 'junior-t2-e01-b01',
+      dificuldade: 2,
+      sintoma: 'Depois de esvaziar a fila, o painel ainda mostra `2 na fila`.',
+      codigo: `import java.util.*;
+
+public class Fila {
+    static void esvaziar(List<String> fila) {
+        fila = new ArrayList<>();
+    }
+
+    public static void main(String[] args) {
+        List<String> clientes = new ArrayList<>(List.of("Ana", "Bia"));
+        esvaziar(clientes);
+        System.out.println(clientes.size() + " na fila");
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: '2 na fila' },
+      correcao: `import java.util.*;
+
+public class Fila {
+    static void esvaziar(List<String> fila) {
+        fila.clear();
+    }
+
+    public static void main(String[] args) {
+        List<String> clientes = new ArrayList<>(List.of("Ana", "Bia"));
+        esvaziar(clientes);
+        System.out.println(clientes.size() + " na fila");
+    }
+}`,
+      saidaCorrigida: '0 na fila',
+      dica: 'O método mexe na lista de quem chamou ou só na cópia da referência?',
+      explicacao: 'O parâmetro é uma cópia da referência. Atribuir uma lista nova a ele muda só a cópia, e a lista do `main` continua com os dois nomes. Para esvaziar a lista de quem chamou, é preciso mexer no objeto: `fila.clear()`.',
+    },
+    {
+      id: 'junior-t2-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O e-mail deveria sair sem espaços e em minúsculas, mas continua `[  Ana@Mail.com ]`.',
+      codigo: `public class Formulario {
+    static void normalizar(String email) {
+        email = email.trim().toLowerCase();
+    }
+
+    public static void main(String[] args) {
+        String email = "  Ana@Mail.com ";
+        normalizar(email);
+        System.out.println("[" + email + "]");
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '[  Ana@Mail.com ]' },
+      correcao: `public class Formulario {
+    static String normalizar(String email) {
+        return email.trim().toLowerCase();
+    }
+
+    public static void main(String[] args) {
+        String email = "  Ana@Mail.com ";
+        email = normalizar(email);
+        System.out.println("[" + email + "]");
+    }
+}`,
+      saidaCorrigida: '[ana@mail.com]',
+      dica: 'Uma `String` pode ser alterada? Para onde vai o texto novo criado dentro do método?',
+      explicacao: 'A `String` é imutável, e o método só conseguiu reatribuir a própria cópia da referência. O texto normalizado se perdeu no fim do método. A saída é devolvê-lo com `return` e guardar o resultado em quem chamou.',
+    },
+    {
+      id: 'junior-t2-e01-b03',
+      dificuldade: 3,
+      sintoma: 'A mediana sai certa, mas a ordem da chamada, que deveria continuar `[9, 4, 7]`, aparece ordenada.',
+      codigo: `import java.util.Arrays;
+
+public class Notas {
+    static int mediana(int[] notas) {
+        Arrays.sort(notas);
+        return notas[notas.length / 2];
+    }
+
+    public static void main(String[] args) {
+        int[] chamada = {9, 4, 7};
+        System.out.println("Mediana: " + mediana(chamada));
+        System.out.println("Ordem da chamada: " + Arrays.toString(chamada));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'Mediana: 7\nOrdem da chamada: [4, 7, 9]' },
+      correcao: `import java.util.Arrays;
+
+public class Notas {
+    static int mediana(int[] notas) {
+        int[] copia = Arrays.stream(notas).sorted().toArray();
+        return copia[copia.length / 2];
+    }
+
+    public static void main(String[] args) {
+        int[] chamada = {9, 4, 7};
+        System.out.println("Mediana: " + mediana(chamada));
+        System.out.println("Ordem da chamada: " + Arrays.toString(chamada));
+    }
+}`,
+      saidaCorrigida: 'Mediana: 7\nOrdem da chamada: [9, 4, 7]',
+      dica: 'O `Arrays.sort` ordena qual array? É o mesmo que o `main` está usando?',
+      explicacao: 'O parâmetro aponta para o mesmo array do `main`, e o `sort` o ordena no lugar: o método tinha um efeito colateral. Ordenando uma cópia, a mediana é calculada sem mexer nos dados de quem chamou.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t2-e01-q01',
@@ -149,6 +273,7 @@ public class Descontos {
       ],
       resposta: 0,
       explicacao: 'O parâmetro sempre recebe uma cópia. Quando a cópia é uma referência, ela aponta para o mesmo objeto, o que dá a impressão de passagem por referência.',
+      dica: 'Pense no que exatamente é copiado quando o argumento é um objeto.',
     },
     {
       id: 'junior-t2-e01-q02',
@@ -169,6 +294,7 @@ public class Descontos {
 }`,
       resposta: '5 15',
       explicacao: '`n` é uma cópia de `a`. O método muda a cópia e devolve o resultado, guardado em `b`; `a` continua 5.',
+      dica: 'O `n` é uma cópia; o resultado só chega pelo `return`.',
     },
     {
       id: 'junior-t2-e01-q03',
@@ -196,6 +322,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A primeira linha do método altera a caixa de `x`. Depois, `c` passa a apontar para uma caixa nova, e o 99 vai para ela, que ninguém fora do método enxerga.',
+      dica: 'A primeira atribuição segue a seta; a partir do `new`, o método mexe em outro objeto.',
     },
     {
       id: 'junior-t2-e01-q04',
@@ -217,6 +344,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`String` é imutável: `s += "!"` cria uma `String` nova e reatribui o parâmetro. A variável `msg` continua apontando para "oi".',
+      dica: '`String` é imutável, e o `+=` só muda a cópia local.',
     },
     {
       id: 'junior-t2-e01-q05',
@@ -232,6 +360,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'O array é compartilhado pela referência copiada; a variável de quem chamou, não. Para trocar duas variáveis, seria preciso passagem por referência, que Java não tem. E nenhuma cópia de caracteres acontece: copia-se só a referência.',
+      dica: 'Separe mudar o objeto de reatribuir o parâmetro.',
     },
     {
       id: 'junior-t2-e01-q06',
@@ -257,6 +386,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'O compilador não avalia as condições: para ele, os dois `if` podem ser falsos, e o método terminaria sem devolver nada. Trocar o segundo `if` por um `else` resolve.',
+      dica: 'O compilador não avalia as condições, só a estrutura dos caminhos.',
     },
     {
       id: 'junior-t2-e01-q07',
@@ -275,6 +405,7 @@ public class Teste {
       respostas: ['return'],
       saida: '8',
       explicacao: '`return` encerra o método e entrega o valor da expressão a quem chamou. Num método `int`, ele é obrigatório.',
+      dica: 'Qual palavra devolve um valor do método?',
     },
     {
       id: 'junior-t2-e01-q08',
@@ -290,6 +421,7 @@ public class Teste {
 }`,
       resposta: 5,
       explicacao: 'Depois do `return`, nada pode rodar, e o compilador recusa comandos inalcançáveis. Em métodos `void`, `return;` sem valor serve para sair mais cedo, mas precisa ser o último comando do bloco.',
+      dica: 'Pode haver código depois de um `return`?',
     },
     {
       id: 'junior-t2-e01-q09',
@@ -313,6 +445,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A primeira escrita vai para o array de `dados`. Depois, `v` passa a apontar para um array novo, e o 40 vai para ele.',
+      dica: '`v[0] = 10` muda o array do `main`; depois, `v` aponta para outro.',
     },
     {
       id: 'junior-t2-e01-q10',
@@ -335,6 +468,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Ignorar o retorno compila, e o resultado da primeira chamada simplesmente se perde. `x` ainda vale 4 na linha seguinte: 8 + 2 = 10.',
+      dica: 'O primeiro `dobro(x)` é descartado; o segundo é somado com `dobro(1)`.',
     },
     {
       id: 'junior-t2-e01-q11',
@@ -362,6 +496,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O método devolve a mesma referência que recebeu. `a`, `b` e `c` apontam para o único ponto, incrementado duas vezes.',
+      dica: '`mover` altera e devolve o mesmo objeto nas duas chamadas.',
     },
     {
       id: 'junior-t2-e01-q12',
@@ -378,6 +513,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 3 },
       explicacao: 'Parâmetros podem ser `final`, e então não podem ser reatribuídos, nem com `*=`. Bastaria `return valor * (1 + taxa);`.',
+      dica: 'Um parâmetro `final` pode receber um novo valor?',
     },
     {
       id: 'junior-t2-e01-q13',
@@ -397,6 +533,7 @@ public class Teste {
 }`,
       resposta: '5',
       explicacao: '`Integer` é imutável. `n++` desembrulha, soma, embrulha num objeto novo e reatribui a variável local `n`. O `Integer` de `contador` nunca muda.',
+      dica: '`Integer` é imutável; o `n++` cria outro objeto só para a cópia.',
     },
     {
       id: 'junior-t2-e01-q14',
@@ -411,6 +548,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Para a JVM, `this` é um argumento implícito, passado por valor como os outros. Os parâmetros declarados começam na posição 1. Em métodos `static`, que não têm `this`, começam na 0.',
+      dica: 'Num método de instância, o primeiro "parâmetro" escondido é o objeto atual.',
     },
     {
       id: 'junior-t2-e01-q15',
@@ -438,6 +576,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`a` altera o objeto de `s` e devolve a mesma referência: `s` e `r1` são o mesmo "xa". `b` cria outro objeto e o devolve, sem tocar em `s`.',
+      dica: '`a` mexe no objeto de `s`; `b` só troca a própria cópia antes de devolver.',
     },
   ],
 };

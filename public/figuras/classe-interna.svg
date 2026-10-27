@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Cada objeto de uma classe interna guarda um campo escondido, this$0, que aponta para o objeto externo: as duas faixas apontam para a playlist Rock e incrementam o mesmo tocadas; um objeto de classe aninhada estática, como o Endereco, não tem esse campo</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="s-azul" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#56a8f5"/></marker>
+  </defs>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <rect x="270" y="40" width="220" height="86" rx="8" fill="#0f1b26" stroke="#56a8f5"/>
+    <text x="284" y="60">Playlist</text>
+    <rect x="40" y="196" width="200" height="86" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="54" y="216">Faixa (interna)</text>
+    <rect x="300" y="196" width="200" height="86" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="314" y="216">Faixa (interna)</text>
+    <rect x="560" y="196" width="170" height="86" rx="8" fill="#1b1916" stroke="#43403a"/>
+    <text x="574" y="216">Endereco (static)</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700">
+    <text x="284" y="88" fill="#56a8f5">nome = "Rock"</text>
+    <text x="284" y="112" fill="#56a8f5">tocadas = 2</text>
+    <text x="54" y="244" fill="#4fd68b">titulo = "Faixa 1"</text>
+    <text x="54" y="268" fill="#7fa6c8">this$0</text>
+    <text x="314" y="244" fill="#4fd68b">titulo = "Faixa 2"</text>
+    <text x="314" y="268" fill="#7fa6c8">this$0</text>
+    <text x="574" y="244" fill="#bcbec4">rua, cidade</text>
+    <text x="574" y="268" fill="#6b645b">sem this$0</text>
+  </g>
+  <g stroke="#56a8f5" stroke-width="1.8" stroke-dasharray="5 3" fill="none" marker-end="url(#s-azul)">
+    <path d="M108 263 C 272 263, 262 170, 292 130"/>
+    <path d="M368 263 C 540 263, 560 100, 496 92"/>
+  </g>
+  <text x="30" y="176" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#7fa6c8">campo escondido: o objeto externo</text>
+
+  <text x="30" y="306" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Por isso uma interna precisa de rock.new Faixa(...), e mantém a playlist viva enquanto existir.</text>
+</svg>

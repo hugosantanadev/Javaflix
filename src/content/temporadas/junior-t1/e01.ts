@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Campo de instância não pode ser acessado pelo nome da classe: `Conta.saldo` não compila se `saldo` não for `static`.',
     'O `equals` herdado de `Object` também compara identidade, até a classe sobrescrevê-lo.',
   ],
+  ia: {
+    uso:
+      'A IA é boa para desenhar, em texto, quais variáveis apontam para quais objetos depois de cada linha, e para gerar classes simples a partir de uma descrição. O cuidado é com o que ela não diz: campos que ficam `null`, objetos compartilhados sem querer e `==` usado como se comparasse conteúdo.',
+    pedido:
+      'Acompanhe este trecho Java 21 linha por linha.\n<cole o código aqui>\n- Depois de cada atribuição, diga para qual objeto cada variável aponta (objeto 1, objeto 2...).\n- Diga quantos objetos foram criados e quais ficaram sem referência no fim.\n- Aponte qualquer campo de tipo objeto que pode ser usado enquanto ainda é null.',
+    erros: [
+      'Explica o `==` entre objetos como comparação de valores.',
+      'Deixa campos de coleção sem inicializar.',
+      'Conta objetos pelas variáveis, e não pelos `new`.',
+    ],
+    conferir: [
+      'Conte os `new`: cada um cria exatamente um objeto.',
+      'Imprima os campos de um objeto recém-criado para ver os valores padrão.',
+      'No depurador, compare os números `@` das variáveis para ver quais apontam para o mesmo objeto.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Creating and Using Objects',
@@ -162,6 +178,132 @@ public class Banco {
     comentarios:
       'A segunda transferência é recusada porque `mesma` é a conta da Ana, que já tinha só 70 depois da primeira. O curto-circuito do `||` garante que `valor > saldo` nunca é avaliado com destino nulo, e a ordem das condições importa. Num sistema real, dinheiro seria `BigDecimal` e a regra ficaria protegida por encapsulamento, assunto da próxima temporada.',
   },
+  bugs: [
+    {
+      id: 'junior-t1-e01-b01',
+      dificuldade: 2,
+      sintoma: 'Só a Bia se mudou para Natal, mas o programa mostra `Ana: Natal, Bia: Natal`.',
+      codigo: `class Endereco {
+    String cidade;
+}
+
+public class Mudanca {
+    public static void main(String[] args) {
+        Endereco casaAna = new Endereco();
+        casaAna.cidade = "Recife";
+        Endereco casaBia = casaAna;
+        casaBia.cidade = "Natal";
+        System.out.println("Ana: " + casaAna.cidade + ", Bia: " + casaBia.cidade);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'Ana: Natal, Bia: Natal' },
+      correcao: `class Endereco {
+    String cidade;
+}
+
+public class Mudanca {
+    public static void main(String[] args) {
+        Endereco casaAna = new Endereco();
+        casaAna.cidade = "Recife";
+        Endereco casaBia = new Endereco();
+        casaBia.cidade = "Natal";
+        System.out.println("Ana: " + casaAna.cidade + ", Bia: " + casaBia.cidade);
+    }
+}`,
+      saidaCorrigida: 'Ana: Recife, Bia: Natal',
+      dica: 'Quantos objetos `Endereco` este programa cria? Conte os `new`.',
+      explicacao: 'Atribuir `casaAna` a `casaBia` copia a referência: as duas variáveis passam a apontar para o mesmo endereço, e mudar a cidade por uma muda o que a outra enxerga. Cada pessoa precisa do seu próprio objeto, criado com `new`.',
+    },
+    {
+      id: 'junior-t1-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O programa para com `NullPointerException` ao adicionar o primeiro item ao carrinho.',
+      codigo: `import java.util.*;
+
+class Carrinho {
+    List<String> itens;
+
+    void adicionar(String item) {
+        itens.add(item);
+    }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        Carrinho c = new Carrinho();
+        c.adicionar("livro");
+        System.out.println(c.itens);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `import java.util.*;
+
+class Carrinho {
+    List<String> itens = new ArrayList<>();
+
+    void adicionar(String item) {
+        itens.add(item);
+    }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        Carrinho c = new Carrinho();
+        c.adicionar("livro");
+        System.out.println(c.itens);
+    }
+}`,
+      saidaCorrigida: '[livro]',
+      dica: 'Qual é o valor padrão de um campo do tipo `List`? Alguém criou a lista?',
+      explicacao: 'O campo `itens` declara a variável, mas não cria lista nenhuma: como todo campo de tipo objeto, ele começa `null`. O `add` é chamado numa referência vazia. Inicializando o campo na declaração, cada carrinho já nasce com uma lista vazia.',
+    },
+    {
+      id: 'junior-t1-e01-b03',
+      dificuldade: 3,
+      sintoma: 'O cliente está na mesma posição da loja, (2, 5), mas o programa diz `Cliente longe`.',
+      codigo: `class Ponto {
+    int x, y;
+}
+
+public class Mapa {
+    public static void main(String[] args) {
+        Ponto loja = new Ponto();
+        loja.x = 2; loja.y = 5;
+        Ponto cliente = new Ponto();
+        cliente.x = 2; cliente.y = 5;
+        if (loja == cliente) {
+            System.out.println("Cliente na loja");
+        } else {
+            System.out.println("Cliente longe");
+        }
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'Cliente longe' },
+      correcao: `class Ponto {
+    int x, y;
+}
+
+public class Mapa {
+    public static void main(String[] args) {
+        Ponto loja = new Ponto();
+        loja.x = 2; loja.y = 5;
+        Ponto cliente = new Ponto();
+        cliente.x = 2; cliente.y = 5;
+        if (loja.x == cliente.x && loja.y == cliente.y) {
+            System.out.println("Cliente na loja");
+        } else {
+            System.out.println("Cliente longe");
+        }
+    }
+}`,
+      saidaCorrigida: 'Cliente na loja',
+      dica: 'O `==` entre duas referências pergunta se os valores são iguais ou se é o mesmo objeto?',
+      explicacao: 'São dois objetos diferentes com os mesmos valores, e o `==` entre referências só é verdadeiro para o mesmo objeto. Para comparar posições, compare os campos. Mais adiante neste cargo, sobrescrever `equals` deixa essa comparação dentro da própria classe.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t1-e01-q01',
@@ -176,6 +318,7 @@ public class Banco {
       ],
       resposta: 0,
       explicacao: 'O objeto mora no heap; a variável guarda só o endereço dele. Por isso duas variáveis podem apontar para o mesmo objeto.',
+      dica: 'O objeto fica no heap. O que vai para a variável?',
     },
     {
       id: 'junior-t1-e01-q02',
@@ -192,6 +335,7 @@ c.itens += 2;
 System.out.println(c.itens + " " + c.rotulo);`,
       resposta: '2 null',
       explicacao: 'Campos começam com o valor padrão: `itens` vale 0 e passa a 2; `rotulo` continua `null`, que a concatenação transforma em texto.',
+      dica: 'Campos começam com o valor padrão: `0` para `int` e `null` para objetos.',
     },
     {
       id: 'junior-t1-e01-q03',
@@ -213,6 +357,7 @@ System.out.println(a.ml + " " + (a == b) + " " + (a == c));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`a` e `b` são o mesmo copo: os 50 ml somados por `b` aparecem em `a`. `c` recebeu o mesmo valor, mas é outro objeto, e `==` compara identidade.',
+      dica: '`a` e `b` são o mesmo copo; `c` é outro, que só copiou o número.',
     },
     {
       id: 'junior-t1-e01-q04',
@@ -229,6 +374,7 @@ System.out.println(pontos);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: '`pontos` é local e só recebe valor dentro do `if`. Para o compilador, `bonus` poderia ser `false`, então há um caminho em que `pontos` é lido sem valor. Um `else` com atribuição resolveria.',
+      dica: 'Variável local precisa de atribuição em todos os caminhos antes de ser lida.',
     },
     {
       id: 'junior-t1-e01-q05',
@@ -254,6 +400,7 @@ System.out.println(pontos);`,
 Campos x = new Campos();
 System.out.println(x.a + " " + x.b + " " + x.c + " " + x.d);`,
       explicacao: 'Campos sempre recebem o valor padrão do tipo: 0, 0.0, `false` e `null`. A exigência de atribuir antes de ler vale só para variáveis locais.',
+      dica: 'Lembre os valores padrão de cada tipo de campo.',
     },
     {
       id: 'junior-t1-e01-q06',
@@ -275,6 +422,7 @@ System.out.println(c.placa.toUpperCase());`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: 'O objeto `c` existe, mas o campo `placa` nunca recebeu uma `String`. Chamar `toUpperCase()` numa referência nula lança a exceção.',
+      dica: 'Qual é o valor padrão de um campo `String`? E o que acontece ao chamar método nele?',
     },
     {
       id: 'junior-t1-e01-q07',
@@ -294,6 +442,7 @@ public class Biblioteca {
       respostas: ['new'],
       saida: 'Dom Casmurro',
       explicacao: '`new` reserva a memória do objeto, inicializa os campos e chama o construtor. O resultado é a referência guardada em `l`.',
+      dica: 'Que palavra reservada cria objetos?',
     },
     {
       id: 'junior-t1-e01-q08',
@@ -314,6 +463,7 @@ public class Teste {
 }`,
       resposta: 9,
       explicacao: 'Cada conta tem o seu `saldo`, então é preciso dizer **de qual objeto**: `c.saldo`. Pelo nome da classe só se acessam membros `static`, assunto do episódio 4.',
+      dica: '`saldo` é um campo do objeto ou da classe?',
     },
     {
       id: 'junior-t1-e01-q09',
@@ -336,6 +486,7 @@ System.out.println(a.valor + " " + b.valor + " " + (a.proximo == null));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`b` guardou a referência do segundo nó antes de `a.proximo` virar `null`. Apagar uma referência não apaga o objeto, que continua acessível por `b`.',
+      dica: '`b` guardou a referência do segundo nó antes de `a.proximo` virar `null`.',
     },
     {
       id: 'junior-t1-e01-q10',
@@ -350,6 +501,7 @@ c = a;`,
       opcoes: ['2', '1', '3', '4'],
       resposta: 0,
       explicacao: 'Objetos só nascem com `new`, e há dois. As outras linhas apenas copiam referências: no fim, `a`, `b` e `c` apontam para o primeiro, e `d` para o segundo.',
+      dica: 'Conte os `new`, não as variáveis.',
     },
     {
       id: 'junior-t1-e01-q11',
@@ -374,6 +526,7 @@ z.incrementar();
 System.out.println(x.valor + " " + y.valor);`,
       resposta: '3 1',
       explicacao: 'Cada contador tem o seu `valor`. `z` é outro nome para `x`, então o terceiro incremento também vai para `x`.',
+      dica: '`z` aponta para o mesmo contador de `x`.',
     },
     {
       id: 'junior-t1-e01-q12',
@@ -392,6 +545,7 @@ System.out.println(texto);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Concatenar `null` não chama nenhum método no objeto: a referência nula vira o texto "null". A exceção só aconteceria com algo como `a.nome.length()`.',
+      dica: 'Concatenar `null` dá o texto `"null"`, e o `double` padrão é `0.0`.',
     },
     {
       id: 'junior-t1-e01-q13',
@@ -406,6 +560,7 @@ System.out.println(texto);`,
       ],
       resposta: 0,
       explicacao: 'São etapas separadas: `new` aloca e zera (de onde vêm os valores padrão), `dup` duplica a referência e `invokespecial` chama o `<init>`, o construtor. A classe é carregada uma única vez, na primeira utilização.',
+      dica: 'Lembre as três instruções: `new`, `dup` e `invokespecial`.',
     },
     {
       id: 'junior-t1-e01-q14',
@@ -422,6 +577,7 @@ System.out.println(texto);`,
       respostas: [0, 1],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: 'Variáveis locais sem valor não podem ser lidas, e `x++` lê antes de escrever. Posições de array têm valor padrão, e `null` é um valor como outro qualquer: atribuído, pode ser impresso e comparado.',
+      dica: 'Variáveis locais sem atribuição não podem ser lidas; posições de array, sim.',
     },
     {
       id: 'junior-t1-e01-q15',
@@ -439,6 +595,7 @@ System.out.println((p1 == p2) + " " + p1.equals(p2) + " " + (p1.x == p2.x));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'São dois objetos, e `==` compara identidade. O `equals` herdado de `Object` faz a mesma comparação, até que a classe o sobrescreva, como você verá na temporada de herança. Os campos, `int`, são comparados por valor.',
+      dica: 'Dois objetos diferentes: o `==` e o `equals` herdado comparam o quê?',
     },
   ],
 };

@@ -1,0 +1,17 @@
+{
+  "q01": "O que acontece com a execução do método logo depois de um `return`?",
+  "q02": "Um laço com condição constante entra na análise de fluxo; o `if (false)` é a exceção aberta de propósito.",
+  "q03": "O compilador não executa o `if`. Existe um caminho em que `x` chega à leitura sem valor?",
+  "q04": "Com a constante `true`, o caminho do falso existe para o compilador?",
+  "q05": "O erro de \"missing return\" é apontado onde o método termina sem devolver nada.",
+  "q06": "O laço só termina pelo `return`. Em que posição está o primeiro número negativo?",
+  "q07": "Que palavra cria o caminho que faltava, dando valor a `x` quando o `if` não entra?",
+  "q08": "Um bloco interno não pode declarar uma variável com o nome de outra que ainda está viva.",
+  "q09": "Os dois laços vêm em sequência: a variável do primeiro já morreu quando o segundo começa.",
+  "q10": "`final` inicializada com constante conta como constante. O laço pode terminar?",
+  "q11": "Um método pode terminar com `return`, com `throw` ou nunca terminar. Procure o que deixa um caminho sem saída.",
+  "q12": "Depois de um `break` no mesmo bloco, o que vem logo abaixo pode rodar?",
+  "q13": "Pense na palavra \"definida\": certa em todos os caminhos, antes de ler.",
+  "q14": "Um `switch` com `default` dá valor a `x` em todos os caminhos. Qual `case` roda com `n` valendo 1?",
+  "q15": "Siga o caminho em que `b` é verdadeiro: quantas vezes `x` recebe valor?"
+}

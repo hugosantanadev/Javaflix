@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="t">
+  <title id="t">Os caminhos de um if sem else: pelo caminho verdadeiro x recebe 1, pelo falso x continua sem valor, e os dois caminhos chegam ao println; como x não tem valor certo nos dois, o compilador recusa a leitura</title>
+  <rect width="760" height="340" fill="#13110f"/>
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/>
+    </marker>
+  </defs>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" text-anchor="middle">
+    <rect x="250" y="20" width="160" height="38" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="330" y="44" fill="#f3eee7">int x;</text>
+    <path d="M330 82 l60 26 l-60 26 l-60 -26 z" fill="#2a2410" stroke="#f2c75c"/>
+    <text x="330" y="113" fill="#f2c75c">ok?</text>
+    <rect x="60" y="160" width="160" height="38" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="140" y="184" fill="#4fd68b">x = 1;</text>
+    <rect x="250" y="262" width="160" height="38" rx="6" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="330" y="286" fill="#ff8a80">println(x);</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#seta)">
+    <line x1="330" y1="58" x2="330" y2="80"/>
+    <path d="M270 108 C 170 108, 140 120, 140 156"/>
+    <path d="M140 198 C 140 240, 230 270, 246 276"/>
+    <path d="M390 108 C 480 108, 480 220, 414 276"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
+    <text x="196" y="100" fill="#4fd68b">verdadeiro</text>
+    <text x="440" y="100" fill="#db5c5c">falso</text>
+    <text x="40" y="232" fill="#4fd68b">aqui x = 1</text>
+    <text x="474" y="200" fill="#db5c5c">aqui x continua</text>
+    <text x="474" y="216" fill="#db5c5c">sem valor</text>
+  </g>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">
+    <text x="560" y="40">Na junção, o compilador</text>
+    <text x="560" y="58">pergunta: x tem valor</text>
+    <text x="560" y="76">em todos os caminhos?</text>
+    <text x="560" y="110" fill="#db5c5c">Num deles, não:</text>
+    <text x="560" y="128" fill="#db5c5c">"might not have been</text>
+    <text x="560" y="146" fill="#db5c5c">initialized"</text>
+  </g>
+  <text x="30" y="328" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">Um else com x = 2 daria valor ao caminho falso, e os dois caminhos chegariam à leitura com x atribuída.</text>
+</svg>

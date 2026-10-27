@@ -1,0 +1,17 @@
+{
+  "q01": "O que entra na assinatura de um método?",
+  "q02": "`byte` e `char` alargam para `int`; `float` alarga para `double`.",
+  "q03": "O tipo de retorno e o nome do parâmetro entram na assinatura?",
+  "q04": "Um `int` alarga para `long` na fase 1; um `Integer` já é um `Object`.",
+  "q05": "Compare as listas de parâmetros: `int[]` e `int...` são o mesmo tipo para a assinatura.",
+  "q06": "A versão sem parâmetros chama a outra pelo mesmo nome.",
+  "q07": "Com dois `int`, as duas versões servem por alargamento. Alguma é mais específica?",
+  "q08": "Um `int` vira `Long`?",
+  "q09": "`String` e `Integer`: algum é mais específico que o outro?",
+  "q10": "A escolha usa o tipo declarado de cada argumento.",
+  "q11": "Alargar vem antes de embrulhar, e varargs fica por último.",
+  "q12": "`char` alarga para `int` na fase 1; um `Character` já é exato na fase 1.",
+  "q13": "Só o que muda a lista de parâmetros diferencia sobrecargas.",
+  "q14": "`s + s` com dois `short` dá que tipo?",
+  "q15": "O compilador grava a escolha no bytecode, com os tipos dos parâmetros."
+}

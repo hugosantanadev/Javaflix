@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`x =+ 1` não é `x += 1`: é `x = +1`.',
     '`if (flag = true)` compila com `boolean` e sempre entra; com `int`, `if (x = 5)` não compila.',
   ],
+  ia: {
+    uso:
+      'Use a IA para gerar trechos com incrementos e para montar, passo a passo, a tabela com o valor de cada operando. É um bom treino para a prova, desde que você confira tudo: incremento dentro de expressão é um dos pontos em que os modelos mais erram, porque misturam as regras do Java com as do C.',
+    pedido:
+      'Estou estudando incremento e atribuição composta para a certificação Java (Java 21). Monte 6 trechos curtos com ++, --, += e *= em variáveis int, byte e char.\n- Não mostre as saídas.\n- Depois que eu responder, mostre uma tabela com o valor de cada operando e da variável a cada passo, da esquerda para a direita.\n- Cite a seção da especificação (JLS) que justifica cada regra.',
+    erros: [
+      'Diz que `x = x++` incrementa `x`, ou que `i++ + ++i` é comportamento indefinido, como em C.',
+      'Esquece o cast escondido do operador composto e afirma que `byte b = 10; b += 5;` não compila.',
+      'Lê `x =+ 1` como se fosse `x += 1`.',
+    ],
+    conferir: [
+      'Rode o trecho e compare com a explicação.',
+      'Use o depurador do IntelliJ, linha a linha, para ver cada valor mudar.',
+      'Confira a regra do cast na seção 15.26.2 da JLS.',
+    ],
+  },
   recursos: [
     {
       titulo: 'The Java Tutorials: Assignment, Arithmetic, and Unary Operators',
@@ -116,6 +132,84 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O 27 é famoso porque, apesar de pequeno, sobe até 9.232 antes de descer. A conjectura de Collatz é um dos problemas abertos mais simples de enunciar da matemática: já foi verificada para todos os números até mais de 2⁶⁸, mas ninguém tem uma prova. Repare que `n /= 2` e `passos++` deixam o laço curto e legível.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t2-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: incompatible types: possible lossy conversion from int to byte`.',
+      codigo: `public class Andar {
+    public static void main(String[] args) {
+        byte andar = 3;
+        andar = andar + 1;
+        System.out.println("Andar " + andar);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Andar {
+    public static void main(String[] args) {
+        byte andar = 3;
+        andar += 1;
+        System.out.println("Andar " + andar);
+    }
+}`,
+      saidaCorrigida: 'Andar 4',
+      dica: 'Qual é o tipo de `andar + 1`? Compare com o tipo da variável que recebe o resultado.',
+      explicacao: '`andar + 1` é uma conta em `int`, e um `int` não entra num `byte` sem cast. O operador composto `+=` traz o cast embutido, por isso `andar += 1;` compila.',
+    },
+    {
+      id: 'estagiario-t2-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O `javac` recusa o programa com `error: unexpected type`, dizendo que esperava uma variável e encontrou um valor.',
+      codigo: `public class Proximo {
+    public static void main(String[] args) {
+        int atual = 7;
+        int proximo = ++(atual + 1);
+        System.out.println(proximo);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Proximo {
+    public static void main(String[] args) {
+        int atual = 7;
+        int proximo = atual + 1;
+        System.out.println(proximo);
+    }
+}`,
+      saidaCorrigida: '8',
+      dica: 'O `++` precisa de um lugar onde guardar o novo valor. `atual + 1` é um lugar?',
+      explicacao: 'Incremento e decremento só funcionam em variáveis, porque precisam gravar o resultado. `atual + 1` é um valor calculado, sem lugar para guardar nada. Para o próximo número, basta somar.',
+    },
+    {
+      id: 'estagiario-t2-e02-b03',
+      dificuldade: 2,
+      sintoma: 'Imprime `Pontos: 10`, mas são 3 rodadas de 10 pontos: deveria imprimir `Pontos: 30`.',
+      codigo: `public class Placar {
+    public static void main(String[] args) {
+        int pontos = 0;
+        for (int rodada = 1; rodada <= 3; rodada++) {
+            pontos =+ 10;
+        }
+        System.out.println("Pontos: " + pontos);
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'Pontos: 10' },
+      correcao: `public class Placar {
+    public static void main(String[] args) {
+        int pontos = 0;
+        for (int rodada = 1; rodada <= 3; rodada++) {
+            pontos += 10;
+        }
+        System.out.println("Pontos: " + pontos);
+    }
+}`,
+      saidaCorrigida: 'Pontos: 30',
+      dica: 'O laço roda três vezes. Leia a linha de dentro dele caractere por caractere: em que ordem estão o `=` e o `+`?',
+      explicacao: '`pontos =+ 10` é `pontos = +10`: atribui o número 10 positivo a cada volta, em vez de somar. O operador composto é `+=`, com o `+` antes do `=`. O compilador aceita os dois, e só o teste da saída mostra a diferença.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t2-e02-q01',
@@ -128,6 +222,7 @@ System.out.println(a++ + " " + a);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`a++` vale 5 (o valor antigo) e deixa `a` em 6. Como os operandos são avaliados da esquerda para a direita, o segundo `a` já lê o 6.',
+      dica: '`a++` entrega o valor antigo à expressão; o incremento só aparece para quem lê `a` depois.',
     },
     {
       id: 'estagiario-t2-e02-q02',
@@ -139,6 +234,7 @@ int y = x++ + x++;
 System.out.println(x + " " + y);`,
       resposta: '3 3',
       explicacao: 'O primeiro `x++` vale 1 (x vira 2); o segundo vale 2 (x vira 3). y = 1 + 2 = 3, e x terminou em 3.',
+      dica: 'Troque cada `x++` pelo valor que ele entrega, da esquerda para a direita, anotando quanto `x` vale depois de cada um.',
     },
     {
       id: 'estagiario-t2-e02-q03',
@@ -152,6 +248,7 @@ System.out.println(i);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Da esquerda para a direita: `i++` vale 2 (i vira 3); `++i` vale 4 (i vira 4). A expressão fica 2 · 2 + 4 = 8, e a atribuição grava 8 em `i`, por cima do 4.',
+      dica: 'Troque cada incremento pelo seu valor, na ordem. A atribuição final grava por cima de tudo o que aconteceu com `i`.',
     },
     {
       id: 'estagiario-t2-e02-q04',
@@ -166,6 +263,7 @@ System.out.println(x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Em `x = x++`, o lado direito vale o valor antigo, e a atribuição grava esse valor por cima do incremento. Duas vezes ou mil, `x` continua 10.',
+      dica: '`x = x++` grava de volta o valor antigo. Repetir isso muda alguma coisa?',
     },
     {
       id: 'estagiario-t2-e02-q05',
@@ -182,6 +280,7 @@ System.out.println(x);`,
       respostas: [0, 1, 3],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Os operadores compostos e o `++` têm cast implícito para o tipo da variável. Já `b + 1` e `b * 2` são `int` (byte é promovido na conta), e atribuir `int` a `byte` exige cast explícito.',
+      dica: 'O operador composto e o `++` têm um cast escondido; a forma longa, `b = b + 1`, não tem.',
     },
     {
       id: 'estagiario-t2-e02-q06',
@@ -195,6 +294,7 @@ System.out.println(x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`x *= 2.5` equivale a `x = (int) (x * 2.5)`. A conta é feita em `double` (12.5) e o cast implícito trunca para 12. Com `x = x * 2.5`, não compilaria.',
+      dica: '`x *= 2.5` equivale a `x = (int) (x * 2.5)`. O que o cast faz com a parte decimal?',
     },
     {
       id: 'estagiario-t2-e02-q07',
@@ -208,6 +308,7 @@ System.out.println(b);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '100 + 100 = 200 é calculado em `int` e convertido para `byte` pelo cast implícito, que guarda só os 8 bits de baixo: 200 − 256 = −56. O compilador aceita, e nada avisa do estouro.',
+      dica: '200 não cabe num `byte`. Quanto sobra depois de dar a volta, tirando 256?',
     },
     {
       id: 'estagiario-t2-e02-q08',
@@ -224,6 +325,7 @@ System.out.println(b);`,
       respostas: ['++'],
       saida: '12 6',
       explicacao: 'Com o prefixo, `x` vira 6 antes de ser lido, e y = 6 · 2 = 12. Com `--x`, daria `8 4`. Escrever `x++` exigiria o operador depois da variável.',
+      dica: 'Para o resultado ser 12, quanto `x` precisa valer no momento da multiplicação?',
     },
     {
       id: 'estagiario-t2-e02-q09',
@@ -238,6 +340,7 @@ System.out.println(a + " " + b);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A atribuição é associativa à direita e é uma expressão. `a = b = 4` deixa os dois em 4. Em `a += b *= 2`, o valor antigo de `a` (4) é guardado, `b *= 2` vale 8 (e b vira 8), e a recebe 4 + 8 = 12.',
+      dica: 'A atribuição é associativa à direita: resolva `b *= 2` primeiro, lembrando que o `a` antigo já foi guardado.',
     },
     {
       id: 'estagiario-t2-e02-q10',
@@ -256,6 +359,7 @@ System.out.println(a + " " + b);`,
 }`,
       resposta: 7,
       explicacao: '`a + 1` é um valor, não uma variável, e não tem onde guardar o incremento. Por isso `++(a + 1)` não compila. Para somar 2 em `a`, use `a += 2`.',
+      dica: 'O `++` precisa de uma variável. O que há dentro dos parênteses?',
     },
     {
       id: 'estagiario-t2-e02-q11',
@@ -270,6 +374,7 @@ System.out.println(flag);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`flag = true` é uma atribuição, não uma comparação. Ela grava `true` e vale `true`, então o `if` sempre entra. Compila porque o resultado é `boolean`. Com `==`, sairia B.',
+      dica: 'No `if` há um `=` sozinho. Qual é o valor de uma atribuição?',
     },
     {
       id: 'estagiario-t2-e02-q12',
@@ -281,6 +386,7 @@ k += k++ * 3;
 System.out.println(k);`,
       resposta: '8',
       explicacao: 'O valor antigo de `k` (2) é guardado antes do lado direito. `k++ * 3` vale 2 · 3 = 6 (e k vira 3 de passagem). A soma 2 + 6 = 8 é gravada em `k`, e o incremento se perde.',
+      dica: 'No `+=`, o valor antigo de `k` é guardado antes de o lado direito ser avaliado.',
     },
     {
       id: 'estagiario-t2-e02-q13',
@@ -295,6 +401,7 @@ System.out.println(c);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`char` é numérico, e `++` e `+=` têm cast implícito de volta para `char`. \'x\' + 2 é \'z\'. Como a variável continua `char`, o `println` imprime a letra, e não 122.',
+      dica: '`char` é número: ande uma posição, depois mais uma, a partir de `\'x\'`.',
     },
     {
       id: 'estagiario-t2-e02-q14',
@@ -311,6 +418,7 @@ int d = 5; d = d++;
 int e = 5; e =+ 1;
 System.out.println(a + " " + b + " " + c + " " + d + " " + e);`,
       explicacao: '`x = ++x` funciona porque o prefixo já vale 6. `x = x++` grava o valor antigo de volta. E `x =+ 1` é uma pegadinha de digitação: o compilador lê `x = +1`, que atribui 1.',
+      dica: 'Confira um por um: `x = x++` perde o incremento, e `=+` não é `+=`.',
     },
     {
       id: 'estagiario-t2-e02-q15',
@@ -325,6 +433,7 @@ System.out.println(a + " " + b + " " + c + " " + d + " " + e);`,
       ],
       resposta: 0,
       explicacao: 'Os dois somam 1 à variável imediatamente. A diferença é só no valor que a expressão produz para quem está ao redor: o novo, no prefixo, ou o antigo, no sufixo.',
+      dica: 'Pense no valor que cada forma entrega à expressão: o de antes ou o de depois do incremento?',
     },
   ],
 };

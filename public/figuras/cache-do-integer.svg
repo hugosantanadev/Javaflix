@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">O cache do Integer: os objetos de -128 a 127 são criados uma vez, e a e b, com 127, apontam para o mesmo objeto do cache; c e d, com 128, ficam fora da faixa e cada um ganha um objeto novo</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="s-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="s-laranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff9447"/></marker>
+  </defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bcbec4">
+    <text x="30" y="32">Integer a = 127, b = 127;</text>
+    <text x="480" y="32">Integer c = 128, d = 128;</text>
+  </g>
+
+  <rect x="30" y="56" width="420" height="104" rx="8" fill="#16201a" stroke="#4fd68b" stroke-dasharray="5 3"/>
+  <text x="46" y="78" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#4fd68b">cache: 256 objetos criados quando a classe Integer carrega</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" text-anchor="middle">
+    <rect x="46" y="94" width="70" height="44" rx="5" fill="#13221a" stroke="#2f5a3f"/><text x="81" y="121" fill="#7fae8f">-128</text>
+    <rect x="126" y="94" width="70" height="44" rx="5" fill="#13221a" stroke="#2f5a3f"/><text x="161" y="121" fill="#7fae8f">-127</text>
+    <text x="226" y="121" fill="#7fae8f">...</text>
+    <rect x="256" y="94" width="70" height="44" rx="5" fill="#13221a" stroke="#2f5a3f"/><text x="291" y="121" fill="#7fae8f">126</text>
+    <rect x="356" y="94" width="76" height="44" rx="5" fill="#13221a" stroke="#4fd68b" stroke-width="2"/><text x="394" y="121" fill="#4fd68b">127</text>
+  </g>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" text-anchor="middle">
+    <rect x="300" y="214" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="325" y="239" fill="#f3eee7">a</text>
+    <rect x="390" y="214" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="415" y="239" fill="#f3eee7">b</text>
+    <rect x="500" y="214" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="525" y="239" fill="#f3eee7">c</text>
+    <rect x="640" y="214" width="50" height="38" rx="4" fill="#1b1916" stroke="#43403a"/><text x="665" y="239" fill="#f3eee7">d</text>
+  </g>
+  <g stroke-width="1.8" fill="none">
+    <path d="M325 212 C 325 180, 370 170, 384 142" stroke="#4fd68b" marker-end="url(#s-verde)"/>
+    <path d="M415 212 C 415 180, 404 170, 400 142" stroke="#4fd68b" marker-end="url(#s-verde)"/>
+    <path d="M525 212 L 525 146" stroke="#ff9447" marker-end="url(#s-laranja)"/>
+    <path d="M665 212 L 665 146" stroke="#ff9447" marker-end="url(#s-laranja)"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" text-anchor="middle">
+    <rect x="487" y="98" width="76" height="44" rx="5" fill="#3a1d07" stroke="#ff7a1a"/><text x="525" y="125" fill="#ff9447">128</text>
+    <rect x="627" y="98" width="76" height="44" rx="5" fill="#3a1d07" stroke="#ff7a1a"/><text x="665" y="125" fill="#ff9447">128</text>
+  </g>
+  <text x="487" y="84" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#ff9447">fora da faixa: um objeto novo para cada um</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <text x="30" y="290" fill="#4fd68b">a == b → true</text>
+    <text x="200" y="290" fill="#ff9447">c == d → false</text>
+    <text x="380" y="290" fill="#bcbec4">c.equals(d) → true</text>
+  </g>
+</svg>

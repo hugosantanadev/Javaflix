@@ -1,0 +1,17 @@
+{
+  "q01": "Qual é o resto de 7 dividido por 2?",
+  "q02": "Numa cadeia de `else if`, vale a primeira condição verdadeira. 35 já passa no primeiro teste?",
+  "q03": "Sem chaves, o `if` controla só o próximo comando. A indentação não conta para o compilador.",
+  "q04": "Um `else` pertence ao `if` mais próximo que ainda não tem `else`, não importa a indentação.",
+  "q05": "Procure uma condição que não é `boolean` e um corpo sem chaves que é uma declaração.",
+  "q06": "O `;` logo depois da condição é o corpo do `if`. O que vem na linha seguinte?",
+  "q07": "Um número é par quando o resto da divisão por 2 é zero.",
+  "q08": "Onde a variável `bonus` é declarada, e até onde ela existe?",
+  "q09": "Execute os dois `if` em sequência: o segundo usa o `x` que o primeiro deixou.",
+  "q10": "Com `&&`, o lado direito só roda se o teste de tipo passou, e aí a variável existe.",
+  "q11": "A variável do padrão existe só onde o teste com certeza deu verdadeiro.",
+  "q12": "Siga a cadeia: 65 não é menor que 18 nem menor que 60. E todos os caminhos dão valor a `faixa`?",
+  "q13": "Siga os `if` aninhados com calma e vá juntando as letras na ordem em que entram.",
+  "q14": "Fora do intervalo quer dizer abaixo do mínimo ou acima do máximo. Os extremos 10 e 20 contam como dentro.",
+  "q15": "Pense no que o `if` precisa decidir: só dois resultados possíveis."
+}

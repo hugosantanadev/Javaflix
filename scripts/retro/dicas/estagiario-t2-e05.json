@@ -1,0 +1,17 @@
+{
+  "q01": "A condição é verdadeira? Então só o primeiro ramo é usado.",
+  "q02": "O ternário é associativo à direita: o segundo `?` só é avaliado se o primeiro for falso.",
+  "q03": "Um ramo é `int` e o outro é `double`. Qual é o tipo do ternário inteiro?",
+  "q04": "Só o ramo escolhido roda, e o `x--` entrega o valor antigo antes de decrementar.",
+  "q05": "Com um ramo `int`, o `Integer` passa por unboxing. O que acontece com um `Integer` nulo?",
+  "q06": "`&` vem antes de `|`. Calcule `6 & 3` em binário primeiro.",
+  "q07": "`^` liga os bits diferentes, `~0` inverte todos os bits do zero, e `1 << 10` é uma potência de 2.",
+  "q08": "Num `int`, só os 5 bits de baixo da distância contam. Quanto sobra de 35?",
+  "q09": "As duas primeiras linhas usam o mesmo operador. A terceira repete o padrão.",
+  "q10": "O ternário precisa produzir um valor que caiba no destino e não pode ser um comando sozinho.",
+  "q11": "`char` com uma constante `int` que cabe em `char` dá `char`. Qual letra tem código 98?",
+  "q12": "Procure um ramo cujo tipo não cabe na variável que recebe o resultado.",
+  "q13": "`>>` copia o bit de sinal; `>>>` põe zero à esquerda, e o número vira positivo.",
+  "q14": "Testar um bit é isolar esse bit com um `&` e ver se sobrou algo.",
+  "q15": "Pense no complemento de dois: inverter todos os bits é quase o mesmo que trocar o sinal. Falta quanto?"
+}

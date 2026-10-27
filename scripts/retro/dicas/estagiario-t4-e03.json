@@ -1,0 +1,17 @@
+{
+  "q01": "O for-each precisa de algo que saiba entregar um elemento depois do outro. Arrays sabem; e as coleções?",
+  "q02": "O laço passa por todos os elementos, atualizando o maior e somando ao mesmo tempo.",
+  "q03": "A variável do laço é uma cópia do elemento. O `x++` muda o array?",
+  "q04": "Remover o penúltimo elemento é o caso especial: o laço termina antes de o iterador conferir a lista.",
+  "q05": "O primeiro par removido é o 2, que não é o penúltimo. O que acontece na volta seguinte?",
+  "q06": "O tipo da variável precisa aceitar cada elemento sem perda, e um `Map` não é `Iterable`.",
+  "q07": "Qual símbolo separa a variável da coleção no for-each?",
+  "q08": "O `append` muda o objeto compartilhado; a atribuição a `sb` muda só a cópia.",
+  "q09": "Qual dos dois laços tenta percorrer o próprio `Map`, sem escolher uma visão dele?",
+  "q10": "Um `char` amplia para `int` sem cast. O que o `println` mostra de um `int`?",
+  "q11": "O `TreeMap` percorre as chaves em ordem alfabética. Some os valores no caminho.",
+  "q12": "O for-each precisa pedir os elementos ao array. E se o array for `null`?",
+  "q13": "Procure o método das coleções feito para remover por uma condição, sem laço manual.",
+  "q14": "Pense no que o for-each não tem: índice, direção e acesso à posição do array.",
+  "q15": "O laço externo pega cada linha, e o interno soma os números dela; a linha vazia não soma nada."
+}

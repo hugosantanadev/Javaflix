@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Duas versões igualmente boas tornam a chamada ambígua, e o erro aparece na chamada.',
     'A sobrecarga é escolhida na compilação, pelo tipo declarado, não pelo objeto real.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a listar as sobrecargas candidatas e a explicar as fases de resolução, mas é justamente aqui que ela mais erra, confundindo sobrecarga com sobrescrita. Use-a para gerar casos de teste e deixe o compilador dar a resposta final.',
+    pedido:
+      'Para cada chamada abaixo, diga qual sobrecarga o compilador Java 21 escolhe.\n<cole as declarações e as chamadas>\n- Liste as candidatas e diga em qual fase cada uma é aplicável (exato/alargamento, boxing, varargs).\n- Use só os tipos declarados dos argumentos, não os tipos reais dos objetos.\n- Aponte chamadas ambíguas, que não compilam.',
+    erros: [
+      'Escolhe a sobrecarga pelo tipo real do objeto, como se fosse sobrescrita.',
+      'Põe o autoboxing antes do alargamento.',
+      'Não percebe a ambiguidade de `m(null)` com dois tipos incomparáveis.',
+    ],
+    conferir: [
+      'Use **Ctrl + clique** na chamada para ver a versão escolhida.',
+      'Compile os casos com `null` e com literais de tipos diferentes.',
+      'Troque o tipo declarado da variável e veja se a escolha muda.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Defining Methods, Overloading Methods',
@@ -142,6 +158,124 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'A linha mais traiçoeira é a do `Integer`: muita gente aposta em `int`, mas desembrulhar é da segunda fase, e a primeira já encontrou `Object`, porque `Integer` é um `Object`. O `char` virou o número 120, o código de "x", porque a versão `int` venceu sem precisar de embrulho. Sobrecargas assim confundem até quem as escreveu, e o Effective Java recomenda evitar versões com o mesmo número de parâmetros.',
   },
+  bugs: [
+    {
+      id: 'junior-t2-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: reference to enviar is ambiguous`.',
+      codigo: `public class Notificacao {
+    static void enviar(String destino, Integer prioridade) {
+        System.out.println("para " + destino);
+    }
+
+    static void enviar(Integer codigo, String mensagem) {
+        System.out.println("código " + codigo);
+    }
+
+    public static void main(String[] args) {
+        enviar(null, null);
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Notificacao {
+    static void enviar(String destino, Integer prioridade) {
+        System.out.println("para " + destino);
+    }
+
+    static void enviar(Integer codigo, String mensagem) {
+        System.out.println("código " + codigo);
+    }
+
+    public static void main(String[] args) {
+        enviar("ana@mail.com", null);
+    }
+}`,
+      saidaCorrigida: 'para ana@mail.com',
+      dica: 'Um `null` cabe em `String` e em `Integer`. Com dois `null`, qual das versões é mais específica?',
+      explicacao: 'Os dois `null` servem nas duas versões, e nenhuma é mais específica que a outra, porque `String` e `Integer` não se comparam. A chamada é ambígua. Com um argumento de tipo conhecido no primeiro parâmetro, só uma versão sobra.',
+    },
+    {
+      id: 'junior-t2-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O relatório deveria sair como `texto: relatório`, mas os dois itens aparecem como `objeto`.',
+      codigo: `public class Impressora {
+    static String formatar(Object o) {
+        return "objeto";
+    }
+
+    static String formatar(String s) {
+        return "texto: " + s;
+    }
+
+    public static void main(String[] args) {
+        Object[] itens = {"relatório", 42};
+        for (Object item : itens) {
+            System.out.println(formatar(item));
+        }
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'saida', saida: 'objeto\nobjeto' },
+      correcao: `public class Impressora {
+    static String formatar(Object o) {
+        return "objeto";
+    }
+
+    static String formatar(String s) {
+        return "texto: " + s;
+    }
+
+    public static void main(String[] args) {
+        Object[] itens = {"relatório", 42};
+        for (Object item : itens) {
+            System.out.println(item instanceof String s ? formatar(s) : formatar(item));
+        }
+    }
+}`,
+      saidaCorrigida: 'texto: relatório\nobjeto',
+      dica: 'A sobrecarga é escolhida pelo tipo declarado de `item` ou pelo tipo do objeto que ele guarda?',
+      explicacao: 'A escolha da sobrecarga acontece na compilação, pelo tipo declarado, e `item` é `Object`: as duas chamadas vão para `formatar(Object)`. Testando o tipo real com `instanceof` e passando a variável já como `String`, o compilador escolhe a versão certa.',
+    },
+    {
+      id: 'junior-t2-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O pagamento em 3 parcelas deveria aparecer como `3x sem juros`, mas sai `R$ 3.0`.',
+      codigo: `public class Pagamento {
+    static String cobrar(double valor) {
+        return "R$ " + valor;
+    }
+
+    static String cobrar(Integer parcelas) {
+        return parcelas + "x sem juros";
+    }
+
+    public static void main(String[] args) {
+        int parcelas = 3;
+        System.out.println(cobrar(parcelas));
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'R$ 3.0' },
+      correcao: `public class Pagamento {
+    static String cobrar(double valor) {
+        return "R$ " + valor;
+    }
+
+    static String cobrar(Integer parcelas) {
+        return parcelas + "x sem juros";
+    }
+
+    public static void main(String[] args) {
+        Integer parcelas = 3;
+        System.out.println(cobrar(parcelas));
+    }
+}`,
+      saidaCorrigida: '3x sem juros',
+      dica: 'Para um `int`, o que vem primeiro nas fases: alargar para `double` ou embrulhar em `Integer`?',
+      explicacao: 'Com um `int`, a fase 1 já acha `cobrar(double)`, por alargamento, e o boxing para `Integer` nem é tentado. Declarando a variável como `Integer`, a versão `Integer` passa a ser exata na fase 1. Melhor ainda seria dar nomes diferentes aos dois métodos, que fazem coisas diferentes.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t2-e02-q01',
@@ -156,6 +290,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'A assinatura é o nome mais os tipos dos parâmetros. Retorno, nomes e modificadores não contam.',
+      dica: 'O que entra na assinatura de um método?',
     },
     {
       id: 'junior-t2-e02-q02',
@@ -174,6 +309,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: 'int long double int',
       explicacao: 'Cada argumento vai para o menor tipo que o aceita por alargamento: `byte` e `char` para `int`, `float` para `double`. O `2L` tem versão exata.',
+      dica: '`byte` e `char` alargam para `int`; `float` alarga para `double`.',
     },
     {
       id: 'junior-t2-e02-q03',
@@ -198,6 +334,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'Para a assinatura, só importam o nome e os tipos dos parâmetros: os dois são `converter(String)`.',
+      dica: 'O tipo de retorno e o nome do parâmetro entram na assinatura?',
     },
     {
       id: 'junior-t2-e02-q04',
@@ -220,6 +357,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `int` alarga para `long` na primeira fase. O `Integer` já é um `Object`, também na primeira fase, sem precisar desembrulhar. Dois argumentos só cabem no varargs.',
+      dica: 'Um `int` alarga para `long` na fase 1; um `Integer` já é um `Object`.',
     },
     {
       id: 'junior-t2-e02-q05',
@@ -236,6 +374,7 @@ const episodio: EpisodioConteudo = {
       respostas: [0, 1, 4],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Tipos diferentes, ordem diferente e primitivo contra wrapper são sobrecargas válidas. `int[]` e `int...` são o mesmo tipo para a assinatura, e `D` só muda o retorno e o nome do parâmetro.',
+      dica: 'Compare as listas de parâmetros: `int[]` e `int...` são o mesmo tipo para a assinatura.',
     },
     {
       id: 'junior-t2-e02-q06',
@@ -258,6 +397,7 @@ const episodio: EpisodioConteudo = {
       respostas: ['ola'],
       saida: 'Olá, mundo',
       explicacao: 'Uma sobrecarga pode chamar outra pelo mesmo nome: o compilador escolhe a versão de um parâmetro `String`. É o jeito comum de oferecer valores padrão em Java.',
+      dica: 'A versão sem parâmetros chama a outra pelo mesmo nome.',
     },
     {
       id: 'junior-t2-e02-q07',
@@ -280,6 +420,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: 12,
       explicacao: 'Na linha 11, só `somar(double, int)` aceita os argumentos. Na 12, as duas versões aceitam dois `int`, cada uma alargando um deles, e nenhuma é mais específica: a chamada é ambígua.',
+      dica: 'Com dois `int`, as duas versões servem por alargamento. Alguma é mais específica?',
     },
     {
       id: 'junior-t2-e02-q08',
@@ -299,6 +440,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 7 },
       explicacao: '`10` é `int`, que só se embrulha em `Integer`. Alargar para `long` e depois embrulhar em `Long` são duas conversões, e o Java não faz as duas. Com `10L`, compilaria.',
+      dica: 'Um `int` vira `Long`?',
     },
     {
       id: 'junior-t2-e02-q09',
@@ -318,6 +460,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 7 },
       explicacao: '`null` cabe em todas. `String` e `Integer` são mais específicos que `Object`, mas nenhum é mais específico que o outro: a chamada é ambígua. Sem a versão `Integer`, venceria `String`.',
+      dica: '`String` e `Integer`: algum é mais específico que o outro?',
     },
     {
       id: 'junior-t2-e02-q10',
@@ -336,6 +479,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: 'String Object String',
       explicacao: 'A escolha usa o tipo declarado da expressão, na compilação. `o` aponta para uma `String`, mas é declarada `Object`. O cast muda o tipo da expressão e, com ele, a versão escolhida.',
+      dica: 'A escolha usa o tipo declarado de cada argumento.',
     },
     {
       id: 'junior-t2-e02-q11',
@@ -350,6 +494,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'As fases preservam o comportamento de código antigo: autoboxing chegou no Java 5, junto com os varargs, e por isso eles só entram quando as regras originais não encontram nada.',
+      dica: 'Alargar vem antes de embrulhar, e varargs fica por último.',
     },
     {
       id: 'junior-t2-e02-q12',
@@ -378,6 +523,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `char` alarga para `int` na primeira fase; embrulhar em `Character` ficaria para a segunda. O `Character` tem versão exata, e a `String` só cabe em `Object`.',
+      dica: '`char` alarga para `int` na fase 1; um `Character` já é exato na fase 1.',
     },
     {
       id: 'junior-t2-e02-q13',
@@ -393,6 +539,7 @@ const episodio: EpisodioConteudo = {
       ],
       respostas: [0, 1],
       explicacao: 'A assinatura é feita do nome e dos tipos dos parâmetros. As outras diferenças deixam os dois métodos com a mesma assinatura, e a classe não compila.',
+      dica: 'Só o que muda a lista de parâmetros diferencia sobrecargas.',
     },
     {
       id: 'junior-t2-e02-q14',
@@ -421,6 +568,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O literal `1` é `int`, e uma chamada de método nunca estreita um `int` para `short` sozinha. A soma de dois `short` é promovida a `int`, como você viu nos operadores.',
+      dica: '`s + s` com dois `short` dá que tipo?',
     },
     {
       id: 'junior-t2-e02-q15',
@@ -435,6 +583,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'O compilador grava algo como `m:(J)V`, com os tipos dos parâmetros e do retorno. A JVM só procura esse método exato. Por isso uma sobrecarga nova numa biblioteca só afeta quem recompila.',
+      dica: 'O compilador grava a escolha no bytecode, com os tipos dos parâmetros.',
     },
   ],
 };

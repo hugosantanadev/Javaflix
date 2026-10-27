@@ -1,0 +1,17 @@
+{
+  "q01": "Pense no que acontece com o objeto quando um método é chamado nele.",
+  "q02": "Siga a cadeia: `append`, depois `insert` na posição 1, depois outro `append`. O `reverse` muda o mesmo buffer.",
+  "q03": "O `append` devolve o próprio objeto. Quantos `StringBuilder` existem?",
+  "q04": "O `delete(1, 3)` remove as posições 1 e 2; o `insert` usa as posições do texto já encurtado.",
+  "q05": "O `StringBuilder` sobrescreve o `equals` de `Object`?",
+  "q06": "Não há conversão automática entre `String` e `StringBuilder` na atribuição.",
+  "q07": "O método tem o nome de inverter em inglês.",
+  "q08": "Dos métodos da tabela, qual devolve uma `String` sem alterar o buffer?",
+  "q09": "Que tipo o `reverse()` devolve? Ele cabe numa variável `String`?",
+  "q10": "Com texto inicial, a capacidade é 16 mais o tamanho do texto.",
+  "q11": "O `setLength(4)` corta o buffer nos 4 primeiros caracteres.",
+  "q12": "Lembre: um dos dois tem todos os métodos `synchronized`.",
+  "q13": "Os métodos de alteração devolvem `this`; os outros dois devolvem texto novo.",
+  "q14": "No Java 21, o `repeat` acrescenta o texto n vezes ao fim do buffer.",
+  "q15": "Quantas vezes o texto anterior é copiado a cada `+=`?"
+}

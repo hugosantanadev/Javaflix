@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Ler pelo nome simples um campo declarado mais abaixo é uma referência adiantada ilegal.',
     'Exceção num inicializador `static` vira `ExceptionInInitializerError`.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a numerar a ordem de execução de classes com blocos, campos e construtores, e a explicar por que uma classe foi ou não inicializada. Peça sempre a numeração completa, linha por linha, e rode o programa: a ordem é fixa, então a conferência é rápida e definitiva.',
+    pedido:
+      'Numere a ordem em que cada trecho desta classe Java 21 executa.\n<cole a classe aqui>\n- Separe o que roda uma vez por classe do que roda a cada new.\n- Diga qual linha dispara a inicialização da classe, e se alguma leitura é de constante de compilação.\n- Aponte qualquer inicializador que lê um campo declarado mais abaixo.',
+    erros: [
+      'Põe um bloco escrito depois do construtor para rodar depois do corpo dele.',
+      'Diz que ler uma constante `static final` inicializa a classe.',
+      'Esquece que uma exceção no `static` vira `ExceptionInInitializerError`.',
+    ],
+    conferir: [
+      'Ponha um `println` em cada bloco e no construtor e compare com a numeração.',
+      'Rode com `-verbose:class` para ver quando a classe é carregada.',
+      'Teste o bloco `static` com uma configuração ausente ou inválida.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: More on Classes, Initializing Fields',
@@ -152,6 +168,94 @@ public class Boot {
     comentarios:
       'A classe do `main` é `Boot`; `Sistema` só é carregada e inicializada no primeiro uso, por isso a mensagem do bloco `static` aparece depois. O bloco de instância é copiado para `Sistema(String)`, o construtor que chama `super()`, e roda antes do corpo dele: quando a mensagem é impressa, `numero` já tem valor.',
   },
+  bugs: [
+    {
+      id: 'junior-t1-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: illegal forward reference`.',
+      codigo: `public class Juros {
+    static double taxaMensal = taxaAnual / 12;
+    static double taxaAnual = 12.0;
+
+    public static void main(String[] args) {
+        System.out.println(taxaMensal);
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Juros {
+    static double taxaAnual = 12.0;
+    static double taxaMensal = taxaAnual / 12;
+
+    public static void main(String[] args) {
+        System.out.println(taxaMensal);
+    }
+}`,
+      saidaCorrigida: '1.0',
+      dica: 'Na linha 2, a `taxaAnual` já foi declarada?',
+      explicacao: 'Um inicializador não pode ler, pelo nome simples, um campo declarado mais abaixo: os campos são inicializados na ordem do código, e a `taxaAnual` ainda não teria valor. Declarando primeiro a taxa anual, a mensal é calculada a partir dela.',
+    },
+    {
+      id: 'junior-t1-e05-b02',
+      dificuldade: 3,
+      sintoma: 'O carrinho tem 5 itens e o frete é de R$ 2 por item, mas o programa cobra `frete 6.0`.',
+      codigo: `public class Carrinho {
+    int itens = 3;
+    double frete = itens * 2.0;
+    { itens = 5; }
+
+    public static void main(String[] args) {
+        Carrinho c = new Carrinho();
+        System.out.println(c.itens + " itens, frete " + c.frete);
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '5 itens, frete 6.0' },
+      correcao: `public class Carrinho {
+    int itens = 3;
+    { itens = 5; }
+    double frete = itens * 2.0;
+
+    public static void main(String[] args) {
+        Carrinho c = new Carrinho();
+        System.out.println(c.itens + " itens, frete " + c.frete);
+    }
+}`,
+      saidaCorrigida: '5 itens, frete 10.0',
+      dica: 'Inicializadores de campo e blocos de instância rodam em que ordem? Quanto vale `itens` quando o frete é calculado?',
+      explicacao: 'Campos e blocos de instância rodam na ordem em que aparecem no código. O frete foi calculado com `itens` ainda valendo 3, e só depois o bloco mudou para 5. Pondo o bloco antes do cálculo, o frete usa o valor final.',
+    },
+    {
+      id: 'junior-t1-e05-b03',
+      dificuldade: 3,
+      sintoma: 'Sem a propriedade `porta` configurada, o servidor nem sobe: o programa para com `ExceptionInInitializerError`.',
+      codigo: `class Config {
+    static String valor = System.getProperty("porta");
+    static int porta = Integer.parseInt(valor);
+}
+
+public class Servidor {
+    public static void main(String[] args) {
+        System.out.println("Porta " + Config.porta);
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'excecao', nome: 'ExceptionInInitializerError' },
+      correcao: `class Config {
+    static String valor = System.getProperty("porta", "8080");
+    static int porta = Integer.parseInt(valor);
+}
+
+public class Servidor {
+    public static void main(String[] args) {
+        System.out.println("Porta " + Config.porta);
+    }
+}`,
+      saidaCorrigida: 'Porta 8080',
+      dica: 'O que `System.getProperty` devolve quando a propriedade não existe? E o que o `parseInt` faz com isso?',
+      explicacao: 'Sem a propriedade, `getProperty` devolve `null`, e `parseInt(null)` lança `NumberFormatException` durante a inicialização da classe. A JVM embrulha a exceção num `ExceptionInInitializerError`. A versão de `getProperty` com valor padrão garante um texto válido.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t1-e05-q01',
@@ -166,6 +270,7 @@ public class Boot {
       ],
       resposta: 0,
       explicacao: 'Blocos `static` pertencem à classe e rodam na inicialização dela, uma vez. Blocos de instância, sem `static`, rodam a cada objeto.',
+      dica: 'Um bloco `static` pertence à classe, não aos objetos.',
     },
     {
       id: 'junior-t1-e05-q02',
@@ -194,6 +299,7 @@ public class Boot {
 }`,
       resposta: 'ADBCBC',
       explicacao: 'O bloco `static` roda antes do `main`, porque a classe precisa ser inicializada. Depois, cada objeto roda o bloco de instância e então o construtor.',
+      dica: 'O `static` roda antes do `main`; cada `new` repete bloco de instância e construtor.',
     },
     {
       id: 'junior-t1-e05-q03',
@@ -223,6 +329,7 @@ public class Boot {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Inicializadores e blocos rodam na ordem do código, e todos antes do corpo do construtor, mesmo o que está escrito depois dele: 5, 15, 14. Só então o construtor dobra: 28.',
+      dica: 'Os dois blocos rodam na ordem do código, antes do corpo do construtor.',
     },
     {
       id: 'junior-t1-e05-q04',
@@ -248,6 +355,7 @@ public class Boot {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Um `final` sem valor na declaração nem em bloco precisa ser atribuído em todos os construtores. Valor padrão não conta para campos `final`.',
+      dica: 'Um campo `final` precisa de valor em todos os construtores.',
     },
     {
       id: 'junior-t1-e05-q05',
@@ -263,6 +371,7 @@ public class Boot {
       ],
       respostas: [0, 1, 2],
       explicacao: 'O valor tem de estar definido quando o objeto termina de ser construído, e uma única vez. Métodos comuns rodam depois, e o bloco `static` não tem objeto.',
+      dica: 'Um `final` de instância aceita valor na declaração, num bloco de instância ou nos construtores.',
     },
     {
       id: 'junior-t1-e05-q06',
@@ -281,6 +390,7 @@ public class Boot {
       respostas: ['static'],
       saida: 'carregando\nrodando',
       explicacao: 'O bloco `static` roda na inicialização da classe, antes do `main`. Sem `static`, seria um bloco de instância, e como nenhum objeto é criado, nunca rodaria.',
+      dica: 'Qual bloco roda antes do `main`, sem nenhum objeto?',
     },
     {
       id: 'junior-t1-e05-q07',
@@ -297,6 +407,7 @@ public class Boot {
 }`,
       resposta: 2,
       explicacao: '`base` é declarado abaixo de `taxa`, e ler um campo pelo nome simples antes da declaração dele, num inicializador, é uma referência adiantada ilegal. Trocar as duas linhas resolve.',
+      dica: 'Um inicializador pode ler pelo nome um campo declarado abaixo?',
     },
     {
       id: 'junior-t1-e05-q08',
@@ -321,6 +432,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`LIMITE` é uma constante de compilação: o `javac` copia o 10 para dentro de `Teste`, e `Tabela` nem é consultada. Sem a inicialização, o bloco `static` não roda.',
+      dica: 'Ler uma constante de compilação dispara a inicialização da classe?',
     },
     {
       id: 'junior-t1-e05-q09',
@@ -349,6 +461,7 @@ public class Teste {
 }`,
       resposta: '501 502 502',
       explicacao: 'O bloco `static` define o início uma vez. Cada objeto pré-incrementa o contador compartilhado e guarda o resultado no seu `numero`.',
+      dica: 'O bloco `static` põe 500 no contador; cada objeto incrementa antes de copiar.',
     },
     {
       id: 'junior-t1-e05-q10',
@@ -364,6 +477,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'Criar objetos e usar membros `static` que não são constantes inicializam a classe. Declarar variáveis e criar arrays não usam a classe de verdade, e a constante é copiada pelo compilador.',
+      dica: 'Constantes de compilação, arrays e declarações não inicializam a classe.',
     },
     {
       id: 'junior-t1-e05-q11',
@@ -388,6 +502,7 @@ public class Inicia {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ExceptionInInitializerError' },
       explicacao: 'A divisão por zero acontece dentro do `<clinit>` de `Falha`. A JVM embrulha a `ArithmeticException` num `ExceptionInInitializerError`, e a classe fica inutilizável dali em diante.',
+      dica: 'Uma exceção na inicialização `static` chega embrulhada em quê?',
     },
     {
       id: 'junior-t1-e05-q12',
@@ -406,6 +521,7 @@ public class Inicia {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com o nome qualificado, a regra da referência adiantada não se aplica. Quando o inicializador de `a` roda, `b` ainda tem o valor padrão, 0: `a` vale 1. Só depois `b` recebe 2.',
+      dica: 'Pelo nome qualificado compila, e `b` ainda tem o valor padrão nesse momento.',
     },
     {
       id: 'junior-t1-e05-q13',
@@ -435,6 +551,7 @@ public class Inicia {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O bloco `static` soma 1 uma vez. O de instância roda para cada objeto: cada `i` é próprio e vale 1, e `s` recebe mais 2.',
+      dica: 'O bloco `static` roda uma vez; o de instância, uma vez por objeto.',
     },
     {
       id: 'junior-t1-e05-q14',
@@ -451,6 +568,7 @@ public class Inicia {
       respostas: [0, 1],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: '`A` atribui no único construtor, e `B` no bloco `static`. `C` nunca atribui, `D` atribui duas vezes, e `E` tenta atribuir um `static final` no construtor, que rodaria a cada objeto.',
+      dica: 'Um `final` recebe valor exatamente uma vez, e um `static final` nunca no construtor.',
     },
     {
       id: 'junior-t1-e05-q15',
@@ -465,6 +583,7 @@ public class Inicia {
       ],
       resposta: 0,
       explicacao: 'O `<clinit>` reúne tudo na ordem do código. A trava garante que duas threads não inicializem a classe ao mesmo tempo. Os inicializadores de instância é que vão para os `<init>`.',
+      dica: 'É um método especial, como o `<init>` dos construtores, mas para a classe.',
     },
   ],
 };

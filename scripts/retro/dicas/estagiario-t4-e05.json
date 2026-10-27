@@ -1,0 +1,17 @@
+{
+  "q01": "Os dois limites são fixos: multiplique as voltas.",
+  "q02": "O i desce de 3 a 1, e cada linha tem i símbolos.",
+  "q03": "O interno começa em i: conte as voltas para i = 0, 1 e 2 e some.",
+  "q04": "O i vale 1, 3 e 9, e o interno roda i vezes em cada um.",
+  "q05": "Calcule cada opção: produto quando os limites são fixos, soma quando dependem do i.",
+  "q06": "O `x` é zerado a cada volta externa. Quanto ele vale ao final de cada uma?",
+  "q07": "Na linha i, quantos `#` precisam sair?",
+  "q08": "O laço externo é o das letras; o interno, o dos números.",
+  "q09": "Onde foi declarado o `j`, e até onde ele existe?",
+  "q10": "Ache as casas com `i + j == 2` e some os valores delas.",
+  "q11": "O interno desce de i até 1, concatenando cada número.",
+  "q12": "Para cada um dos n valores do externo, o interno roda n vezes.",
+  "q13": "Siga até o primeiro produto maior que 6: o `break externo` encerra tudo nesse ponto.",
+  "q14": "O interno roda n − 1, n − 2, ..., até 0 vezes. Some.",
+  "q15": "Cada linha da matriz fica contígua na memória, e o cache carrega blocos vizinhos."
+}

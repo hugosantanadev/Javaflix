@@ -1,0 +1,17 @@
+{
+  "q01": "O primeiro índice é 0. Qual é o último, com 5 posições?",
+  "q02": "As posições não atribuídas ficam com o valor padrão do `int`.",
+  "q03": "Não se informa tamanho e valores ao mesmo tempo, e o `var` precisa do `new`.",
+  "q04": "O `[]` depois do tipo vale para todas as variáveis; o depois do nome soma mais um.",
+  "q05": "Arrays são covariantes, mas a JVM confere o tipo real em cada escrita.",
+  "q06": "Um array de `String` criado com tamanho começa cheio de quê?",
+  "q07": "O tamanho de um array é um campo, sem parênteses.",
+  "q08": "Tamanho e lista de valores juntos são permitidos?",
+  "q09": "`b` aponta para o array original; depois, `a` passa a apontar para outro.",
+  "q10": "Com `var`, o compilador sabe o tipo de `{9.9, 15.0, 4.5}`?",
+  "q11": "A soma é 30, e a divisão é entre dois `int`.",
+  "q12": "O laço usa `<=`: o que acontece quando `i` chega a 3?",
+  "q13": "Lembre os valores padrão de `double`, `boolean` e referências.",
+  "q14": "O `println` tem uma versão especial para `char[]`.",
+  "q15": "Em arrays, `length` é campo; em `String`, é método."
+}

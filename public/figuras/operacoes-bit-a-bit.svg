@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">As operações bit a bit entre 1100 (12) e 1010 (10): o E dá 1000 (8), o OU dá 1110 (14) e o OU exclusivo dá 0110 (6), coluna por coluna</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <text x="30" y="32" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">Cada coluna é calculada sozinha, como uma porta lógica por bit.</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#8a8277" text-anchor="middle">
+    <text x="120" y="66">8</text><text x="160" y="66">4</text><text x="200" y="66">2</text><text x="240" y="66">1</text>
+  </g>
+
+  <!-- três blocos: & | ^ -->
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="20" font-weight="700" text-anchor="middle">
+    <!-- a e b, repetidos em cada bloco -->
+    <g fill="#f3eee7">
+      <text x="120" y="96">1</text><text x="160" y="96">1</text><text x="200" y="96">0</text><text x="240" y="96">0</text>
+      <text x="120" y="124">1</text><text x="160" y="124">0</text><text x="200" y="124">1</text><text x="240" y="124">0</text>
+    </g>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#bdb5aa">
+    <text x="30" y="96">a = 12</text>
+    <text x="30" y="124">b = 10</text>
+  </g>
+  <line x1="100" y1="136" x2="260" y2="136" stroke="#43403a" stroke-width="1.5"/>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="20" font-weight="700" text-anchor="middle">
+    <text x="120" y="172" fill="#ff9447">1</text><text x="160" y="172" fill="#5c5750">0</text><text x="200" y="172" fill="#5c5750">0</text><text x="240" y="172" fill="#5c5750">0</text>
+    <text x="120" y="216" fill="#4fd68b">1</text><text x="160" y="216" fill="#4fd68b">1</text><text x="200" y="216" fill="#4fd68b">1</text><text x="240" y="216" fill="#5c5750">0</text>
+    <text x="120" y="260" fill="#5c5750">0</text><text x="160" y="260" fill="#f2c75c">1</text><text x="200" y="260" fill="#f2c75c">1</text><text x="240" y="260" fill="#5c5750">0</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700">
+    <text x="30" y="172" fill="#ff9447">a &amp; b</text>
+    <text x="30" y="216" fill="#4fd68b">a | b</text>
+    <text x="30" y="260" fill="#f2c75c">a ^ b</text>
+    <text x="290" y="172" fill="#ff9447">= 8</text>
+    <text x="290" y="216" fill="#4fd68b">= 14</text>
+    <text x="290" y="260" fill="#f2c75c">= 6</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">
+    <text x="360" y="168">E: 1 só onde os dois têm 1</text>
+    <text x="360" y="212">OU: 1 onde pelo menos um tem 1</text>
+    <text x="360" y="256">OU exclusivo: 1 onde são diferentes</text>
+  </g>
+
+  <!-- deslocamento -->
+  <line x1="560" y1="56" x2="560" y2="290" stroke="#2b2824"/>
+  <text x="580" y="70" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7">1 &lt;&lt; 3</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="18" font-weight="700" text-anchor="middle">
+    <text x="600" y="110" fill="#5c5750">0</text><text x="630" y="110" fill="#5c5750">0</text><text x="660" y="110" fill="#5c5750">0</text><text x="690" y="110" fill="#ff9447">1</text>
+    <text x="600" y="180" fill="#ff9447">1</text><text x="630" y="180" fill="#5c5750">0</text><text x="660" y="180" fill="#5c5750">0</text><text x="690" y="180" fill="#5c5750">0</text>
+  </g>
+  <path d="M688 118 C 680 150, 620 140, 604 162" fill="none" stroke="#ff7a1a" stroke-width="1.6"/>
+  <path d="M604 162 l1 -9 m-1 9 l8 -4" fill="none" stroke="#ff7a1a" stroke-width="1.6"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">
+    <text x="580" y="214">cada posição vale o dobro:</text>
+    <text x="580" y="232">1 vira 8, ou 1 × 2³</text>
+  </g>
+  <text x="30" y="304" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">Num int, a distância do deslocamento usa só 5 bits: 1 &lt;&lt; 32 é o mesmo que 1 &lt;&lt; 0.</text>
+</svg>

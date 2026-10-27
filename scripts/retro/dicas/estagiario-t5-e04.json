@@ -1,0 +1,17 @@
+{
+  "q01": "Pense em três aspas e em várias linhas.",
+  "q02": "Conte as letras e as quebras de linha: o fechamento está numa linha própria.",
+  "q03": "Ache a menor indentação entre as duas linhas com conteúdo e a linha do fechamento.",
+  "q04": "O que precisa vir logo depois das três aspas de abertura?",
+  "q05": "Lembre onde o conteúdo começa e o que um text block produz.",
+  "q06": "Os espaços do fim das linhas são removidos; o `\\s` é processado depois e sobrevive.",
+  "q07": "A abertura e o fechamento usam o mesmo delimitador.",
+  "q08": "Uma `\\` no fim da linha junta com a próxima, e o espaço antes dela fica.",
+  "q09": "O fechamento numa linha própria deixa uma quebra de linha no fim do texto.",
+  "q10": "Aspas sozinhas não precisam de escape; três seguidas, sim, e o escape some na saída.",
+  "q11": "O resultado de um text block é uma `String` comum. Ela tem o método `formatted`?",
+  "q12": "Os dois literais viram a mesma constante de compilação.",
+  "q13": "Pense no `\\n` do fim e na linha do fechamento no cálculo do corte.",
+  "q14": "Uma linha em branco no meio também conta como linha para o `lines()`.",
+  "q15": "O `stripIndent` remove a menor indentação entre as linhas, e as duas têm 2 e 4 espaços."
+}

@@ -1,0 +1,17 @@
+{
+  "q01": "Pense em onde cada uma é declarada: no corpo, com ou sem `static`, num método, ou numa expressão.",
+  "q02": "As duas agências pertencem ao mesmo banco e somam no mesmo campo.",
+  "q03": "O `main` é `static`. Uma classe interna pode nascer sem um objeto da externa?",
+  "q04": "`v` é o parâmetro, `this.v` o campo de `B` e `A.this.v` o campo de `a`, que foi mudado para 1.",
+  "q05": "Interna: `externa.new`; aninhada estática: `new Externa.Estatica()`.",
+  "q06": "Para chegar ao objeto externo: `Externa.___.campo`.",
+  "q07": "Uma variável local capturada pode ser alterada dentro da classe anônima?",
+  "q08": "A anônima sobrescreve `falar` só para o objeto `formal`; o argumento vai para o construtor da superclasse.",
+  "q09": "As aninhadas usam `$` e o nome; as anônimas, `$` e um número.",
+  "q10": "A declaração de uma anônima é uma expressão. Como termina um comando com expressão?",
+  "q11": "As capturas exigem variáveis que nunca mudam.",
+  "q12": "A classe local lê os parâmetros, que não são alterados.",
+  "q13": "A aninhada estática não pertence a nenhum objeto da externa, mas faz parte da classe.",
+  "q14": "O que a classe interna guarda para saber a qual objeto pertence?",
+  "q15": "`j1` e `j3` são do time `a`; `j2` é do `b`."
+}

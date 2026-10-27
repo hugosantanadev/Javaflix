@@ -1,0 +1,17 @@
+{
+  "q01": "`m.length` conta as linhas; `m[0].length`, as colunas da primeira linha.",
+  "q02": "Conte as linhas, o tamanho da linha 1 e ache a coluna 1 da linha 2.",
+  "q03": "Só a primeira dimensão é obrigatória, e o tipo dos dois lados precisa bater.",
+  "q04": "A linha 1 foi criada?",
+  "q05": "Na linha 1, `b` é um `int` comum. Ele aceita um array?",
+  "q06": "Cada elemento do array externo é uma linha. De que tipo?",
+  "q07": "`linha` continua apontando para a linha antiga, mesmo depois de `m[0]` mudar.",
+  "q08": "Dá para informar só a segunda dimensão?",
+  "q09": "Só um dos métodos desce nos arrays internos.",
+  "q10": "A diagonal principal tem `i == j`: 1, 5 e 9.",
+  "q11": "O laço interno usa `m.length`, que vale 4. Quantas colunas cada linha tem?",
+  "q12": "Um objeto para o array externo e um para cada linha.",
+  "q13": "Some os colchetes do tipo com os do nome de cada variável.",
+  "q14": "Pense em como os números de uma linha ficam guardados na memória.",
+  "q15": "Cada dimensão tem o seu `length`; a posição atribuída guarda 5."
+}

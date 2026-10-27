@@ -1,0 +1,17 @@
+{
+  "q01": "Pense no que acontece depois de um `case` executar: na forma com seta, a execução continua para o próximo?",
+  "q02": "Para cada mês do laço, procure o `case` que casa; o que não casa vai para o `default`.",
+  "q03": "Uma expressão precisa de um valor para todo `int`. O que acontece com o 5?",
+  "q04": "Não se misturam `:` e `->` no mesmo `switch`, e um bloco precisa entregar o valor com `yield`.",
+  "q05": "Com `:` numa expressão, o fall-through volta. A execução entra no `case 3` e desce até um `yield`.",
+  "q06": "Os ramos são `char` e `long`. Qual é o tipo da expressão, e quanto vale `'x'` nesse tipo?",
+  "q07": "No bloco de um `case`, qual palavra entrega o valor à expressão?",
+  "q08": "Com `enum`, cobrir todas as constantes basta. Some as duas medidas.",
+  "q09": "Procure uma palavra que tentaria sair do método inteiro de dentro da expressão.",
+  "q10": "Os `case` são testados em ordem. \"Java\" é `String`, e o comprimento dele é maior que 3?",
+  "q11": "Na forma com seta não há fall-through: cada `d` imprime uma linha só.",
+  "q12": "Pense na exaustividade e na ausência de fall-through.",
+  "q13": "Não é `return` nem `break`: é a palavra criada para entregar o valor de um bloco.",
+  "q14": "`String` tem infinitos valores possíveis. Dois `case` cobrem todos?",
+  "q15": "O seletor usa `i++`: ele vale o 0 antigo, e `i` já é 1 quando o `case` calcula o resultado."
+}

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Cópia defensiva: sem cópia, a variável nomes de quem criou a turma e o campo alunos apontam para o mesmo array, e mudanças de fora entram na turma; com cópia, a turma guarda um array só dela e entrega outra cópia no getter</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="s-laranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff9447"/></marker>
+    <marker id="s-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="s-cinza" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <line x1="380" y1="20" x2="380" y2="290" stroke="#2b2824"/>
+
+  <text x="30" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#ff9447">sem cópia: this.alunos = alunos</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#f3eee7">
+    <rect x="30" y="70" width="84" height="34" rx="4" fill="#1b1916" stroke="#43403a"/><text x="42" y="92">nomes</text>
+    <rect x="30" y="160" width="140" height="70" rx="6" fill="none" stroke="#43403a"/>
+    <text x="42" y="180" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="400" fill="#8a8277">a turma</text>
+    <rect x="42" y="190" width="84" height="30" rx="4" fill="#1b1916" stroke="#43403a"/><text x="52" y="210">alunos</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" text-anchor="middle">
+    <rect x="220" y="110" width="66" height="40" fill="#3a1d07" stroke="#ff7a1a"/><text x="253" y="136" fill="#ff9447">Caio</text>
+    <rect x="286" y="110" width="66" height="40" fill="#3a1d07" stroke="#ff7a1a"/><text x="319" y="136" fill="#ff9447">Davi</text>
+  </g>
+  <g stroke="#ff9447" stroke-width="1.8" fill="none" marker-end="url(#s-laranja)">
+    <path d="M116 87 C 170 87, 190 110, 216 122"/>
+    <path d="M128 205 C 180 205, 200 160, 216 140"/>
+  </g>
+  <text x="30" y="262" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bcbec4">um array só: quem tem a seta muda a turma</text>
+
+  <text x="400" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#4fd68b">com cópia: alunos.clone()</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#f3eee7">
+    <rect x="400" y="70" width="84" height="34" rx="4" fill="#1b1916" stroke="#43403a"/><text x="412" y="92">nomes</text>
+    <rect x="400" y="160" width="140" height="70" rx="6" fill="none" stroke="#43403a"/>
+    <text x="412" y="180" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="400" fill="#8a8277">a turma</text>
+    <rect x="412" y="190" width="84" height="30" rx="4" fill="#1b1916" stroke="#43403a"/><text x="422" y="210">alunos</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" text-anchor="middle">
+    <rect x="590" y="62" width="66" height="40" fill="#1b1916" stroke="#43403a"/><text x="623" y="88" fill="#bcbec4">Caio</text>
+    <rect x="656" y="62" width="66" height="40" fill="#1b1916" stroke="#43403a"/><text x="689" y="88" fill="#bcbec4">Bia</text>
+    <rect x="590" y="176" width="66" height="40" fill="#13221a" stroke="#4fd68b"/><text x="623" y="202" fill="#4fd68b">Ana</text>
+    <rect x="656" y="176" width="66" height="40" fill="#13221a" stroke="#4fd68b"/><text x="689" y="202" fill="#4fd68b">Bia</text>
+  </g>
+  <g stroke-width="1.8" fill="none">
+    <path d="M486 87 L586 84" stroke="#8a8277" marker-end="url(#s-cinza)"/>
+    <path d="M498 205 L586 198" stroke="#4fd68b" marker-end="url(#s-verde)"/>
+  </g>
+  <text x="590" y="122" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">o array de quem criou</text>
+  <text x="590" y="236" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#4fd68b">o array só da turma</text>
+  <text x="400" y="262" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bcbec4">e o getter devolve mais uma cópia, nunca este</text>
+
+  <text x="30" y="312" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">final na referência impede trocar a seta, não mexer no array. A cópia é o que protege a turma.</text>
+</svg>

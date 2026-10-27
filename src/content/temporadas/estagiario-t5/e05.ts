@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`trim()` devolve a própria `String` quando não há espaços nas pontas.',
     '`switch` com `String` compara por `equals`, não por referência.',
   ],
+  ia: {
+    uso:
+      'A IA explica bem a diferença entre `==` e `equals` e consegue dizer, expressão por expressão, o que é constante de compilação. Use-a para revisar código legado atrás de comparações de `String` com `==` e de `equals` chamados em variáveis que podem ser nulas.',
+    pedido:
+      'Revise as comparações de String neste código Java 21.\n<cole o código aqui>\n- Liste cada uso de == ou != entre Strings e diga se pode dar resultado errado com dados vindos de fora.\n- Liste cada x.equals(...) em que x pode ser null e reescreva com o literal à esquerda ou Objects.equals.\n- Não sugira intern() a menos que haja medição mostrando ganho.',
+    erros: [
+      'Diz que `a + "b"` é constante de compilação mesmo com `a` não `final`.',
+      'Sugere `intern()` como otimização geral de memória, sem medição.',
+      'Não aponta `x.equals("...")` quando `x` pode ser nulo.',
+    ],
+    conferir: [
+      'Teste a comparação com uma `String` criada em tempo de execução, como `new String("admin")` ou o resultado de um `substring`.',
+      'Rode o código com `null` em cada variável comparada.',
+      'Confira se o `==` entre strings só aparece em testes de `null`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de String.intern',
@@ -129,6 +145,94 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Com `==`, o primeiro teste daria `false`, porque as strings criadas com `new` não são as do pool, exatamente como acontece com texto digitado de verdade. Colocar o literal à esquerda elimina o risco de `NullPointerException`. Num sistema real, a senha nunca é comparada em texto puro: guarda-se um hash, comparado com uma função de tempo constante.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t5-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com um erro de tipos no `==`: `String` não pode ser comparada com `int`.',
+      codigo: `public class Codigo {
+    public static void main(String[] args) {
+        String codigo = "10";
+        if (codigo == 10) {
+            System.out.println("Código dez");
+        }
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Codigo {
+    public static void main(String[] args) {
+        String codigo = "10";
+        if (codigo.equals("10")) {
+            System.out.println("Código dez");
+        }
+    }
+}`,
+      saidaCorrigida: 'Código dez',
+      dica: 'De que tipo é `codigo`? E de que tipo é o `10` sem aspas?',
+      explicacao: 'O `==` entre uma referência `String` e um `int` não compila: os tipos não têm comparação possível. O texto `"10"` precisa ser comparado com outro texto, e pelo conteúdo, com `equals("10")`.',
+    },
+    {
+      id: 'estagiario-t5-e05-b02',
+      dificuldade: 2,
+      sintoma: 'O usuário digitou exatamente `admin`, mas o sistema o trata como `Usuário comum`.',
+      codigo: `public class Login {
+    public static void main(String[] args) {
+        String digitado = new StringBuilder("ad").append("min").toString();
+        if (digitado == "admin") {
+            System.out.println("Bem-vindo, administrador");
+        } else {
+            System.out.println("Usuário comum");
+        }
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'Usuário comum' },
+      correcao: `public class Login {
+    public static void main(String[] args) {
+        String digitado = new StringBuilder("ad").append("min").toString();
+        if (digitado.equals("admin")) {
+            System.out.println("Bem-vindo, administrador");
+        } else {
+            System.out.println("Usuário comum");
+        }
+    }
+}`,
+      saidaCorrigida: 'Bem-vindo, administrador',
+      dica: 'O texto digitado foi montado em tempo de execução. Ele está no pool?',
+      explicacao: 'O `toString()` do `StringBuilder` cria uma `String` nova, fora do pool, e o `==` compara referências: o literal `"admin"` é outro objeto. Com `equals`, a comparação é pelo texto e dá verdadeiro.',
+    },
+    {
+      id: 'estagiario-t5-e05-b03',
+      dificuldade: 2,
+      sintoma: 'O programa para com `NullPointerException` ao contar os administradores.',
+      codigo: `public class Perfil {
+    public static void main(String[] args) {
+        String[] perfis = {"admin", null, "aluno"};
+        int admins = 0;
+        for (String p : perfis) {
+            if (p.equals("admin")) admins++;
+        }
+        System.out.println("Admins: " + admins);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `public class Perfil {
+    public static void main(String[] args) {
+        String[] perfis = {"admin", null, "aluno"};
+        int admins = 0;
+        for (String p : perfis) {
+            if ("admin".equals(p)) admins++;
+        }
+        System.out.println("Admins: " + admins);
+    }
+}`,
+      saidaCorrigida: 'Admins: 1',
+      dica: 'Em qual dos dois lados do `equals` o `null` causa exceção?',
+      explicacao: 'Chamar `equals` numa referência nula lança `NullPointerException`; passar `null` como argumento só devolve `false`. Com o literal à esquerda, `"admin".equals(p)`, o perfil nulo simplesmente não conta.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t5-e05-q01',
@@ -138,6 +242,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['Com `equals`', 'Com `==`', 'Com `compareTo` igual a 1', 'Com `hashCode`'],
       resposta: 0,
       explicacao: '`equals` compara caractere por caractere. `==` compara se as duas variáveis apontam para o mesmo objeto. `compareTo` dá 0 (e não 1) para textos iguais.',
+      dica: 'Um dos operadores compara referências; o outro, os caracteres.',
     },
     {
       id: 'estagiario-t5-e05-q02',
@@ -152,6 +257,7 @@ System.out.println(a == c);
 System.out.println(a.equals(c));`,
       resposta: 'true\nfalse\ntrue',
       explicacao: 'Literais iguais são o mesmo objeto do pool. `new String` cria um objeto separado, com o mesmo conteúdo.',
+      dica: 'Literais iguais são o mesmo objeto; `new` cria sempre outro.',
     },
     {
       id: 'estagiario-t5-e05-q03',
@@ -166,6 +272,7 @@ System.out.println((s1 == s3) + " " + s1.equals(s3) + " " + (s1 == s3.intern()))
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`s2` não é `final`, então `s2 + "va"` é calculado em tempo de execução e cria um objeto novo. O conteúdo é igual, e `intern()` devolve o "Java" do pool, que é o mesmo de `s1`.',
+      dica: '`s2` não é `final`: `s2 + "va"` é calculado na execução. E o `intern()` devolve o quê?',
     },
     {
       id: 'estagiario-t5-e05-q04',
@@ -179,6 +286,7 @@ System.out.println(y == "Java");`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`x` é `final` e inicializada com um literal: é uma constante de compilação. `x + "va"` é calculado pelo `javac`, vira o literal "Java" e vai para o pool.',
+      dica: 'Uma variável `final` inicializada com um literal entra no cálculo das constantes.',
     },
     {
       id: 'estagiario-t5-e05-q05',
@@ -197,6 +305,7 @@ System.out.println(y == "Java");`,
       codigoVerificacao: `System.out.println(("a" + "b" == "ab") + " " + new String("x").equals("x") + " "
         + "Ok".equalsIgnoreCase("OK") + " " + (new String("x") == "x") + " " + "x".equals(null));`,
       explicacao: 'A concatenação de dois literais é constante e vai para o pool. `equals` e `equalsIgnoreCase` comparam conteúdo. Um objeto criado com `new` nunca é o do pool, e `equals(null)` é sempre `false`.',
+      dica: 'Separe o que compara conteúdo do que compara referência, e lembre o que `equals(null)` devolve.',
     },
     {
       id: 'estagiario-t5-e05-q06',
@@ -217,6 +326,7 @@ System.out.println("fim");`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: 'O método é chamado **em** `perfil`, que é nulo. Com o literal à esquerda, `"admin".equals(perfil)`, o resultado seria `false`, sem exceção.',
+      dica: 'Qual é o valor de `perfil` quando o `equals` é chamado nele?',
     },
     {
       id: 'estagiario-t5-e05-q07',
@@ -237,6 +347,7 @@ System.out.println("fim");`,
       respostas: ['equals', 'contentEquals'],
       saida: 'liberado',
       explicacao: 'A senha digitada é um objeto novo, então `==` daria `false`. `equals` compara o conteúdo; `contentEquals` também, e aceita qualquer sequência de caracteres.',
+      dica: 'Procure o método que compara o conteúdo, não a referência.',
     },
     {
       id: 'estagiario-t5-e05-q08',
@@ -250,6 +361,7 @@ System.out.println(s == t);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem espaços para remover, `trim()` devolve a própria `String`, e a documentação garante isso. Com algo para remover, devolveria um objeto novo.',
+      dica: 'Quando não há espaços nas pontas, o `trim()` precisa criar uma `String` nova?',
     },
     {
       id: 'estagiario-t5-e05-q09',
@@ -266,6 +378,7 @@ System.out.println(s == t);`,
 }`,
       resposta: 5,
       explicacao: 'Aspas simples são para um único `char`. `\'Ana\'` não é um literal válido, e mesmo `\'A\'` não poderia ser comparado com `==` a uma `String`.',
+      dica: 'Aspas simples delimitam um `char`, e só cabe um caractere nelas.',
     },
     {
       id: 'estagiario-t5-e05-q10',
@@ -279,6 +392,7 @@ String d = b.intern();
 System.out.println((a == b) + " " + (c == d) + " " + (c == "x"));`,
       resposta: 'false true true',
       explicacao: 'Dois `new` são dois objetos. `intern()` devolve a cópia única do pool, a mesma para os dois e a mesma do literal "x".',
+      dica: '`a` e `b` são objetos diferentes; os dois `intern()` levam ao mesmo objeto do pool.',
     },
     {
       id: 'estagiario-t5-e05-q11',
@@ -294,6 +408,7 @@ switch (cmd) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `switch` com `String` compara usando `hashCode` e `equals`, não referências. Um objeto criado com `new` cai no `case` com o mesmo texto.',
+      dica: 'O `switch` com `String` compara usando `equals`.',
     },
     {
       id: 'estagiario-t5-e05-q12',
@@ -308,6 +423,7 @@ switch (cmd) {
       ],
       resposta: 0,
       explicacao: 'Até o Java 6, o pool ficava na PermGen, e internar strings demais estourava a memória. A partir do Java 7, ele fica no heap e participa da coleta de lixo.',
+      dica: 'No Java 7, o pool saiu da PermGen.',
     },
     {
       id: 'estagiario-t5-e05-q13',
@@ -321,6 +437,7 @@ System.out.println((s == t) + " " + s.equals(t));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A chamada de método faz a expressão deixar de ser constante: ela é calculada em tempo de execução e gera um objeto novo. O conteúdo é o mesmo.',
+      dica: 'Uma chamada de método impede que a concatenação seja constante.',
     },
     {
       id: 'estagiario-t5-e05-q14',
@@ -336,6 +453,7 @@ System.out.println((s == t) + " " + s.equals(t));`,
       ],
       respostas: [0, 1],
       explicacao: 'Com o literal chamando o método, ou com `Objects.equals`, `null` vira simplesmente `false`. `s.equals` e `s.equalsIgnoreCase` lançam exceção com `s` nulo. E `s == "admin"` não lança, mas compara referências, não conteúdo.',
+      dica: 'A chamada não pode ser feita numa referência que talvez seja nula.',
     },
     {
       id: 'estagiario-t5-e05-q15',
@@ -345,6 +463,7 @@ System.out.println((s == t) + " " + s.equals(t));`,
       opcoes: ['`true`', '`false`', '`0`', 'Lança exceção'],
       resposta: 0,
       explicacao: '`equalsIgnoreCase` compara o conteúdo sem diferenciar maiúsculas de minúsculas. É o jeito certo de comparar respostas como "sim", "Sim" e "SIM".',
+      dica: 'Ignorando maiúsculas, os textos são iguais?',
     },
   ],
 };

@@ -1,0 +1,17 @@
+{
+  "q01": "Construtor: o mesmo nome da classe e nenhum tipo de retorno, nem `void`.",
+  "q02": "Na linha `nivel = nivel`, qual `nivel` recebe o valor?",
+  "q03": "A classe declara um construtor. O padrão sem parâmetros ainda existe?",
+  "q04": "O mais interno termina primeiro; cada um acrescenta a sua letra na volta.",
+  "q05": "Procure ciclos de `this(...)`, retornos indevidos e comandos antes de `this(...)`.",
+  "q06": "Qual palavra se refere ao objeto que está sendo construído?",
+  "q07": "Até o Java 21, o que precisa vir primeiro num construtor que chama outro?",
+  "q08": "Com `void`, aquilo ainda é um construtor? Alguém chamou o método?",
+  "q09": "Todas as chamadas devolvem o mesmo objeto.",
+  "q10": "Basta declarar um construtor para o padrão sumir.",
+  "q11": "No Java 25, comandos antes de `this(...)` são permitidos se não usarem o objeto.",
+  "q12": "O segundo `new` passa um valor que a validação recusa.",
+  "q13": "`this` é uma referência ao objeto atual, e só existe em código de instância.",
+  "q14": "O inicializador `x = 10` não é copiado para o construtor que começa com `this(...)`; ele roda no outro.",
+  "q15": "O nome especial no bytecode tem sinais de menor e maior."
+}

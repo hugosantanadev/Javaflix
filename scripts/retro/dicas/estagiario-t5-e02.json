@@ -1,0 +1,17 @@
+{
+  "q01": "Com um só argumento, o `substring` vai do índice dado até o fim. Qual letra está no índice 4?",
+  "q02": "O fim do `substring` é excluído; `indexOf` e `lastIndexOf` contam a partir de 0.",
+  "q03": "O início pode ser maior que o fim?",
+  "q04": "Siga a cadeia da esquerda para a direita e conte as letras no final.",
+  "q05": "Quais opções tratam o ponto literalmente, sem expressão regular?",
+  "q06": "O `split` mantém os vazios do meio e descarta os do fim.",
+  "q07": "Procure o método que devolve a posição de um caractere.",
+  "q08": "Compare os primeiros caracteres: `'B'` e `'a'`. Qual é a diferença entre os códigos?",
+  "q09": "Uma chamada de método pode ficar à esquerda de um `=`?",
+  "q10": "Repetir zero vezes dá que texto?",
+  "q11": "O `replace` troca todas as ocorrências; o `indexOf` com dois argumentos começa a procurar na posição 3.",
+  "q12": "O `join` põe o separador só entre os elementos. E se não houver nenhum?",
+  "q13": "Lembre: `length()` é método e `concat` só aceita `String`.",
+  "q14": "No Java 21, o `indexOf` com três argumentos procura só entre o início (incluído) e o fim (excluído).",
+  "q15": "Dois métodos removem espaços das pontas; só um conhece os espaços Unicode."
+}

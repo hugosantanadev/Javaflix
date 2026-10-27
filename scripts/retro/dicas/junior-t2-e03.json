@@ -1,0 +1,17 @@
+{
+  "q01": "Por dentro, o varargs é de que tipo?",
+  "q02": "Some os tamanhos: zero, um e três.",
+  "q03": "O varargs precisa ser o último, e só pode haver um.",
+  "q04": "Um parâmetro `int[]` aceita valores soltos?",
+  "q05": "Varargs é a última fase da escolha: `m(5)` acha uma versão antes.",
+  "q06": "Qual símbolo transforma o parâmetro em varargs?",
+  "q07": "Pode haver parâmetro depois do varargs?",
+  "q08": "O cast decide se o `null` é um elemento ou o array inteiro.",
+  "q09": "O primeiro `dobrar` recebe o próprio array; o segundo, um array novo com cópias.",
+  "q10": "`int...` e `Integer...`: algum é mais específico que o outro?",
+  "q11": "Sem argumentos, o compilador monta que array?",
+  "q12": "`m(1)` acha `m(Object)` por boxing, antes da fase dos varargs; entre `int...` e `long...`, vale o mais específico.",
+  "q13": "O separador entra só antes do segundo número em diante; sem números, sobram os sinais.",
+  "q14": "O varargs aceita nada, valores soltos ou um array do mesmo tipo.",
+  "q15": "Varargs é escrita abreviada: o array é montado na chamada."
+}

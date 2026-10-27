@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Ramos de tipos numéricos diferentes são promovidos: `case 1 -> 1; default -> 2.5;` resulta em `double`.',
     'Com `:` dentro de uma expressão `switch`, o fall-through volta.',
   ],
+  ia: {
+    uso:
+      'A IA converte bem um `switch` clássico numa expressão com setas e explica a exaustividade. Use para modernizar código antigo, mas confira se o resultado ficou idêntico: uma constante de `enum` esquecida, ou um `default` acrescentado sem necessidade, muda o comportamento.',
+    pedido:
+      'Converta o switch abaixo para uma expressão switch com setas, em Java 21.\n<cole o switch aqui>\n- Mantenha exatamente o mesmo comportamento, inclusive nos valores que hoje caem no default.\n- Se o seletor for um enum, liste todas as constantes e não acrescente default.\n- Antes do código, liste os casos de teste que provam que nada mudou.',
+    erros: [
+      'Usa `return` ou `break valor;` dentro do bloco de uma expressão `switch`, em vez de `yield`.',
+      'Esquece o `;` depois da `}` de uma expressão `switch` usada numa atribuição.',
+      'Acrescenta um `default` num `switch` sobre `enum` "por segurança", desligando o aviso de constante nova.',
+    ],
+    conferir: [
+      'Compile: a exaustividade e o `yield` são conferidos pelo compilador.',
+      'Teste um valor de cada `case` e um que caia no `default`.',
+      'Compare com a conversão automática do IntelliJ, pelo Alt + Enter na palavra `switch`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JEP 361: Switch Expressions',
@@ -122,6 +138,106 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O `default -> throw` satisfaz a exaustividade sem inventar um valor falso: um tipo desconhecido é um erro, e o método deixa isso claro. Compare com a versão clássica: uma variável declarada antes, um `break` em cada `case` e o risco de esquecer um deles. A expressão `switch` no `return` deixa o método com uma única saída.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t3-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: \';\' expected`.',
+      codigo: `public class Plano {
+    public static void main(String[] args) {
+        int codigo = 2;
+        String tipo = switch (codigo) {
+            case 1 -> "comum";
+            default -> "especial";
+        }
+        System.out.println(tipo);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Plano {
+    public static void main(String[] args) {
+        int codigo = 2;
+        String tipo = switch (codigo) {
+            case 1 -> "comum";
+            default -> "especial";
+        };
+        System.out.println(tipo);
+    }
+}`,
+      saidaCorrigida: 'especial',
+      dica: 'O `switch` aqui é o lado direito de uma atribuição. Como termina toda atribuição?',
+      explicacao: 'Quando o `switch` é uma expressão, ele faz parte de um comando maior, a atribuição `String tipo = ...`, e todo comando termina com `;`. A `}` fecha o `switch`, e o `;` depois dela fecha a atribuição.',
+    },
+    {
+      id: 'estagiario-t3-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O `javac` recusa o programa com `error: attempt to return out of a switch expression`.',
+      codigo: `public class Nota {
+    public static void main(String[] args) {
+        int estrelas = 4;
+        String texto = switch (estrelas) {
+            case 1, 2 -> "ruim";
+            default -> {
+                String base = "bom";
+                return base + "!";
+            }
+        };
+        System.out.println(texto);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Nota {
+    public static void main(String[] args) {
+        int estrelas = 4;
+        String texto = switch (estrelas) {
+            case 1, 2 -> "ruim";
+            default -> {
+                String base = "bom";
+                yield base + "!";
+            }
+        };
+        System.out.println(texto);
+    }
+}`,
+      saidaCorrigida: 'bom!',
+      dica: 'Dentro do bloco de um `case`, qual palavra entrega o valor para a expressão `switch`?',
+      explicacao: '`return` sairia do método inteiro, e isso não é permitido no meio de uma expressão. O valor de um bloco numa expressão `switch` sai com `yield`, que entrega o resultado e encerra só o `switch`.',
+    },
+    {
+      id: 'estagiario-t3-e03-b03',
+      dificuldade: 2,
+      sintoma: 'Para novembro, o mês 11, imprime `31 dias`, mas novembro tem 30.',
+      codigo: `public class Calendario {
+    public static void main(String[] args) {
+        int mes = 11;
+        int dias = switch (mes) {
+            case 2 -> 28;
+            case 4, 6, 9, 10 -> 30;
+            default -> 31;
+        };
+        System.out.println(dias + " dias");
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: '31 dias' },
+      correcao: `public class Calendario {
+    public static void main(String[] args) {
+        int mes = 11;
+        int dias = switch (mes) {
+            case 2 -> 28;
+            case 4, 6, 9, 11 -> 30;
+            default -> 31;
+        };
+        System.out.println(dias + " dias");
+    }
+}`,
+      saidaCorrigida: '30 dias',
+      dica: 'Recite os meses de 30 dias: abril, junho, setembro e... Compare com os rótulos do `case`.',
+      explicacao: 'Um rótulo errado, 10 no lugar de 11, faz novembro cair no `default`. O compilador não tem como saber disso: só um teste com cada mês pega. É o tipo de bug que um teste automatizado com os doze meses encontra na hora.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t3-e03-q01',
@@ -136,6 +252,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Na forma arrow, cada `case` é independente, e o `break` deixa de ser necessário. As regras dos rótulos e dos tipos do seletor continuam as mesmas.',
+      dica: 'Pense no que acontece depois de um `case` executar: na forma com seta, a execução continua para o próximo?',
     },
     {
       id: 'estagiario-t3-e03-q02',
@@ -152,6 +269,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: '28\n30\n31',
       explicacao: 'A expressão `switch` produz um valor por mês: fevereiro 28, novembro está na lista dos meses de 30 dias, e dezembro cai no `default`.',
+      dica: 'Para cada mês do laço, procure o `case` que casa; o que não casa vai para o `default`.',
     },
     {
       id: 'estagiario-t3-e03-q03',
@@ -173,6 +291,7 @@ System.out.println(s);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Uma expressão sempre precisa produzir um valor, e um `int` pode ser qualquer coisa além de 1 e 2. Sem `default`, o compilador recusa. Com um `enum`, listar todas as constantes bastaria.',
+      dica: 'Uma expressão precisa de um valor para todo `int`. O que acontece com o 5?',
     },
     {
       id: 'estagiario-t3-e03-q04',
@@ -189,6 +308,7 @@ System.out.println(s);`,
       respostas: [0, 2],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: 'Misturar `->` com `:` é proibido, e um bloco numa expressão precisa terminar com `yield` (`20;` sozinho nem é um comando válido). A forma com `:` funciona numa expressão desde que cada caminho termine em `yield`, e blocos vazios são válidos num `switch` comando.',
+      dica: 'Não se misturam `:` e `->` no mesmo `switch`, e um bloco precisa entregar o valor com `yield`.',
     },
     {
       id: 'estagiario-t3-e03-q05',
@@ -210,6 +330,7 @@ System.out.println(r);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com `:`, o fall-through existe mesmo numa expressão. O `case 3` imprime e cai no `default`, que produz o valor. Basta que todo caminho termine num `yield`, e termina.',
+      dica: 'Com `:` numa expressão, o fall-through volta. A execução entra no `case 3` e desce até um `yield`.',
     },
     {
       id: 'estagiario-t3-e03-q06',
@@ -225,6 +346,7 @@ System.out.println(v);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os ramos são `char` e `long`, então a expressão é promovida para `long`. O `\'x\'` escolhido vira 120. Com `var`, o tipo inferido é `long`.',
+      dica: 'Os ramos são `char` e `long`. Qual é o tipo da expressão, e quanto vale `\'x\'` nesse tipo?',
     },
     {
       id: 'estagiario-t3-e03-q07',
@@ -247,6 +369,7 @@ System.out.println(v);`,
       respostas: ['yield'],
       saida: 'A',
       explicacao: '9 / 2 é 4, que cai no primeiro `case`. Dentro do bloco, `yield` produz o valor da expressão. `return` sairia do `main` e não é permitido dentro de uma expressão `switch`.',
+      dica: 'No bloco de um `case`, qual palavra entrega o valor à expressão?',
     },
     {
       id: 'estagiario-t3-e03-q08',
@@ -272,6 +395,7 @@ System.out.println(v);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com `enum`, cobrir todas as constantes torna a expressão exaustiva sem `default`. 54 + 58 = 112: soma de dois `int`, sem nenhuma `String` na conta.',
+      dica: 'Com `enum`, cobrir todas as constantes basta. Some as duas medidas.',
     },
     {
       id: 'estagiario-t3-e03-q09',
@@ -296,6 +420,7 @@ System.out.println(v);`,
 }`,
       resposta: 6,
       explicacao: 'Não se pode sair do método de dentro de uma expressão `switch`: o bloco precisa produzir um valor com `yield "dois";`. O `return s;` da linha 10 está fora do `switch` e é válido.',
+      dica: 'Procure uma palavra que tentaria sair do método inteiro de dentro da expressão.',
     },
     {
       id: 'estagiario-t3-e03-q10',
@@ -315,6 +440,7 @@ System.out.println(r);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os `case` com padrão são testados em ordem. O objeto não é `Integer`; é `String` com 4 letras, então a guarda `when` é verdadeira no segundo `case`. Pattern matching em `switch` é do Java 21.',
+      dica: 'Os `case` são testados em ordem. "Java" é `String`, e o comprimento dele é maior que 3?',
     },
     {
       id: 'estagiario-t3-e03-q11',
@@ -330,6 +456,7 @@ System.out.println(r);`,
 }`,
       resposta: '5 útil\n6 sábado\n7 domingo',
       explicacao: 'Cada `case` com seta executa só o seu lado direito. Sem fall-through, o 5 não "cai" no `case 6`, como aconteceria com `:` e sem `break`.',
+      dica: 'Na forma com seta não há fall-through: cada `d` imprime uma linha só.',
     },
     {
       id: 'estagiario-t3-e03-q12',
@@ -345,6 +472,7 @@ System.out.println(r);`,
       ],
       respostas: [0, 1],
       explicacao: 'Uma expressão sempre precisa ter um valor, daí a exaustividade, e a seta elimina o fall-through. O valor de um bloco sai com `yield` (o `break` com valor existiu só numa versão de *preview*), e os tipos do seletor são os mesmos do `switch` clássico.',
+      dica: 'Pense na exaustividade e na ausência de fall-through.',
     },
     {
       id: 'estagiario-t3-e03-q13',
@@ -354,6 +482,7 @@ System.out.println(r);`,
       opcoes: ['`yield`', '`return`', '`break`', '`continue`'],
       resposta: 0,
       explicacao: '`yield` encerra o bloco e entrega o valor para a expressão. `return` sairia do método e não é permitido ali.',
+      dica: 'Não é `return` nem `break`: é a palavra criada para entregar o valor de um bloco.',
     },
     {
       id: 'estagiario-t3-e03-q14',
@@ -374,6 +503,7 @@ int r = switch (s) {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Uma `String` pode ter infinitos valores, e dois `case` não a cobrem. O compilador não "sabe" que `s` vale "a": a exaustividade é verificada pelo tipo, não pelo valor.',
+      dica: '`String` tem infinitos valores possíveis. Dois `case` cobrem todos?',
     },
     {
       id: 'estagiario-t3-e03-q15',
@@ -391,6 +521,7 @@ System.out.println(r + " " + i);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O seletor `i++` vale 0 e deixa `i` em 1, uma única vez, antes de escolher o `case`. O `case 0` usa o `i` já incrementado: 1 · 10 = 10.',
+      dica: 'O seletor usa `i++`: ele vale o 0 antigo, e `i` já é 1 quando o `case` calcula o resultado.',
     },
   ],
 };

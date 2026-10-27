@@ -1,0 +1,17 @@
+{
+  "q01": "A inicialização é especial: roda quantas vezes? E a atualização vem antes ou depois do corpo?",
+  "q02": "Comece em 10 e tire 3 enquanto o valor for maior que zero.",
+  "q03": "Liste os valores de `i`: começa em 0, anda de 2 em 2, e o `<=` deixa o 10 passar?",
+  "q04": "Calcule `a` e `b` a cada volta: `a` dobra e `b` diminui 1. Pare quando `a < b` falhar.",
+  "q05": "A inicialização declara um tipo só, e a variável do `for` não existe depois dele.",
+  "q06": "Quando `i` é múltiplo de 3, o corpo soma 1 antes de imprimir, e o `i++` do cabeçalho soma mais 1 depois.",
+  "q07": "Para somar o 5 também, a condição precisa deixar o 5 passar.",
+  "q08": "O `;` logo depois do cabeçalho é o corpo do laço. O `println` faz parte dele?",
+  "q09": "Até onde a variável declarada no cabeçalho do `for` existe?",
+  "q10": "A cada volta, o corpo soma 1 a `x` e a atualização soma mais 10. Quantas voltas são?",
+  "q11": "Multiplique por 3 a partir de 1 enquanto o valor for menor que 100.",
+  "q12": "Conte as voltas de cada um; cuidado com os `<=` e `>=`, que incluem o extremo.",
+  "q13": "Sem condição, o laço testa o quê para parar?",
+  "q14": "`char` também é número: somar 2 pula uma letra.",
+  "q15": "O `byte` vai até 127. O que acontece quando ele passa disso?"
+}

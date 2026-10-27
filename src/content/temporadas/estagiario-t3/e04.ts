@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Método com retorno precisa de `return` ou `throw` em todos os caminhos; o erro aparece na `}` final.',
     'Bloco interno não pode redeclarar uma variável local do bloco externo.',
   ],
+  ia: {
+    uso:
+      'A IA explica bem uma mensagem de "unreachable statement" ou "might not have been initialized" quando você cola o erro junto com o método. O cuidado está na correção: o caminho mais curto para calar o compilador, um valor inicial qualquer, costuma esconder o caso que você esqueceu.',
+    pedido:
+      'O javac recusa o método Java 21 abaixo com a mensagem abaixo.\n<cole o erro e o método aqui>\n- Explique qual caminho do código causa o erro, linha por linha.\n- Não resolva inicializando a variável com um valor qualquer: diga o que aquele caminho deveria fazer de acordo com a regra de negócio, e pergunte se não estiver claro.\n- Sugira um teste que passe por esse caminho.',
+    erros: [
+      'Sugere `int x = 0;` só para calar o erro, escondendo o caminho esquecido com um valor arbitrário.',
+      'Afirma que o compilador "sabe" que uma condição como `Math.random() > 2` é sempre falsa.',
+      'Diz que `if (false)` não compila, confundindo com `while (false)`.',
+    ],
+    conferir: [
+      'Compile: as três verificações deste episódio são do compilador, e ele é a fonte da verdade.',
+      'Desenhe os caminhos do método e marque, em cada um, onde a variável recebe valor.',
+      'Escreva um teste que passe pelo caminho que faltava e confira o resultado.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JLS 14.22: Unreachable Statements',
@@ -124,6 +140,102 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'As duas versões compilam pelo mesmo motivo: o `else` final fecha o último caminho. Tire o `else` da primeira e aparece "missing return statement"; tire da segunda e aparece "variable r might not have been initialized". A versão com uma única saída costuma ser mais fácil de depurar; a com vários `return`, mais fácil de ler. O compilador garante as duas.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t3-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: unreachable statement`.',
+      codigo: `public class Caixa {
+    static int total(int a, int b) {
+        int soma = a + b;
+        return soma;
+        System.out.println("Total calculado");
+    }
+
+    public static void main(String[] args) {
+        System.out.println(total(30, 12));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Caixa {
+    static int total(int a, int b) {
+        int soma = a + b;
+        System.out.println("Total calculado");
+        return soma;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(total(30, 12));
+    }
+}`,
+      saidaCorrigida: 'Total calculado\n42',
+      dica: 'O que acontece com a execução do método logo depois de um `return`?',
+      explicacao: 'O `return` encerra o método na hora, então nada depois dele, no mesmo bloco, pode rodar. Em Java, um comando que nunca roda é erro de compilação. O `println` precisa vir antes do `return`.',
+    },
+    {
+      id: 'estagiario-t3-e04-b02',
+      dificuldade: 2,
+      sintoma: 'O `javac` recusa o programa com `error: variable taxa might already have been assigned`.',
+      codigo: `public class Desconto {
+    public static void main(String[] args) {
+        final double taxa;
+        boolean cliente = true;
+        if (cliente) taxa = 0.1;
+        taxa = 0.05;
+        System.out.println("Taxa: " + taxa);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Desconto {
+    public static void main(String[] args) {
+        final double taxa;
+        boolean cliente = true;
+        if (cliente) taxa = 0.1;
+        else taxa = 0.05;
+        System.out.println("Taxa: " + taxa);
+    }
+}`,
+      saidaCorrigida: 'Taxa: 0.1',
+      dica: 'Uma variável `final` só pode receber valor uma vez. Siga o caminho em que `cliente` é verdadeiro: quantas atribuições acontecem?',
+      explicacao: 'Quando `cliente` é verdadeiro, `taxa` recebe 0.1 no `if` e de novo 0.05 na linha seguinte, e uma `final` não pode ser atribuída duas vezes. Com o `else`, cada caminho atribui exatamente uma vez, que é o que a regra exige.',
+    },
+    {
+      id: 'estagiario-t3-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O alarme dispara com 30 graus, mas o limite combinado é de 40 graus. Deveria imprimir `Tudo normal`.',
+      codigo: `public class Alarme {
+    static int limite;
+
+    public static void main(String[] args) {
+        int temperatura = 30;
+        if (temperatura > limite) {
+            System.out.println("Alarme: " + temperatura + " graus");
+        } else {
+            System.out.println("Tudo normal");
+        }
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'saida', saida: 'Alarme: 30 graus' },
+      correcao: `public class Alarme {
+    static int limite = 40;
+
+    public static void main(String[] args) {
+        int temperatura = 30;
+        if (temperatura > limite) {
+            System.out.println("Alarme: " + temperatura + " graus");
+        } else {
+            System.out.println("Tudo normal");
+        }
+    }
+}`,
+      saidaCorrigida: 'Tudo normal',
+      dica: 'Quanto vale `limite` no momento da comparação? Ninguém atribuiu nada a ele, e mesmo assim o código compilou.',
+      explicacao: 'A regra de atribuição definida vale só para variáveis locais. Um campo começa com o valor padrão, 0 para `int`, e o compilador não reclama de ler um campo sem valor escolhido. O limite esquecido virou 0, e qualquer temperatura positiva dispara o alarme.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t3-e04-q01',
@@ -142,6 +254,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Código inalcançável é erro de compilação em Java, não um aviso. O `return` encerra o método, e nenhum caminho chega ao `println`.',
+      dica: 'O que acontece com a execução do método logo depois de um `return`?',
     },
     {
       id: 'estagiario-t3-e04-q02',
@@ -158,6 +271,7 @@ const episodio: EpisodioConteudo = {
       respostas: [0, 1],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: 'O `while (true)` sem `break` nunca termina, e o corpo do `while (false)` nunca roda. O `if (false)` é a exceção deliberada, o `do-while` roda o corpo uma vez e termina, e o `for` sem condição tem um `break` alcançável.',
+      dica: 'Um laço com condição constante entra na análise de fluxo; o `if (false)` é a exceção aberta de propósito.',
     },
     {
       id: 'estagiario-t3-e04-q03',
@@ -177,6 +291,7 @@ System.out.println(x);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'O compilador não executa `n > 3`: para ele, existe o caminho em que o `if` não entra, e nele `x` não tem valor. Variáveis locais não têm valor padrão.',
+      dica: 'O compilador não executa o `if`. Existe um caminho em que `x` chega à leitura sem valor?',
     },
     {
       id: 'estagiario-t3-e04-q04',
@@ -190,6 +305,7 @@ System.out.println(x);`,
       resposta: 0,
       verificar: { tipo: 'executa', saida: '7' },
       explicacao: 'Com uma condição constante `true`, o caminho do "falso" não existe na análise de atribuição definida, e `x` conta como atribuída. Trocando `true` por uma variável `boolean`, o mesmo código deixa de compilar.',
+      dica: 'Com a constante `true`, o caminho do falso existe para o compilador?',
     },
     {
       id: 'estagiario-t3-e04-q05',
@@ -211,6 +327,7 @@ System.out.println(x);`,
 }`,
       resposta: 8,
       explicacao: 'Quando `n` é zero, o método chega ao fim sem `return`. O erro "missing return statement" é apontado na chave que fecha o método, o ponto aonde esse caminho chega. Um `else` ou um `return` antes da chave resolveria.',
+      dica: 'O erro de "missing return" é apontado onde o método termina sem devolver nada.',
     },
     {
       id: 'estagiario-t3-e04-q06',
@@ -234,6 +351,7 @@ System.out.println(x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Como o `while (true)` não tem `break`, o fim do método é inalcançável, e nenhum `return` final é exigido. O método devolve a posição do primeiro negativo, 2.',
+      dica: 'O laço só termina pelo `return`. Em que posição está o primeiro número negativo?',
     },
     {
       id: 'estagiario-t3-e04-q07',
@@ -255,6 +373,7 @@ System.out.println(x);`,
       respostas: ['else'],
       saida: '2',
       explicacao: 'Com o `else`, os dois caminhos atribuem `x`, e a leitura no `println` passa na análise de atribuição definida.',
+      dica: 'Que palavra cria o caminho que faltava, dando valor a `x` quando o `if` não entra?',
     },
     {
       id: 'estagiario-t3-e04-q08',
@@ -274,6 +393,7 @@ for (int i = 0; i < 3; i++) {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Variáveis locais não podem ser sombreadas por outras locais. A `total` externa ainda está viva dentro do laço. Sombreamento só é permitido quando uma local esconde um campo.',
+      dica: 'Um bloco interno não pode declarar uma variável com o nome de outra que ainda está viva.',
     },
     {
       id: 'estagiario-t3-e04-q09',
@@ -290,6 +410,7 @@ for (int i = 5; i < 6; i++) {
 }`,
       resposta: '0\n2\n10',
       explicacao: 'Cada laço tem o seu próprio `i` e o seu próprio `dobro`, que deixam de existir no fim do laço. Por isso os nomes podem ser reaproveitados no segundo laço.',
+      dica: 'Os dois laços vêm em sequência: a variável do primeiro já morreu quando o segundo começa.',
     },
     {
       id: 'estagiario-t3-e04-q10',
@@ -310,6 +431,7 @@ System.out.println("fim");`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: '`LIGADO` é `final` e inicializada com uma constante: o compilador a trata como o literal `true`. O laço sem `break` nunca termina, e o comando seguinte é inalcançável. Sem o `final`, compilaria (e rodaria para sempre).',
+      dica: '`final` inicializada com constante conta como constante. O laço pode terminar?',
     },
     {
       id: 'estagiario-t3-e04-q11',
@@ -326,6 +448,7 @@ System.out.println("fim");`,
       respostas: [0, 2, 3],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Um método pode terminar com `return`, com `throw` ou nunca terminar (laço infinito): o que não pode é chegar à `}` final. B deixa o caminho do `b` falso; E deixa o caminho de qualquer valor que não seja 1 nem 2, porque não tem `default`.',
+      dica: 'Um método pode terminar com `return`, com `throw` ou nunca terminar. Procure o que deixa um caminho sem saída.',
     },
     {
       id: 'estagiario-t3-e04-q12',
@@ -345,6 +468,7 @@ System.out.println("fim");`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Depois de um `break` no mesmo bloco, nada pode ser executado. Com o `break` dentro de um `if`, o `println` voltaria a ser alcançável.',
+      dica: 'Depois de um `break` no mesmo bloco, o que vem logo abaixo pode rodar?',
     },
     {
       id: 'estagiario-t3-e04-q13',
@@ -359,6 +483,7 @@ System.out.println("fim");`,
       ],
       resposta: 0,
       explicacao: 'O compilador analisa a estrutura do código, sem executá-lo, e recusa leituras de variáveis locais que possam não ter valor. Campos não entram na regra porque recebem valor padrão.',
+      dica: 'Pense na palavra "definida": certa em todos os caminhos, antes de ler.',
     },
     {
       id: 'estagiario-t3-e04-q14',
@@ -376,6 +501,7 @@ System.out.println(x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com `default`, todo caminho do `switch` atribui `x`, então a leitura é permitida. Sem o `default`, não compilaria. O `case 1` casa e x vale 10.',
+      dica: 'Um `switch` com `default` dá valor a `x` em todos os caminhos. Qual `case` roda com `n` valendo 1?',
     },
     {
       id: 'estagiario-t3-e04-q15',
@@ -395,6 +521,7 @@ x = 2;`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Uma `final` local pode ser declarada sem valor, mas cada caminho só pode atribuí-la uma vez. No caminho em que o `if` entra, a segunda atribuição seria a segunda vez. É a atribuição definida ao contrário: "certamente não atribuída".',
+      dica: 'Siga o caminho em que `b` é verdadeiro: quantas vezes `x` recebe valor?',
     },
   ],
 };

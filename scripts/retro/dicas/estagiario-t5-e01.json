@@ -1,0 +1,17 @@
+{
+  "q01": "Imutável fala do objeto, não da variável.",
+  "q02": "Quais das chamadas guardam o resultado em `s`?",
+  "q03": "Depois de `b = a`, as duas apontam para o mesmo objeto. A concatenação muda esse objeto ou cria outro?",
+  "q04": "O último índice válido é `length() - 1`.",
+  "q05": "Pense no que só é seguro porque ninguém altera o objeto.",
+  "q06": "`length()` é `int` e `charAt` é `char`. O que dá `int + char`?",
+  "q07": "O método segue o padrão `toXxxCase`.",
+  "q08": "Uma classe `final` aceita subclasses?",
+  "q09": "O `b += \"y\"` cria um objeto novo para `b`; o `a` depois vira maiúsculo sozinho.",
+  "q10": "A String tem um espaço, um tab e outro espaço. Ela está vazia? Está em branco?",
+  "q11": "`charAt` devolve um `char`. Um `char` pode ser atribuído a uma `String`?",
+  "q12": "O emoji fica fora do plano básico do Unicode e ocupa duas unidades UTF-16.",
+  "q13": "Chamar método em `null` lança exceção; concatenar e passar como argumento, não.",
+  "q14": "`s += \"a\"` é `s = s + \"a\"`, e concatenar `null` produz o texto `\"null\"`.",
+  "q15": "Lembre o JEP 254, Compact Strings."
+}

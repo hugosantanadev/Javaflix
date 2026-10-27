@@ -1,0 +1,17 @@
+{
+  "q01": "Pense em quem pode mexer no estado e por qual caminho.",
+  "q02": "O segundo `setGraus` passa na validação?",
+  "q03": "A receita fala de campos, de métodos que alteram e de objetos mutáveis.",
+  "q04": "O construtor guardou uma cópia ou a mesma referência de `base`?",
+  "q05": "Um campo `final` pode ser incrementado?",
+  "q06": "Para `boolean`, a convenção usa outro prefixo no lugar de `get`.",
+  "q07": "Um campo `final` aceita uma atribuição num método comum?",
+  "q08": "A visão acompanha a original; a cópia, não.",
+  "q09": "Só a atribuição guarda o objeto novo; as outras chamadas descartam o resultado.",
+  "q10": "Uma subclasse poderia acrescentar o quê a uma classe imutável?",
+  "q11": "`List.copyOf` devolve uma lista que aceita `add`?",
+  "q12": "`final` impede trocar a referência, não mexer no objeto.",
+  "q13": "Quais delas não têm nenhum método que altera o objeto?",
+  "q14": "Pense no modelo de memória e em outras threads.",
+  "q15": "O `clone` de array é raso: copia as setas, não os `StringBuilder`."
+}

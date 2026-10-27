@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'A expressão com classe anônima termina com `;`.',
     'Cada classe aninhada vira um `.class` próprio, como `Externa$Interna` ou `Externa$1`.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a escolher entre os quatro tipos de classe aninhada e a converter classes anônimas em lambdas. Use-a também para revisar classes internas: ela explica bem o `this$0` quando perguntada, mas raramente avisa sozinha que uma interna deveria ser `static`.',
+    pedido:
+      'Revise as classes aninhadas deste código Java 21.\n<cole o código aqui>\n- Para cada classe interna, diga se ela usa algo do objeto externo; se não usa, proponha static.\n- Para cada nome repetido entre os níveis, diga qual variável cada uso lê.\n- Aponte variáveis locais capturadas que são alteradas.',
+    erros: [
+      'Declara classes internas sem `static` quando não precisam do objeto externo.',
+      'Tenta criar uma classe interna dentro de um método `static` sem um objeto da externa.',
+      'Altera dentro de uma classe anônima uma variável local capturada.',
+    ],
+    conferir: [
+      'Compile: os erros de contexto `static` e de captura aparecem na hora.',
+      'Rode a inspeção "Inner class may be static".',
+      'Com nomes repetidos, imprima `this.x` e `Externa.this.x` para ver de onde vem cada valor.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Nested Classes',
@@ -183,6 +199,128 @@ public class Numeros {
     comentarios:
       'O método `resumir` não sabe nada sobre pares ou limites: recebe o critério como objeto. Esse é o padrão *Strategy*, e as classes anônimas foram, por anos, o jeito de usá-lo em Java. No cargo Pleno, cada uma delas vira uma linha: `n.resumir(v -> v % 2 == 0)`. A interface `Filtro` é praticamente a `IntPredicate` da biblioteca padrão.',
   },
+  bugs: [
+    {
+      id: 'junior-t2-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: non-static variable this cannot be referenced from a static context`.',
+      codigo: `public class Garagem {
+    class Carro {
+        String placa = "ABC1D23";
+    }
+
+    public static void main(String[] args) {
+        Carro c = new Carro();
+        System.out.println(c.placa);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Garagem {
+    class Carro {
+        String placa = "ABC1D23";
+    }
+
+    public static void main(String[] args) {
+        Carro c = new Garagem().new Carro();
+        System.out.println(c.placa);
+    }
+}`,
+      saidaCorrigida: 'ABC1D23',
+      dica: 'Uma classe interna precisa de qual objeto para nascer? Existe algum `this` dentro do `main`?',
+      explicacao: 'Cada `Carro` pertence a uma `Garagem`, e o `main`, sendo `static`, não tem nenhuma. A sintaxe `objetoExterno.new Interna()` informa o dono. A outra saída seria declarar `Carro` como `static`, já que ele não usa nada da garagem.',
+    },
+    {
+      id: 'junior-t2-e05-b02',
+      dificuldade: 2,
+      sintoma: 'Cada time marcou um gol, mas o placar mostra `Casa 2 x 0 Fora`.',
+      codigo: `public class Time {
+    private final String nome;
+    private int gols;
+
+    Time(String nome) { this.nome = nome; }
+
+    class Jogador {
+        void marcar() { gols++; }
+    }
+
+    public static void main(String[] args) {
+        Time casa = new Time("Casa");
+        Time fora = new Time("Fora");
+        Time.Jogador j1 = casa.new Jogador();
+        Time.Jogador j2 = casa.new Jogador();
+        j1.marcar();
+        j2.marcar();
+        System.out.println(casa.nome + " " + casa.gols + " x " + fora.gols + " " + fora.nome);
+    }
+}`,
+      linha: 15,
+      efeito: { tipo: 'saida', saida: 'Casa 2 x 0 Fora' },
+      correcao: `public class Time {
+    private final String nome;
+    private int gols;
+
+    Time(String nome) { this.nome = nome; }
+
+    class Jogador {
+        void marcar() { gols++; }
+    }
+
+    public static void main(String[] args) {
+        Time casa = new Time("Casa");
+        Time fora = new Time("Fora");
+        Time.Jogador j1 = casa.new Jogador();
+        Time.Jogador j2 = fora.new Jogador();
+        j1.marcar();
+        j2.marcar();
+        System.out.println(casa.nome + " " + casa.gols + " x " + fora.gols + " " + fora.nome);
+    }
+}`,
+      saidaCorrigida: 'Casa 1 x 1 Fora',
+      dica: 'Os gols de um jogador vão para o time de qual objeto `Time`? Quem é o dono de `j2`?',
+      explicacao: 'Cada jogador soma no `gols` do time que o criou, o objeto à esquerda do `.new`. Os dois foram criados por `casa`. O segundo jogador precisa nascer de `fora`.',
+    },
+    {
+      id: 'junior-t2-e05-b03',
+      dificuldade: 3,
+      sintoma: 'A conta tem R$ 100, mas o extrato mostra `Saldo da conta: 0.0`.',
+      codigo: `public class Conta {
+    private double saldo = 100;
+
+    class Extrato {
+        private double saldo = 0;
+
+        String resumo() {
+            return "Saldo da conta: " + saldo;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(new Conta().new Extrato().resumo());
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'Saldo da conta: 0.0' },
+      correcao: `public class Conta {
+    private double saldo = 100;
+
+    class Extrato {
+        private double saldo = 0;
+
+        String resumo() {
+            return "Saldo da conta: " + Conta.this.saldo;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(new Conta().new Extrato().resumo());
+    }
+}`,
+      saidaCorrigida: 'Saldo da conta: 100.0',
+      dica: 'Há dois campos chamados `saldo`. Dentro de `Extrato`, o nome sozinho se refere a qual deles?',
+      explicacao: 'O nome sozinho pega o `saldo` mais próximo, o campo do próprio `Extrato`, que esconde o da conta. Para ler o campo do objeto externo, a forma é `Conta.this.saldo`. Melhor ainda seria dar nomes diferentes aos dois campos.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t2-e05-q01',
@@ -197,6 +335,7 @@ public class Numeros {
       ],
       resposta: 0,
       explicacao: 'As duas primeiras ficam no corpo da classe, com e sem `static`. As locais ficam dentro de métodos, e as anônimas são declaradas numa expressão `new`.',
+      dica: 'Pense em onde cada uma é declarada: no corpo, com ou sem `static`, num método, ou numa expressão.',
     },
     {
       id: 'junior-t2-e05-q02',
@@ -224,6 +363,7 @@ public class Numeros {
 }`,
       resposta: '3',
       explicacao: 'As duas agências foram criadas a partir do mesmo banco e incrementam o campo `private` dele. A classe interna enxerga os membros privados da externa.',
+      dica: 'As duas agências pertencem ao mesmo banco e somam no mesmo campo.',
     },
     {
       id: 'junior-t2-e05-q03',
@@ -244,6 +384,7 @@ public class Numeros {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 7 },
       explicacao: '`Quarto` é interna e precisa de um objeto `Casa`, e o `main` é `static`. Seria `new Casa().new Quarto()`, ou declarar `Quarto` como `static`.',
+      dica: 'O `main` é `static`. Uma classe interna pode nascer sem um objeto da externa?',
     },
     {
       id: 'junior-t2-e05-q04',
@@ -271,6 +412,7 @@ public class Numeros {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`v` é o parâmetro (100), `this.v` é o da classe interna (20) e `A.this.v` é o do objeto externo, que foi alterado para 1.',
+      dica: '`v` é o parâmetro, `this.v` o campo de `B` e `A.this.v` o campo de `a`, que foi mudado para 1.',
     },
     {
       id: 'junior-t2-e05-q05',
@@ -286,6 +428,7 @@ public class Numeros {
       ],
       respostas: [0, 1],
       explicacao: 'A interna precisa de um objeto da externa antes do `new`; a estática, não, e o `new` qualificado por um objeto é proibido para ela ("qualified new of static class").',
+      dica: 'Interna: `externa.new`; aninhada estática: `new Externa.Estatica()`.',
     },
     {
       id: 'junior-t2-e05-q06',
@@ -310,6 +453,7 @@ public class Numeros {
       respostas: ['this'],
       saida: 'branca numa casa azul',
       explicacao: '`Casa.this` é a referência para o objeto externo ao qual a porta pertence. Sozinho, `cor` é o campo da própria porta.',
+      dica: 'Para chegar ao objeto externo: `Externa.___.campo`.',
     },
     {
       id: 'junior-t2-e05-q07',
@@ -333,6 +477,7 @@ public class Numeros {
 }`,
       resposta: 10,
       explicacao: 'A classe anônima captura `vezes`, que precisa ser efetivamente final, e tenta alterá-la. Um campo, em vez de variável local, resolveria.',
+      dica: 'Uma variável local capturada pode ser alterada dentro da classe anônima?',
     },
     {
       id: 'junior-t2-e05-q08',
@@ -371,6 +516,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A classe anônima estende `Saudacao`: o argumento "Ana" vai para o construtor da superclasse, e o `falar` da anônima substitui o original só nesse objeto.',
+      dica: 'A anônima sobrescreve `falar` só para o objeto `formal`; o argumento vai para o construtor da superclasse.',
     },
     {
       id: 'junior-t2-e05-q09',
@@ -390,6 +536,7 @@ public class Teste {
 }`,
       resposta: 'Nomes$Estatica\nNomes$Interna\nNomes$1',
       explicacao: 'Cada classe aninhada vira um arquivo `.class` próprio, com o nome da externa, um `$` e o nome dela. Anônimas recebem números, na ordem em que aparecem.',
+      dica: 'As aninhadas usam `$` e o nome; as anônimas, `$` e um número.',
     },
     {
       id: 'junior-t2-e05-q10',
@@ -419,6 +566,7 @@ public class App {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'A classe anônima faz parte de uma atribuição, e toda atribuição termina com `;`. O `new Tarefa() { ... }` não instancia a interface: instancia uma classe sem nome que a implementa.',
+      dica: 'A declaração de uma anônima é uma expressão. Como termina um comando com expressão?',
     },
     {
       id: 'junior-t2-e05-q11',
@@ -433,6 +581,7 @@ public class App {
       ],
       resposta: 0,
       explicacao: 'O valor é copiado para dentro da classe anônima quando ela é criada. Para a cópia não ficar desatualizada, a variável não pode mudar.',
+      dica: 'As capturas exigem variáveis que nunca mudam.',
     },
     {
       id: 'junior-t2-e05-q12',
@@ -459,6 +608,7 @@ public class App {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os parâmetros `palavra` e `vezes` nunca são reatribuídos, então são efetivamente final e podem ser lidos pela classe local.',
+      dica: 'A classe local lê os parâmetros, que não são alterados.',
     },
     {
       id: 'junior-t2-e05-q13',
@@ -474,6 +624,7 @@ public class App {
       ],
       respostas: [0, 1],
       explicacao: 'Elas fazem parte da classe externa, mas não de um objeto dela. Para ler campos de instância, precisam receber um objeto, como qualquer outra classe.',
+      dica: 'A aninhada estática não pertence a nenhum objeto da externa, mas faz parte da classe.',
     },
     {
       id: 'junior-t2-e05-q14',
@@ -488,6 +639,7 @@ public class App {
       ],
       resposta: 0,
       explicacao: 'O campo `this$0` aponta para o objeto externo. Se a classe interna for guardada em algum lugar duradouro, como uma lista `static`, o objeto externo inteiro não pode ser coletado.',
+      dica: 'O que a classe interna guarda para saber a qual objeto pertence?',
     },
     {
       id: 'junior-t2-e05-q15',
@@ -519,6 +671,7 @@ public class App {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Cada jogador pertence ao time usado no `new`: `j1` e `j3` são do time `a`, e `j2` do `b`. Os gols vão para o time de cada um.',
+      dica: '`j1` e `j3` são do time `a`; `j2` é do `b`.',
     },
   ],
 };

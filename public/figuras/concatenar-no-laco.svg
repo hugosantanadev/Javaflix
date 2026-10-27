@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Juntar 5 pedaços com += cria 5 Strings novas e copia 1 + 2 + 3 + 4 + 5 = 15 pedaços; com StringBuilder, cada pedaço é escrito uma vez num único buffer com folga, 5 cópias no total</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <line x1="400" y1="20" x2="400" y2="270" stroke="#2b2824"/>
+  <text x="30" y="36" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f3eee7">texto += pedaco;</text>
+  <text x="30" y="58" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">cada volta cria uma String nova e copia tudo</text>
+  <rect x="30" y="72" width="30" height="26" rx="3" fill="#3a1d07" stroke="#ff7a1a"/>
+  <text x="45.0" y="90" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#ff9447" text-anchor="middle">0</text>
+  <text x="214" y="90" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">volta 1: copia 1</text>
+  <rect x="30" y="106" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="45.0" y="124" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">0</text>
+  <rect x="64" y="106" width="30" height="26" rx="3" fill="#3a1d07" stroke="#ff7a1a"/>
+  <text x="79.0" y="124" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#ff9447" text-anchor="middle">1</text>
+  <text x="214" y="124" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">volta 2: copia 2</text>
+  <rect x="30" y="140" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="45.0" y="158" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">0</text>
+  <rect x="64" y="140" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="79.0" y="158" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">1</text>
+  <rect x="98" y="140" width="30" height="26" rx="3" fill="#3a1d07" stroke="#ff7a1a"/>
+  <text x="113.0" y="158" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#ff9447" text-anchor="middle">2</text>
+  <text x="214" y="158" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">volta 3: copia 3</text>
+  <rect x="30" y="174" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="45.0" y="192" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">0</text>
+  <rect x="64" y="174" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="79.0" y="192" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">1</text>
+  <rect x="98" y="174" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="113.0" y="192" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">2</text>
+  <rect x="132" y="174" width="30" height="26" rx="3" fill="#3a1d07" stroke="#ff7a1a"/>
+  <text x="147.0" y="192" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#ff9447" text-anchor="middle">3</text>
+  <text x="214" y="192" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">volta 4: copia 4</text>
+  <rect x="30" y="208" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="45.0" y="226" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">0</text>
+  <rect x="64" y="208" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="79.0" y="226" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">1</text>
+  <rect x="98" y="208" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="113.0" y="226" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">2</text>
+  <rect x="132" y="208" width="30" height="26" rx="3" fill="#1b1916" stroke="#43403a"/>
+  <text x="147.0" y="226" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277" text-anchor="middle">3</text>
+  <rect x="166" y="208" width="30" height="26" rx="3" fill="#3a1d07" stroke="#ff7a1a"/>
+  <text x="181.0" y="226" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#ff9447" text-anchor="middle">4</text>
+  <text x="214" y="226" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">volta 5: copia 5</text>
+  <text x="30" y="258" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#ff9447">1 + 2 + 3 + 4 + 5 = 15 cópias: O(n²)</text>
+  <text x="420" y="36" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f3eee7">sb.append(pedaco);</text>
+  <text x="420" y="58" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">um buffer só, com folga; cada pedaço é escrito uma vez</text>
+  <rect x="416" y="114" width="276" height="38" rx="5" fill="none" stroke="#4fd68b" stroke-dasharray="5 3"/>
+  <rect x="420" y="120" width="30" height="26" rx="3" fill="#13221a" stroke="#4fd68b"/>
+  <text x="435.0" y="138" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#4fd68b" text-anchor="middle">0</text>
+  <rect x="454" y="120" width="30" height="26" rx="3" fill="#13221a" stroke="#4fd68b"/>
+  <text x="469.0" y="138" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#4fd68b" text-anchor="middle">1</text>
+  <rect x="488" y="120" width="30" height="26" rx="3" fill="#13221a" stroke="#4fd68b"/>
+  <text x="503.0" y="138" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#4fd68b" text-anchor="middle">2</text>
+  <rect x="522" y="120" width="30" height="26" rx="3" fill="#13221a" stroke="#4fd68b"/>
+  <text x="537.0" y="138" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#4fd68b" text-anchor="middle">3</text>
+  <rect x="556" y="120" width="30" height="26" rx="3" fill="#13221a" stroke="#4fd68b"/>
+  <text x="571.0" y="138" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#4fd68b" text-anchor="middle">4</text>
+  <rect x="590" y="120" width="30" height="26" rx="3" fill="none" stroke="#2b2824"/>
+  <rect x="624" y="120" width="30" height="26" rx="3" fill="none" stroke="#2b2824"/>
+  <rect x="658" y="120" width="30" height="26" rx="3" fill="none" stroke="#2b2824"/>
+  <text x="420" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">length() = 5</text>
+  <text x="692" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4" text-anchor="end">capacity(): com folga</text>
+  <text x="420" y="184" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">Quando a folga acaba, o buffer dobra de tamanho:</text>
+  <text x="420" y="202" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">uma cópia rara, que se paga com as próximas.</text>
+  <text x="420" y="258" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#4fd68b">5 pedaços, 5 cópias: O(n)</text>
+  <text x="30" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Com 100 mil pedaços, são 5 bilhões de cópias contra 100 mil. É a diferença entre segundos e milissegundos.</text>
+</svg>

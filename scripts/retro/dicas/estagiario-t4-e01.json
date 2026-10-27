@@ -1,0 +1,17 @@
+{
+  "q01": "Qual laço testa a condição só depois de rodar o corpo?",
+  "q02": "Monte a tabela: `n` é multiplicado por 3 a cada volta. Qual é o primeiro valor que passa de 50?",
+  "q03": "O `k--` compara o valor antigo e só depois decrementa; dentro do corpo, `k` já está menor.",
+  "q04": "O `do-while` roda o corpo uma vez antes de testar qualquer coisa.",
+  "q05": "Procure uma condição que não é `boolean` e uma variável usada fora do bloco onde nasceu.",
+  "q06": "Como termina o comando `do-while`, depois da condição?",
+  "q07": "O laço tira um dígito por volta. Até quando ainda sobra dígito em `n`?",
+  "q08": "Some 3 a partir de 1 e veja se algum valor da sequência bate exatamente com 10.",
+  "q09": "O laço interno roda menos vezes a cada volta do externo, porque `j` começa em `i`. Some as voltas.",
+  "q10": "O laço para no 0, que é a sentinela. Quais valores foram somados antes dele?",
+  "q11": "A condição do `do-while` fica fora do bloco. Onde a variável dela foi declarada?",
+  "q12": "Monte a tabela de `a` e `b` a cada volta até `a > b` falhar.",
+  "q13": "Conte as voltas de cada um; lembre que o `do-while` roda o corpo antes do primeiro teste.",
+  "q14": "Pense em onde fica o teste da condição em cada um.",
+  "q15": "`x --> 0` é `x-- > 0`. Dentro do corpo, `x` já foi decrementado."
+}

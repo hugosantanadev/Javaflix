@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">As conversões automáticas entre primitivos: byte, short, int, long, float e double em sequência, com o char entrando pelo int; as setas de int para float e de long para double podem arredondar, e char e short não se convertem sem cast</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/>
+    </marker>
+    <marker id="seta-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f2c75c"/>
+    </marker>
+  </defs>
+  <text x="30" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">No sentido das setas, o Java converte sozinho. No sentido contrário, só com cast.</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" text-anchor="middle">
+    <rect x="30" y="90" width="90" height="46" rx="6" fill="#3a1d07" stroke="#ff7a1a"/><text x="75" y="119" fill="#ff9447">byte</text>
+    <rect x="150" y="90" width="90" height="46" rx="6" fill="#3a1d07" stroke="#ff7a1a"/><text x="195" y="119" fill="#ff9447">short</text>
+    <rect x="270" y="90" width="90" height="46" rx="6" fill="#3a1d07" stroke="#ff7a1a"/><text x="315" y="119" fill="#ff9447">int</text>
+    <rect x="390" y="90" width="90" height="46" rx="6" fill="#3a1d07" stroke="#ff7a1a"/><text x="435" y="119" fill="#ff9447">long</text>
+    <rect x="510" y="90" width="90" height="46" rx="6" fill="#2a2410" stroke="#f2c75c"/><text x="555" y="119" fill="#f2c75c">float</text>
+    <rect x="630" y="90" width="100" height="46" rx="6" fill="#2a2410" stroke="#f2c75c"/><text x="680" y="119" fill="#f2c75c">double</text>
+    <rect x="270" y="200" width="90" height="46" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="315" y="229" fill="#4fd68b">char</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#8a8277" text-anchor="middle">
+    <text x="75" y="80">8 bits</text><text x="195" y="80">16 bits</text><text x="315" y="80">32 bits</text>
+    <text x="435" y="80">64 bits</text><text x="555" y="80">32 bits</text><text x="680" y="80">64 bits</text>
+    <text x="315" y="262">16 bits, sem sinal</text>
+  </g>
+
+  <g stroke="#8a8277" stroke-width="1.8" marker-end="url(#seta)">
+    <line x1="122" y1="113" x2="146" y2="113"/>
+    <line x1="242" y1="113" x2="266" y2="113"/>
+    <line x1="362" y1="113" x2="386" y2="113"/>
+    <line x1="315" y1="198" x2="315" y2="140"/>
+  </g>
+  <g stroke="#f2c75c" stroke-width="1.8" marker-end="url(#seta-m)">
+    <line x1="482" y1="113" x2="506" y2="113"/>
+    <line x1="602" y1="113" x2="626" y2="113"/>
+    <path d="M315 88 C 330 50, 520 50, 548 86" fill="none"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#f2c75c">
+    <text x="510" y="164">int e long cabem em float e double,</text>
+    <text x="510" y="180">mas podem perder precisão</text>
+  </g>
+
+  <path d="M240 212 L 196 140" stroke="#db5c5c" stroke-width="1.6" stroke-dasharray="5 4"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#db5c5c">
+    <text x="108" y="196">char e short: nenhum</text>
+    <text x="108" y="212">dos dois cabe no outro</text>
+  </g>
+  <text x="420" y="222" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Em toda conta, byte, short e char</text>
+  <text x="420" y="240" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">viram int antes de qualquer coisa.</text>
+</svg>

@@ -1,0 +1,17 @@
+{
+  "q01": "Lembre a tabela dos tipos aceitos no seletor: os inteiros pequenos, os wrappers deles, `String` e `enum`.",
+  "q02": "A execução entra no `case 2`. Sem `break`, por onde ela continua?",
+  "q03": "Nenhum `case` casa com 9. Onde a execução começa, e o que vem logo abaixo?",
+  "q04": "Rótulos repetidos não compilam, e o valor de um rótulo precisa caber no tipo do seletor.",
+  "q05": "O `switch` de `String` diferencia maiúsculas. Nenhum `case` casa com \"Sair\"?",
+  "q06": "Para comparar o seletor com os rótulos, o `switch` precisa chamar métodos dele. E se ele for `null`?",
+  "q07": "Qual comando faz a execução sair do `switch` logo depois de imprimir?",
+  "q08": "A execução entra no `case 2` e, sem `break`, soma tudo daí para baixo, inclusive o `default`.",
+  "q09": "Rótulos precisam ser constantes. Qual dos dois é uma variável comum?",
+  "q10": "`'c'` e `99` são o mesmo valor para um `char`. Dois rótulos iguais compilam?",
+  "q11": "Para cada mês, procure o `case` que casa; os que não casam vão para o `default`.",
+  "q12": "Sem pattern matching, valem os inteiros pequenos, os wrappers deles, `String` e `enum`.",
+  "q13": "Com valores próximos, a JVM pode montar uma tabela e pular direto para a posição certa.",
+  "q14": "Qual `case` casa com `'B'`, e o que vem logo depois dele?",
+  "q15": "O resto em Java tem o sinal do dividendo: quanto dá `-4 % 3`? E `return` encerra o método na hora."
+}

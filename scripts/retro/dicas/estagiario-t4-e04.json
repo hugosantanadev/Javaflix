@@ -1,0 +1,17 @@
+{
+  "q01": "Pense no que acontece com o resto do corpo e com o laço depois do `continue`.",
+  "q02": "Os não múltiplos de 3 são pulados. O `break` só é testado quando i é múltiplo de 3.",
+  "q03": "Para cada i, o laço interno conta os j de 0 até i antes do `continue fora`.",
+  "q04": "Em cada volta do i, o interno soma 10 uma vez antes do `break`, e depois vem o `total++`.",
+  "q05": "O `continue` precisa de um laço em volta, e o rótulo dele precisa marcar um laço.",
+  "q06": "No `do-while`, o `continue` vai direto para o teste da condição. O `i++` já rodou?",
+  "q07": "O `break` precisa do nome do rótulo que marca o laço externo.",
+  "q08": "Cada `break` aqui sai só do `switch`; o `for` continua. Some o que cada i acrescenta.",
+  "q09": "O `continue laco` está dentro do laço rotulado `laco`?",
+  "q10": "Para cada i, o laço interno roda até `j == i`. Some quantas vezes o `n++` acontece.",
+  "q11": "O `break etapa` sai do bloco rotulado, e o que vem depois dele continua.",
+  "q12": "Um `break` sem rótulo sai só do laço mais interno.",
+  "q13": "Lembre a tabela: onde cada comando é permitido e o que um `continue` faz dentro de um `switch`.",
+  "q14": "Os i menores que 3 contam um pulo e vão para a próxima volta sem imprimir.",
+  "q15": "O laço para no primeiro elemento maior que 10."
+}

@@ -1,0 +1,17 @@
+{
+  "q01": "Pense no que exatamente é copiado quando o argumento é um objeto.",
+  "q02": "O `n` é uma cópia; o resultado só chega pelo `return`.",
+  "q03": "A primeira atribuição segue a seta; a partir do `new`, o método mexe em outro objeto.",
+  "q04": "`String` é imutável, e o `+=` só muda a cópia local.",
+  "q05": "Separe mudar o objeto de reatribuir o parâmetro.",
+  "q06": "O compilador não avalia as condições, só a estrutura dos caminhos.",
+  "q07": "Qual palavra devolve um valor do método?",
+  "q08": "Pode haver código depois de um `return`?",
+  "q09": "`v[0] = 10` muda o array do `main`; depois, `v` aponta para outro.",
+  "q10": "O primeiro `dobro(x)` é descartado; o segundo é somado com `dobro(1)`.",
+  "q11": "`mover` altera e devolve o mesmo objeto nas duas chamadas.",
+  "q12": "Um parâmetro `final` pode receber um novo valor?",
+  "q13": "`Integer` é imutável; o `n++` cria outro objeto só para a cópia.",
+  "q14": "Num método de instância, o primeiro \"parâmetro\" escondido é o objeto atual.",
+  "q15": "`a` mexe no objeto de `s`; `b` só troca a própria cópia antes de devolver."
+}

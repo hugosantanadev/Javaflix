@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">A busca binária de 20 em [3, 7, 19, 25, 42]: o meio 2 vale 19, menor, e a busca vai para a direita; o meio 3 vale 25, maior, e a busca vai para a esquerda; o intervalo fica vazio com o ponto de inserção 3, e o resultado é −3 − 1 = −4</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <text x="40" y="34" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f3eee7">Arrays.binarySearch(new int[] {3, 7, 19, 25, 42}, 20)</text>
+  <text x="66.0" y="66" font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#8a8277" text-anchor="middle">0</text>
+  <text x="118.0" y="66" font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#8a8277" text-anchor="middle">1</text>
+  <text x="170.0" y="66" font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#8a8277" text-anchor="middle">2</text>
+  <text x="222.0" y="66" font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#8a8277" text-anchor="middle">3</text>
+  <text x="274.0" y="66" font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#8a8277" text-anchor="middle">4</text>
+  <rect x="42" y="76" width="48" height="38" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="66.0" y="101" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">3</text>
+  <rect x="94" y="76" width="48" height="38" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="118.0" y="101" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">7</text>
+  <rect x="146" y="76" width="48" height="38" rx="4" fill="#3a1d07" stroke="#ff7a1a"/>
+  <text x="170.0" y="101" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#ff9447" text-anchor="middle">19</text>
+  <rect x="198" y="76" width="48" height="38" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="222.0" y="101" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">25</text>
+  <rect x="250" y="76" width="48" height="38" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="274.0" y="101" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">42</text>
+  <text x="320" y="92" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">passo 1</text>
+  <text x="320" y="109" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bcbec4">meio 2: 19 &lt; 20, procura à direita</text>
+  <rect x="42" y="134" width="48" height="38" rx="4" fill="#1b1916" stroke="#2b2824"/>
+  <text x="66.0" y="159" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#5c564e" text-anchor="middle">3</text>
+  <rect x="94" y="134" width="48" height="38" rx="4" fill="#1b1916" stroke="#2b2824"/>
+  <text x="118.0" y="159" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#5c564e" text-anchor="middle">7</text>
+  <rect x="146" y="134" width="48" height="38" rx="4" fill="#1b1916" stroke="#2b2824"/>
+  <text x="170.0" y="159" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#5c564e" text-anchor="middle">19</text>
+  <rect x="198" y="134" width="48" height="38" rx="4" fill="#3a1d07" stroke="#ff7a1a"/>
+  <text x="222.0" y="159" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#ff9447" text-anchor="middle">25</text>
+  <rect x="250" y="134" width="48" height="38" rx="4" fill="#13221a" stroke="#4fd68b"/>
+  <text x="274.0" y="159" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#4fd68b" text-anchor="middle">42</text>
+  <text x="320" y="150" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">passo 2</text>
+  <text x="320" y="167" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bcbec4">meio 3: 25 &gt; 20, procura à esquerda</text>
+  <rect x="42" y="192" width="48" height="38" rx="4" fill="#1b1916" stroke="#2b2824"/>
+  <text x="66.0" y="217" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#5c564e" text-anchor="middle">3</text>
+  <rect x="94" y="192" width="48" height="38" rx="4" fill="#1b1916" stroke="#2b2824"/>
+  <text x="118.0" y="217" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#5c564e" text-anchor="middle">7</text>
+  <rect x="146" y="192" width="48" height="38" rx="4" fill="#1b1916" stroke="#2b2824"/>
+  <text x="170.0" y="217" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#5c564e" text-anchor="middle">19</text>
+  <rect x="198" y="192" width="48" height="38" rx="4" fill="#1b1916" stroke="#2b2824"/>
+  <text x="222.0" y="217" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#5c564e" text-anchor="middle">25</text>
+  <rect x="250" y="192" width="48" height="38" rx="4" fill="#1b1916" stroke="#2b2824"/>
+  <text x="274.0" y="217" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#5c564e" text-anchor="middle">42</text>
+  <text x="320" y="208" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">passo 3</text>
+  <text x="320" y="225" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bcbec4">início 3 &gt; fim 2: não está no array</text>
+  <path d="M196 184 L196 238" stroke="#56a8f5" stroke-width="2.4"/>
+  <path d="M190 246 L196 236 L202 246 z" fill="#56a8f5"/>
+  <text x="196" y="264" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#56a8f5" text-anchor="middle">o 20 entraria aqui: ponto de inserção 3</text>
+  <text x="40" y="306" font-family="Cascadia Code, Consolas, monospace" font-size="15" fill="#56a8f5">resultado: -(3) - 1 = -4</text>
+  <text x="330" y="306" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#8a8277">O - 1 separa "entraria na posição 0" de "achei na posição 0".</text>
+</svg>

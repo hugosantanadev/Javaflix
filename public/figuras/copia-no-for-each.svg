@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">A variável do for-each é uma cópia: num array de int, mudar x não muda o array; num array de StringBuilder, a cópia aponta para o mesmo objeto, e um append aparece no array</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/>
+    </marker>
+    <marker id="seta-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/>
+    </marker>
+  </defs>
+  <line x1="380" y1="20" x2="380" y2="290" stroke="#2b2824"/>
+
+  <!-- primitivos -->
+  <text x="30" y="36" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f3eee7">for (int x : v) x = x * 10;</text>
+  <text x="30" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">o array v</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="18" font-weight="700" text-anchor="middle">
+    <rect x="30" y="90" width="60" height="44" fill="#1b1916" stroke="#43403a"/><text x="60" y="119" fill="#f3eee7">1</text>
+    <rect x="90" y="90" width="60" height="44" fill="#1b1916" stroke="#43403a"/><text x="120" y="119" fill="#f3eee7">2</text>
+    <rect x="150" y="90" width="60" height="44" fill="#1b1916" stroke="#43403a"/><text x="180" y="119" fill="#f3eee7">3</text>
+    <rect x="250" y="190" width="70" height="44" rx="6" fill="#3a1d07" stroke="#ff7a1a"/><text x="285" y="219" fill="#ff9447">10</text>
+  </g>
+  <text x="250" y="180" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">a cópia x</text>
+  <path d="M60 136 C 70 200, 200 212, 246 212" fill="none" stroke="#8a8277" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <text x="76" y="196" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">copia o 1</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
+    <text x="30" y="262" fill="#ff9447">x vira 10, mas é só a cópia:</text>
+    <text x="30" y="280" fill="#bdb5aa">o array continua [1, 2, 3]</text>
+  </g>
+
+  <!-- referências -->
+  <text x="400" y="36" font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f3eee7">for (StringBuilder sb : t) sb.append("!");</text>
+  <text x="400" y="80" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">o array t guarda setas</text>
+  <g>
+    <rect x="400" y="90" width="60" height="44" fill="#1b1916" stroke="#43403a"/>
+    <rect x="460" y="90" width="60" height="44" fill="#1b1916" stroke="#43403a"/>
+    <circle cx="430" cy="112" r="4" fill="#4fd68b"/>
+    <circle cx="490" cy="112" r="4" fill="#4fd68b"/>
+    <rect x="600" y="70" width="110" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <rect x="600" y="140" width="110" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <rect x="420" y="200" width="60" height="44" rx="6" fill="#3a1d07" stroke="#ff7a1a"/>
+    <circle cx="450" cy="222" r="4" fill="#ff9447"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700" text-anchor="middle">
+    <text x="655" y="96" fill="#4fd68b">"a!"</text>
+    <text x="655" y="166" fill="#4fd68b">"b"</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.6" fill="none" marker-end="url(#seta-v)">
+    <path d="M430 108 C 470 70, 560 82, 596 88"/>
+    <path d="M490 116 C 530 150, 560 158, 596 158"/>
+  </g>
+  <path d="M452 218 C 540 210, 580 120, 600 104" fill="none" stroke="#ff7a1a" stroke-width="1.6" marker-end="url(#seta)"/>
+  <text x="400" y="190" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">a cópia sb</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
+    <text x="400" y="262" fill="#4fd68b">sb aponta para o mesmo objeto:</text>
+    <text x="400" y="280" fill="#bdb5aa">o append aparece no array</text>
+  </g>
+  <text x="30" y="310" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">Mudar a variável não muda o array. Mudar o objeto para o qual ela aponta, muda.</text>
+</svg>

@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Qualquer comparação com `NaN` dá `false`, menos `!=`.',
     '`s.length() > 0 && s != null` lança `NullPointerException` com `s` nulo: o teste veio tarde.',
   ],
+  ia: {
+    uso:
+      'A IA é boa para simplificar condições longas, aplicar De Morgan e montar tabelas-verdade, desde que você confira o resultado: uma condição "simplificada" errada compila e passa despercebida. Também ajuda a achar o lado de uma condição que pode lançar `NullPointerException`.',
+    pedido:
+      'Tenho esta condição em Java 21: <cole aqui>. Quero uma versão mais legível.\n- Mostre a tabela-verdade da original e da nova, para eu comparar.\n- Não troque && por & nem || por |, e mantenha o teste de nulo à esquerda.\n- Se algum lado tiver efeito colateral, como um ++ ou uma chamada de método, avise antes de mexer.',
+    erros: [
+      'Troca `&&` por `&` dizendo que dá no mesmo, sem notar o efeito colateral ou o acesso que pode ser nulo do lado direito.',
+      'Nega `x >= 18` como `x <= 18`, em vez de `x < 18`.',
+      'Escreve `1 < x < 10` como se Java aceitasse comparações encadeadas, como o Python.',
+    ],
+    conferir: [
+      'Compare as tabelas-verdade da condição original e da nova, linha por linha.',
+      'Escreva um teste com os valores de fronteira, como 17, 18 e 19, e com `null`.',
+      'Use o Alt + Enter do IntelliJ para aplicar De Morgan e compare com a sugestão recebida.',
+    ],
+  },
   recursos: [
     {
       titulo: 'The Java Tutorials: Equality, Relational, and Conditional Operators',
@@ -119,6 +135,88 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O curto-circuito transforma a cadeia de `&&` numa sequência de portões: assim que um falha, os seguintes nem são avaliados. Por isso `nome.isBlank()` nunca roda com `nome` nulo. Trocar qualquer `&&` por `&` faria o segundo e o quarto testes lançarem `NullPointerException`.',
   },
+  bugs: [
+    {
+      id: 'estagiario-t2-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: bad operand types for binary operator \'<\'`.',
+      codigo: `public class MeiaEntrada {
+    public static void main(String[] args) {
+        int idade = 15;
+        boolean meia = 6 < idade < 18;
+        System.out.println("Meia-entrada: " + meia);
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class MeiaEntrada {
+    public static void main(String[] args) {
+        int idade = 15;
+        boolean meia = 6 < idade && idade < 18;
+        System.out.println("Meia-entrada: " + meia);
+    }
+}`,
+      saidaCorrigida: 'Meia-entrada: true',
+      dica: 'Resolva da esquerda para a direita: `6 < idade` vira o quê? Dá para comparar isso com 18?',
+      explicacao: 'Java não encadeia comparações: `6 < idade < 18` vira `(6 < idade) < 18`, um `boolean` comparado com um `int`. Uma faixa se escreve com duas comparações ligadas por `&&`.',
+    },
+    {
+      id: 'estagiario-t2-e04-b02',
+      dificuldade: 2,
+      sintoma: 'O `javac` recusa o programa com `error: incompatible types: int cannot be converted to boolean`.',
+      codigo: `public class Carrinho {
+    public static void main(String[] args) {
+        int quantidade = 0;
+        if (quantidade = 0) {
+            System.out.println("Carrinho vazio");
+        }
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Carrinho {
+    public static void main(String[] args) {
+        int quantidade = 0;
+        if (quantidade == 0) {
+            System.out.println("Carrinho vazio");
+        }
+    }
+}`,
+      saidaCorrigida: 'Carrinho vazio',
+      dica: 'Dentro do `if` há um único `=`. Ele compara ou atribui?',
+      explicacao: '`=` atribui e `==` compara. A atribuição `quantidade = 0` vale o `int` 0, e um `if` só aceita `boolean`. Com `int`, o compilador pega o erro; com `boolean`, a mesma troca compilaria e passaria despercebida.',
+    },
+    {
+      id: 'estagiario-t2-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O programa para com `NullPointerException` quando o nome não foi informado, em vez de imprimir `Nome não informado`.',
+      codigo: `public class Saudacao {
+    public static void main(String[] args) {
+        String nome = null;
+        if (nome.length() > 0 && nome != null) {
+            System.out.println("Olá, " + nome);
+        } else {
+            System.out.println("Nome não informado");
+        }
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `public class Saudacao {
+    public static void main(String[] args) {
+        String nome = null;
+        if (nome != null && nome.length() > 0) {
+            System.out.println("Olá, " + nome);
+        } else {
+            System.out.println("Nome não informado");
+        }
+    }
+}`,
+      saidaCorrigida: 'Nome não informado',
+      dica: 'O `&&` avalia da esquerda para a direita. O que roda primeiro quando `nome` é `null`?',
+      explicacao: 'O teste de nulo protege só o que vem depois dele. Aqui, `nome.length()` roda antes e lança a exceção. Com o `nome != null` à esquerda, o curto-circuito impede que o `length()` seja chamado num nome nulo.',
+    },
+  ],
   exercicios: [
     {
       id: 'estagiario-t2-e04-q01',
@@ -130,6 +228,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Antes de comparar, o `int` 5 é promovido para `double` 5.0. Números de tipos diferentes podem ser comparados com `==`.',
+      dica: 'Antes de comparar, o Java promove os dois lados para o mesmo tipo.',
     },
     {
       id: 'estagiario-t2-e04-q02',
@@ -143,6 +242,7 @@ b = x > 10 || x++ > 0;
 System.out.println(b + " " + x);`,
       resposta: 'false 5\ntrue 6',
       explicacao: 'No `&&`, o lado esquerdo é falso e o `x++` é pulado: x continua 5. No `||`, o lado esquerdo é falso, então o direito precisa ser avaliado: `x++ > 0` é verdadeiro e x vira 6.',
+      dica: 'Em cada linha, o lado esquerdo decide sozinho? Se decidir, o `x++` nem roda.',
     },
     {
       id: 'estagiario-t2-e04-q03',
@@ -154,6 +254,7 @@ System.out.println(b + " " + x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`&&` tem precedência maior que `||`: a expressão é `true || (false && false)`, que dá `true`. Lendo da esquerda para a direita sem a precedência, chegaria-se a `false`.',
+      dica: '`&&` tem precedência maior que `||`: agrupe o `&&` primeiro.',
     },
     {
       id: 'estagiario-t2-e04-q04',
@@ -167,6 +268,7 @@ System.out.println(i);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`i++ == 0` compara o valor antigo (0) e deixa i em 1. Como é verdadeiro, o `||` não avalia o `++i`. O `if` entra e soma 10: 11.',
+      dica: 'O primeiro teste já é verdadeiro? Lembre que `i++` compara o valor antigo e só depois incrementa.',
     },
     {
       id: 'estagiario-t2-e04-q05',
@@ -183,6 +285,7 @@ System.out.println(i);`,
       respostas: [0, 1],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: '`1 < 2` é `boolean`, e `boolean < 3` não existe. Comparar `int` com `boolean` também não. `char` é numérico, então `\'a\' < 98` compila (e dá `true`), e `1.0 == 1` compara números após promoção.',
+      dica: 'Java não encadeia comparações nem compara `boolean` com número.',
     },
     {
       id: 'estagiario-t2-e04-q06',
@@ -200,6 +303,7 @@ System.out.println(s == null | s.isEmpty());`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: 'O `|` com `boolean` é o OU **sem** curto-circuito: mesmo com o lado esquerdo verdadeiro, ele avalia `s.isEmpty()`, e `s` é nulo. Com `||`, a expressão daria `true` sem exceção.',
+      dica: 'O `|` sozinho não faz curto-circuito. O lado direito roda com `s` nulo?',
     },
     {
       id: 'estagiario-t2-e04-q07',
@@ -211,6 +315,7 @@ System.out.println(s == null | s.isEmpty());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`10 / 4` é uma divisão de inteiros e vale 2. Só depois o 2 é promovido para comparar com 2.5. A promoção na comparação não "volta no tempo" para refazer a divisão.',
+      dica: 'Qual é o valor de `10 / 4` com dois inteiros?',
     },
     {
       id: 'estagiario-t2-e04-q08',
@@ -227,6 +332,7 @@ System.out.println(s == null | s.isEmpty());`,
       respostas: ['&&'],
       saida: 'false',
       explicacao: 'Com `&&`, como `s != null` é falso, o `s.length()` nunca é chamado. Com `&`, ele seria chamado e lançaria `NullPointerException`. Com `||`, o lado direito também seria avaliado (porque o esquerdo é falso), com o mesmo resultado.',
+      dica: 'Qual operador para de avaliar quando o lado esquerdo já é falso?',
     },
     {
       id: 'estagiario-t2-e04-q09',
@@ -238,6 +344,7 @@ System.out.println(s == null | s.isEmpty());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com `boolean`, `^` é o OU exclusivo: verdadeiro quando os lados diferem. `true ^ true` é `false`, e `false ^ false` é `false`.',
+      dica: 'O OU exclusivo é verdadeiro quando os dois lados são diferentes. Resolva da esquerda para a direita.',
     },
     {
       id: 'estagiario-t2-e04-q10',
@@ -254,6 +361,7 @@ System.out.println(s == null | s.isEmpty());`,
 }`,
       resposta: 5,
       explicacao: '`18 <= idade` vira um `boolean`, e comparar `boolean <= 60` não existe. O jeito certo é `18 <= idade && idade <= 60`.',
+      dica: 'Procure uma comparação encadeada, do jeito que se escreve na matemática.',
     },
     {
       id: 'estagiario-t2-e04-q11',
@@ -266,6 +374,7 @@ System.out.println((x < 1) + " " + (x >= 1) + " " + (x != x));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'NaN não é menor, maior nem igual a nada, nem a si mesmo. Todas as comparações dão `false`, exceto `!=`, que dá `true`. É por isso que `x != x` é um teste (obscuro) de NaN; o legível é `Double.isNaN(x)`.',
+      dica: 'Toda comparação com `NaN` dá `false`, com uma única exceção.',
     },
     {
       id: 'estagiario-t2-e04-q12',
@@ -279,6 +388,7 @@ r = a++ > 1 && b++ > 1;
 System.out.println(r + " " + a + " " + b);`,
       resposta: 'false 2 2\ntrue 3 3',
       explicacao: 'Com `&`, os dois lados rodam: 1 > 1 e 1 > 1 são falsos, e os dois viram 2. Com `&&`, o lado esquerdo (2 > 1) é verdadeiro, então o direito também é avaliado: 2 > 1 é verdadeiro, e os dois viram 3.',
+      dica: 'Na primeira linha, o `&` avalia os dois lados; na segunda, veja se o lado esquerdo já decide.',
     },
     {
       id: 'estagiario-t2-e04-q13',
@@ -288,6 +398,7 @@ System.out.println(r + " " + a + " " + b);`,
       opcoes: ['`&`', '`&&`', '`||`', '`? :`'],
       resposta: 0,
       explicacao: '`&` (assim como `|` e `^`) é o operador lógico sem curto-circuito. `&&` e `||` podem pular o lado direito, e o ternário só avalia um dos dois ramos.',
+      dica: 'Qual dos operadores não tem curto-circuito?',
     },
     {
       id: 'estagiario-t2-e04-q14',
@@ -314,6 +425,7 @@ for (int a = 0; a <= 10; a++) for (int b = 0; b <= 6; b++) {
 }
 System.out.println(ok[0] + " " + ok[1] + " " + ok[2] + " " + ok[3] + " " + ok[4]);`,
       explicacao: 'Pela lei de De Morgan, a negação de um E é o OU das negações. A negação de `a > 5` é `a <= 5`, e a de `b < 3` é `b >= 3`. Trocar `<=` por `<` erra quando a vale 5; manter o `&&` esquece de trocar o operador.',
+      dica: 'Aplique De Morgan: negue cada comparação e troque o `&&` por `||`. A negação de `>` é `<=`.',
     },
     {
       id: 'estagiario-t2-e04-q15',
@@ -328,6 +440,7 @@ System.out.println(ok[0] + " " + ok[1] + " " + ok[2] + " " + ok[3] + " " + ok[4]
       ],
       resposta: 0,
       explicacao: 'Se `pedido` é nulo, o lado esquerdo é falso e o `&&` encerra a avaliação sem chamar `getTotal()`. Com `&`, a chamada aconteceria e lançaria `NullPointerException`.',
+      dica: 'Pense no que aconteceria com `pedido.getTotal()` se `pedido` fosse `null`.',
     },
   ],
 };

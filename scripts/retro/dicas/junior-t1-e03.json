@@ -1,0 +1,17 @@
+{
+  "q01": "A pilha guarda variáveis locais; os objetos ficam numa área compartilhada.",
+  "q02": "Depois de `a = b`, quem ainda aponta para o objeto \"x\"?",
+  "q03": "`c` ainda aponta para um dos nós, e o ciclo liga os três.",
+  "q04": "`y` e depois `z` guardam a referência do \"um\"; o `x` passou a apontar para outro.",
+  "q05": "Elegível não é coletado, e nem `gc` nem `finalize` dão garantias.",
+  "q06": "Até onde vai o escopo de uma variável declarada dentro de um bloco?",
+  "q07": "Qual interface o `try` com recursos exige?",
+  "q08": "`Tela` pode ser usada num `try` com recursos?",
+  "q09": "Quais referências sobrevivem ao fim do método? Uma delas foi guardada num `static`.",
+  "q10": "O GC parte das raízes e segue as referências.",
+  "q11": "Os recursos são fechados na ordem inversa da abertura, depois do corpo.",
+  "q12": "É o coletor padrão desde o Java 9, que divide o heap em regiões.",
+  "q13": "A Bia continua alcançável por `bia`. E a Ana?",
+  "q14": "As raízes são referências que o programa usa diretamente, não as de dentro de objetos.",
+  "q15": "Pense na hipótese geracional: quanto tempo vive a maioria dos objetos?"
+}

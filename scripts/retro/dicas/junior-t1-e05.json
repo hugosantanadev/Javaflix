@@ -1,0 +1,17 @@
+{
+  "q01": "Um bloco `static` pertence à classe, não aos objetos.",
+  "q02": "O `static` roda antes do `main`; cada `new` repete bloco de instância e construtor.",
+  "q03": "Os dois blocos rodam na ordem do código, antes do corpo do construtor.",
+  "q04": "Um campo `final` precisa de valor em todos os construtores.",
+  "q05": "Um `final` de instância aceita valor na declaração, num bloco de instância ou nos construtores.",
+  "q06": "Qual bloco roda antes do `main`, sem nenhum objeto?",
+  "q07": "Um inicializador pode ler pelo nome um campo declarado abaixo?",
+  "q08": "Ler uma constante de compilação dispara a inicialização da classe?",
+  "q09": "O bloco `static` põe 500 no contador; cada objeto incrementa antes de copiar.",
+  "q10": "Constantes de compilação, arrays e declarações não inicializam a classe.",
+  "q11": "Uma exceção na inicialização `static` chega embrulhada em quê?",
+  "q12": "Pelo nome qualificado compila, e `b` ainda tem o valor padrão nesse momento.",
+  "q13": "O bloco `static` roda uma vez; o de instância, uma vez por objeto.",
+  "q14": "Um `final` recebe valor exatamente uma vez, e um `static final` nunca no construtor.",
+  "q15": "É um método especial, como o `<init>` dos construtores, mas para a classe."
+}
