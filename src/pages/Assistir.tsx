@@ -30,6 +30,7 @@ import { VIDEOS } from '../content/videos';
 import { episodioDisponivel, exerciciosDoEpisodio, useTemporada } from '../lib/conteudo';
 import { indiceDoMarkdown } from '../lib/markdown';
 import { episodioDesbloqueado, episodioSeguinte, estadoTemporada, motivoDoBloqueio } from '../lib/progresso';
+import { fmtNota, notaDesafio, notaEpisodio, notaParcialDaSessao, pesoDe, pontuar, teto, textoDaProva, usaNotas } from '../lib/notas';
 import { estaCerta, respostaVazia, type Resposta } from '../lib/respostas';
 import { sfx } from '../lib/sfx';
 import { bonusCombo, estadoOfensiva, useProgresso, usePerfil, useStore } from '../lib/store';
@@ -155,7 +156,7 @@ function Player({ ep }: { ep: EpisodioConteudo }) {
       {fase === 'desafio' && ep.desafio && <FaseDesafio ep={ep} />}
       {fase === 'depuracao' && !!ep.bugs?.length && <Depuracao ep={ep} />}
       {fase === 'creditos' && (
-        <Creditos ep={ep} total={total} refazer={() => setFase('exercicios')} irDesafio={ep.desafio ? () => setFase('desafio') : undefined} />
+        <Creditos ep={ep} exercicios={exercicios} refazer={() => setFase('exercicios')} irDesafio={ep.desafio ? () => setFase('desafio') : undefined} />
       )}
     </div>
   );
@@ -412,14 +413,15 @@ function FaseExercicios({ ep, exercicios, aoTerminar }: { ep: EpisodioConteudo; 
   const pronta = !!sessao && sessao.resultados.length === exercicios.length;
 
   useEffect(() => {
-    if (!pronta || (sessao && sessao.resultados.every((r) => r !== null))) iniciar(ep.id, exercicios.length, !!sessao && pronta);
+    if (!pronta || (sessao && sessao.resultados.every((r) => r !== null))) iniciar(ep.id, exercicios.map(pesoDe), !!sessao && pronta);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const primeiroAberto = sessao ? sessao.resultados.findIndex((r) => r === null) : 0;
   const [indice, setIndice] = useState(Math.max(0, primeiroAberto));
   const [resposta, setResposta] = useState<Resposta | null>(null);
-  const [confirmada, setConfirmada] = useState<null | { certo: boolean; ganho: number }>(null);
+  const [confirmada, setConfirmada] = useState<null | { certo: boolean; ganho: number; nota: number; teto: number }>(null);
+  const comNotas = usaNotas(getTemporadaDoEpisodio(ep.id)!.id);
   const [comDica, setComDica] = useState(false);
   const palco = useRef<HTMLDivElement>(null);
 
@@ -436,11 +438,14 @@ function FaseExercicios({ ep, exercicios, aoTerminar }: { ep: EpisodioConteudo; 
   const confirmar = useCallback(() => {
     if (!q || confirmada || respostaVazia(resposta)) return;
     const certo = estaCerta(q, resposta!);
-    const ganho = responder(ep.id, q.id, indice, certo, q.tipo, comDica);
+    const tentativa = (progresso.tentativas?.[q.id] ?? 0) + 1;
+    const limite = teto({ dica: comDica, tentativa });
+    const nota = pontuar(q, resposta) * limite;
+    const ganho = responder(ep.id, q.id, indice, certo, q.tipo, comDica, nota * pesoDe(q));
     if (certo) sfx.certo((sessao?.combo ?? 0) + 1);
     else sfx.errado();
-    setConfirmada({ certo, ganho });
-  }, [q, confirmada, resposta, responder, ep.id, indice, sessao?.combo, comDica]);
+    setConfirmada({ certo, ganho, nota, teto: limite });
+  }, [q, confirmada, resposta, responder, ep.id, indice, sessao?.combo, comDica, progresso.tentativas]);
 
   const seguir = useCallback(() => {
     if (!confirmada) return;
@@ -450,7 +455,7 @@ function FaseExercicios({ ep, exercicios, aoTerminar }: { ep: EpisodioConteudo; 
     const qualquer = atual ? atual.resultados.findIndex((r) => r === null) : -1;
     const alvo = proximo >= 0 ? proximo : qualquer;
     if (alvo < 0) {
-      concluir(ep.id);
+      concluir(ep.id, (ep.bugs ?? []).map((b) => b.id));
       sfx.conclusao();
       aoTerminar();
       return;
@@ -481,12 +486,20 @@ function FaseExercicios({ ep, exercicios, aoTerminar }: { ep: EpisodioConteudo; 
   if (!q || !sessao) return <div className="carregando-tela" aria-busy />;
 
   const certosAteAqui = sessao.resultados.filter((r) => r === true).length;
+  const parcial = comNotas ? notaParcialDaSessao(progresso, ep.id) : null;
+  const tentativaAtual = (progresso.tentativas?.[q.id] ?? 0) + 1;
   const explicacaoCorreta = confirmada && (
     <div ref={feedbackRef} className={`feedback ${confirmada.certo ? 'certo' : 'errado'}`} role="status">
       <div className="feedback-cabeca">
         <span className="feedback-icone">{confirmada.certo ? <CheckIcon size={22} weight="bold" /> : <XIcon size={22} weight="bold" />}</span>
         <strong>{confirmada.certo ? fraseAcerto(sessao.combo) : 'Não foi dessa vez'}</strong>
         {confirmada.ganho > 0 && <span className="feedback-xp">+{confirmada.ganho} XP</span>}
+        {comNotas && (
+          <span className="feedback-nota">
+            Nota {fmtNota(confirmada.nota * 10)}
+            {confirmada.teto < 1 && ` (teto ${fmtNota(confirmada.teto * 10)})`}
+          </span>
+        )}
         {confirmada.certo && comDica && <span className="feedback-revisao">Com dica: sem XP nesta questão</span>}
         {!confirmada.certo && <span className="feedback-revisao">Volta amanhã na sua revisão</span>}
       </div>
@@ -510,6 +523,11 @@ function FaseExercicios({ ep, exercicios, aoTerminar }: { ep: EpisodioConteudo; 
           <span>
             {certosAteAqui} certos de {sessao.resultados.filter((r) => r !== null).length}
           </span>
+          {parcial && (
+            <span className="nota-parcial">
+              Nota parcial: <strong>{fmtNota(parcial.nota)}</strong>, {parcial.respondidas} de {parcial.total} respondidas
+            </span>
+          )}
           {combo >= 2 && (
             <span className="combo" key={combo}>
               <FireIcon size={16} weight="fill" /> Sequência de {combo}
@@ -526,6 +544,11 @@ function FaseExercicios({ ep, exercicios, aoTerminar }: { ep: EpisodioConteudo; 
             <small>/{exercicios.length}</small>
           </span>
           <span className="etiqueta">{rotuloTipo(q)}</span>
+          {comNotas && tentativaAtual > 1 && !confirmada && (
+            <span className="etiqueta" title="Refazer limita a nota da questão">
+              {tentativaAtual}ª tentativa: vale até {fmtNota(teto({ tentativa: tentativaAtual }) * 10)}
+            </span>
+          )}
           <span className="dificuldade" aria-label={`Dificuldade ${q.dificuldade} de 3`}>
             {[1, 2, 3].map((d) => (
               <i key={d} className={d <= q.dificuldade ? 'on' : ''} />
@@ -533,7 +556,7 @@ function FaseExercicios({ ep, exercicios, aoTerminar }: { ep: EpisodioConteudo; 
           </span>
         </div>
         <Questao q={q} resposta={resposta} mudar={setResposta} revelada={!!confirmada} travada={!!confirmada} />
-        {q.dica && !confirmada && <DicaDaQuestao dica={q.dica} aberta={comDica} abrir={() => setComDica(true)} />}
+        {q.dica && !confirmada && <DicaDaQuestao dica={q.dica} aberta={comDica} abrir={() => setComDica(true)} comNotas={comNotas} />}
         {explicacaoCorreta}
       </div>
 
@@ -578,7 +601,12 @@ function FaseDesafio({ ep }: { ep: EpisodioConteudo }) {
   const [solucao, setSolucao] = useState(false);
   const progresso = useProgresso();
   const concluir = useStore((s) => s.concluirDesafio);
+  const usarAjuda = useStore((s) => s.usarAjudaDesafio);
   const feito = !!progresso.desafios[ep.id];
+  const comNotas = usaNotas(getTemporadaDoEpisodio(ep.id)!.id);
+  const ajuda = progresso.ajudaDesafio?.[ep.id];
+  const nota = notaDesafio(progresso, ep.id);
+  const valeAte = teto({ dica: ajuda?.dica || dicas > 0, solucao: ajuda?.solucao || solucao }) * 10;
 
   return (
     <div className="desafio">
@@ -586,6 +614,13 @@ function FaseDesafio({ ep }: { ep: EpisodioConteudo }) {
         <span className="hero-cargo">Desafio de código</span>
         <h1>{d.titulo}</h1>
         <p>Resolva na sua IDE ou no terminal. Depois compare com a solução comentada.</p>
+        {comNotas && (
+          <p className="desafio-nota">
+            {feito && nota !== null
+              ? `Nota do desafio: ${fmtNota(nota)}.`
+              : `Vale até ${fmtNota(valeAte)}. Com dica, o máximo é 7; depois de ver a solução, a nota é 0.`}
+          </p>
+        )}
       </div>
       <Markdown texto={d.enunciado} className="desafio-enunciado" />
 
@@ -597,14 +632,14 @@ function FaseDesafio({ ep }: { ep: EpisodioConteudo }) {
           </div>
         ))}
         {dicas < d.dicas.length && (
-          <button type="button" className="btn btn-linha btn-sm" onClick={() => setDicas((n) => n + 1)}>
+          <button type="button" className="btn btn-linha btn-sm" onClick={() => (setDicas((n) => n + 1), usarAjuda(ep.id, 'dica'))}>
             <LightbulbIcon size={18} /> {dicas === 0 ? 'Quero uma dica' : 'Mais uma dica'} ({d.dicas.length - dicas} restantes)
           </button>
         )}
       </div>
 
       {!solucao ? (
-        <button type="button" className="btn btn-ghost" onClick={() => setSolucao(true)}>
+        <button type="button" className="btn btn-ghost" onClick={() => (setSolucao(true), usarAjuda(ep.id, 'solucao'))}>
           <CodeIcon size={20} /> Ver a solução
         </button>
       ) : (
@@ -640,7 +675,18 @@ function FaseDesafio({ ep }: { ep: EpisodioConteudo }) {
 /* Créditos                                                            */
 /* ------------------------------------------------------------------ */
 
-function Creditos({ ep, total, refazer, irDesafio }: { ep: EpisodioConteudo; total: number; refazer: () => void; irDesafio?: () => void }) {
+function Creditos({
+  ep,
+  exercicios,
+  refazer,
+  irDesafio,
+}: {
+  ep: EpisodioConteudo;
+  exercicios: Exercicio[];
+  refazer: () => void;
+  irDesafio?: () => void;
+}) {
+  const total = exercicios.length;
   const meta = getEpisodio(ep.id)!;
   const temporada = getTemporadaDoEpisodio(ep.id)!;
   const perfil = usePerfil()!;
@@ -668,6 +714,8 @@ function Creditos({ ep, total, refazer, irDesafio }: { ep: EpisodioConteudo; tot
     return () => window.clearTimeout(t);
   }, [contagem, nav, prox]);
 
+  const comNotas = usaNotas(temporada.id);
+  const notaEp = comNotas ? notaEpisodio(progresso, ep.id) : null;
   const frase = pct === 1 ? 'Gabaritou.' : pct >= 0.8 ? 'Mandou bem.' : pct >= 0.6 ? 'Bom episódio.' : 'Esse pede revisão.';
 
   return (
@@ -683,6 +731,16 @@ function Creditos({ ep, total, refazer, irDesafio }: { ep: EpisodioConteudo; tot
           </span>
           <h1>{frase}</h1>
           <ul className="creditos-numeros">
+            {notaEp !== null && (
+              <li>
+                <strong>{fmtNota(notaEp)}</strong> nota do episódio{(progresso.episodios[ep.id]?.tentativas ?? 0) > 1 ? ' (a maior)' : ''}
+              </li>
+            )}
+            {st.nota && (
+              <li>
+                <strong>{fmtNota(st.nota.media)}</strong> média da temporada até aqui
+              </li>
+            )}
             <li>
               <strong>+{sessao?.xp ?? 0}</strong> XP nos exercícios
             </li>
@@ -701,7 +759,7 @@ function Creditos({ ep, total, refazer, irDesafio }: { ep: EpisodioConteudo; tot
               type="button"
               className="btn btn-linha"
               onClick={() => {
-                iniciar(ep.id, total, true);
+                iniciar(ep.id, exercicios.map(pesoDe), true);
                 refazer();
               }}
             >
@@ -723,7 +781,9 @@ function Creditos({ ep, total, refazer, irDesafio }: { ep: EpisodioConteudo; tot
             <Arte temporada={temporada} titulo={false} glifo="?" />
             <div>
               <strong>Prova da temporada {temporada.numero}</strong>
-              <p>Questões inéditas no formato da certificação, com cronômetro. Aprovação com 68%.</p>
+              <p>
+                {st.nota ? textoDaProva(st.nota) : 'Questões inéditas no formato da certificação, com cronômetro. Aprovação com 68%.'}
+              </p>
               <Link to={`/prova/${temporada.id}`} className="btn btn-play">
                 Fazer a prova
               </Link>

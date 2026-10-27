@@ -18,6 +18,7 @@ const LINKS = [
   { to: '/', rotulo: 'Início', fim: true },
   { to: '/trilha', rotulo: 'Carreira' },
   { to: '/projetos', rotulo: 'Projetos' },
+  { to: '/boletim', rotulo: 'Boletim' },
   { to: '/revisao', rotulo: 'Revisão' },
   { to: '/simulado', rotulo: 'Simulados' },
   { to: '/videos', rotulo: 'Vídeos' },

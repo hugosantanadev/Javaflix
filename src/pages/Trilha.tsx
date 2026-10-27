@@ -7,6 +7,7 @@ import { PROVAS } from '../content/types';
 import { cargoCompleto, temporadaDisponivel } from '../lib/conteudo';
 import { dataCurta } from '../lib/datas';
 import { cargoAtual, cargoDesbloqueado, estadoTemporada, infoNivel, nivelExigido, pendenciasDaPromocao } from '../lib/progresso';
+import { cargoUsaNotas, MEDIA_APROVACAO } from '../lib/notas';
 import { useProgresso, usePerfil } from '../lib/store';
 
 const geradas = (n: number) => (n === 1 ? '1 gerada' : `${n} geradas`);
@@ -120,7 +121,8 @@ export function Trilha() {
                   {c.temporadas.length > 0 && (
                     <span>
                       {completas} de {c.temporadas.length} temporadas fechadas
-                      {c.trilha !== 'base' && ` · promoção a partir do nível ${nivelExigido(c, perfil.prova)}`}
+                      {c.trilha !== 'base' &&
+                        (cargoUsaNotas(c) ? ` · promoção com CR ${MEDIA_APROVACAO}` : ` · promoção a partir do nível ${nivelExigido(c, perfil.prova)}`)}
                     </span>
                   )}
                   {c.trilha === 'base' ? (

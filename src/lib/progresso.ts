@@ -2,6 +2,7 @@ import { CARGOS, EPISODIOS, getCargo, getTemporada, getTemporadaDoEpisodio } fro
 import { PROJETOS } from '../content/projetos';
 import type { CargoMeta, EpisodioMeta, ProjetoMeta, Prova, TemporadaMeta } from '../content/types';
 import { episodioDisponivel, projetoDisponivel, temporadaDisponivel } from './conteudo';
+import { cargoUsaNotas, crDoCargo, fmtNota, MEDIA_APROVACAO, notaTemporada, usaNotas, type NotaTemporada } from './notas';
 import type { Perfil, Progresso } from './store';
 
 export const episodioRelevante = (e: EpisodioMeta, prova: Prova) => e.provas.length === 0 || e.provas.includes(prova);
@@ -48,16 +49,21 @@ export interface EstadoTemporada {
   completa: boolean;
   pct: number;
   iniciada: boolean;
+  /** Sistema de notas: médias e situação. Só nos cargos que usam notas. */
+  nota: NotaTemporada | null;
 }
 
 export function estadoTemporada(t: TemporadaMeta, p: Progresso, prova: Prova): EstadoTemporada {
   const relevantes = t.episodios.filter((e) => episodioRelevante(e, prova));
   const estados = relevantes.map((e) => estadoEpisodio(e, p, prova));
   const concluidos = estados.filter((s) => s.concluido).length;
-  const provaAprovada = !!p.provas[t.id]?.aprovadoEm;
+  const nota = usaNotas(t.id) ? notaTemporada(t, p, relevantes) : null;
+  // com notas, "aprovada" é a temporada com média 7, não a prova sozinha
+  const provaAprovada = nota ? nota.situacao === 'aprovado' : !!p.provas[t.id]?.aprovadoEm;
   const provaLiberada = concluidos === relevantes.length;
   const soma = estados.reduce((acc, s) => acc + s.pct, 0) + (provaAprovada ? 1 : 0);
   return {
+    nota,
     disponivel: temporadaDisponivel(t.id),
     relevantes,
     concluidos,
@@ -96,7 +102,8 @@ export function temporadaDesbloqueada(t: TemporadaMeta, p: Progresso, perfil: Pe
   if (i <= 0) return true;
   const anterior = c.temporadas[i - 1];
   if (!temporadaDisponivel(anterior.id)) return true;
-  return estadoTemporada(anterior, p, perfil.prova).provaLiberada;
+  const st = estadoTemporada(anterior, p, perfil.prova);
+  return st.nota ? st.completa : st.provaLiberada;
 }
 
 /** Episódios abrem em sequência dentro da temporada: cada um destrava o seguinte ao ser concluído. */
@@ -125,7 +132,9 @@ export function motivoDoBloqueio(e: EpisodioMeta, p: Progresso, perfil: Perfil):
     const anterior = c.temporadas[c.temporadas.findIndex((x) => x.id === t.id) - 1];
     return {
       titulo: 'Temporada bloqueada',
-      texto: `Ela abre quando você concluir todos os episódios da temporada anterior, "${anterior.titulo}".`,
+      texto: usaNotas(anterior.id)
+        ? `Ela abre quando você for aprovado na temporada anterior, "${anterior.titulo}": média ${MEDIA_APROVACAO} somando exercícios, desafios e prova.`
+        : `Ela abre quando você concluir todos os episódios da temporada anterior, "${anterior.titulo}".`,
     };
   }
   const relevantes = t.episodios.filter((x) => episodioRelevante(x, perfil.prova));
@@ -176,6 +185,13 @@ export function pendenciasDaPromocao(c: CargoMeta, p: Progresso, perfil: Perfil)
   if (perfil.config.modoLivre) return [];
   const faltam: string[] = [];
   const disponiveis = c.temporadas.filter((t) => temporadaDisponivel(t.id));
+  if (cargoUsaNotas(c)) {
+    const aprovadas = disponiveis.filter((t) => estadoTemporada(t, p, perfil.prova).completa).length;
+    if (aprovadas < disponiveis.length) faltam.push(`ser aprovado nas ${disponiveis.length} temporadas (${aprovadas} aprovadas)`);
+    const cr = crDoCargo(c, p, (t) => t.episodios.filter((e) => episodioRelevante(e, perfil.prova)));
+    if (cr === null || cr < MEDIA_APROVACAO) faltam.push(`ter CR ${MEDIA_APROVACAO} ou mais (o seu é ${cr === null ? 'sem nota' : fmtNota(cr)})`);
+    return faltam;
+  }
   const completas = disponiveis.filter((t) => estadoTemporada(t, p, perfil.prova).completa).length;
   if (completas < disponiveis.length) faltam.push(`concluir as ${disponiveis.length} temporadas, com as provas (${completas} feitas)`);
   const exigido = nivelExigido(c, perfil.prova);

@@ -10,7 +10,8 @@ import {
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Exercicio } from '../content/types';
 import { formatarTempo } from '../lib/datas';
-import { estaCerta, respostaVazia, type Resposta } from '../lib/respostas';
+import { fmtNota, pontuar } from '../lib/notas';
+import { embaralhar, estaCerta, respostaVazia, type Resposta } from '../lib/respostas';
 import { sfx } from '../lib/sfx';
 import { Markdown } from './Markdown';
 import { BotaoReportar, Questao, rotuloTipo } from './Questao';
@@ -36,6 +37,8 @@ interface ExameProps {
   aoEntregar: (r: ResultadoExame) => void;
   voltar: () => void;
   extraIntro?: ReactNode;
+  /** Sistema de notas: múltipla escolha com nota parcial, ordem sorteada a cada tentativa e resultado de 0 a 10. */
+  notas?: boolean;
 }
 
 interface Tentativa {
@@ -64,7 +67,7 @@ function salvarTentativa(chave: string, t: Tentativa | null) {
   }
 }
 
-export function Exame({ chave, titulo, sobre, descricao, questoes, minutos, aprovacao = 68, aoEntregar, voltar, extraIntro }: ExameProps) {
+export function Exame({ chave, titulo, sobre, descricao, questoes, minutos, aprovacao = 68, aoEntregar, voltar, extraIntro, notas = false }: ExameProps) {
   const [tentativa, setTentativa] = useState<Tentativa | null>(() => {
     const t = lerTentativa(chave);
     if (t && t.ids.every((id) => questoes.some((q) => q.id === id))) return t;
@@ -95,7 +98,7 @@ export function Exame({ chave, titulo, sobre, descricao, questoes, minutos, apro
           </div>
           <div>
             <dt>Aprovação</dt>
-            <dd>{aprovacao}%</dd>
+            <dd>{notas ? `média ${fmtNota(aprovacao / 10)}` : `${aprovacao}%`}</dd>
           </div>
         </dl>
         <ul className="exame-regras">
@@ -109,7 +112,10 @@ export function Exame({ chave, titulo, sobre, descricao, questoes, minutos, apro
           type="button"
           className="btn btn-play btn-lg"
           disabled={questoes.length === 0}
-          onClick={() => setTentativa({ ids: questoes.map((q) => q.id), respostas: {}, marcadas: [], inicio: Date.now() })}
+          onClick={() => {
+            const ids = questoes.map((q) => q.id);
+            setTentativa({ ids: notas ? embaralhar(ids) : ids, respostas: {}, marcadas: [], inicio: Date.now() });
+          }}
         >
           Começar agora
         </button>
@@ -123,6 +129,7 @@ export function Exame({ chave, titulo, sobre, descricao, questoes, minutos, apro
         titulo={titulo}
         resultado={tentativa.entregue}
         aprovacao={aprovacao}
+        notas={notas}
         questoes={tentativa.ids.map((id) => porId.get(id)!).filter(Boolean)}
         respostas={tentativa.respostas}
         refazer={() => setTentativa(null)}
@@ -145,7 +152,9 @@ export function Exame({ chave, titulo, sobre, descricao, questoes, minutos, apro
         const qs = t.ids.map((id) => porId.get(id)!);
         const erradas = qs.filter((q) => !t.respostas[q.id] || !estaCerta(q, t.respostas[q.id])).map((q) => q.id);
         const acertos = qs.length - erradas.length;
-        const pct = qs.length ? Math.round((acertos / qs.length) * 100) : 0;
+        // com notas, a múltipla escolha meio certa conta pela metade
+        const pontos = notas ? qs.reduce((a, q) => a + pontuar(q, t.respostas[q.id] ?? null), 0) : acertos;
+        const pct = qs.length ? Math.round((pontos / qs.length) * 100) : 0;
         const r: ResultadoExame = {
           acertos,
           total: qs.length,
@@ -334,10 +343,12 @@ function ResultadoTela({
   respostas,
   refazer,
   voltar,
+  notas,
 }: {
   titulo: string;
   resultado: ResultadoExame;
   aprovacao: number;
+  notas: boolean;
   questoes: Exercicio[];
   respostas: Record<string, Resposta>;
   refazer: () => void;
@@ -351,7 +362,7 @@ function ResultadoTela({
     <div className="resultado surgir">
       <div className={`resultado-placar ${resultado.aprovado ? 'aprovado' : 'reprovado'}`}>
         <div className="placar-anel grande" style={{ '--pct': resultado.pct / 100 } as React.CSSProperties}>
-          <strong>{resultado.pct}%</strong>
+          <strong>{notas ? fmtNota(resultado.pct / 10) : `${resultado.pct}%`}</strong>
           <span>
             {resultado.acertos} de {resultado.total}
           </span>
@@ -359,9 +370,11 @@ function ResultadoTela({
         </div>
         <div>
           <span className="hero-cargo">{titulo}</span>
-          <h1>{resultado.aprovado ? 'Aprovado' : 'Ainda não'}</h1>
+          <h1>{notas ? (resultado.aprovado ? 'Boa prova' : 'Prova abaixo de 7') : resultado.aprovado ? 'Aprovado' : 'Ainda não'}</h1>
           <p>
-            {resultado.aprovado
+            {notas
+              ? `Nota ${fmtNota(resultado.pct / 10)} na prova, que vale 50% da média da temporada. Fica a maior nota entre as tentativas.`
+              : resultado.aprovado
               ? `Passou da linha de ${aprovacao}%. As questões erradas foram para a sua revisão.`
               : `Faltaram ${Math.max(1, Math.ceil((aprovacao / 100) * resultado.total) - resultado.acertos)} acertos para os ${aprovacao}%. Revise as explicações abaixo e tente de novo.`}
           </p>

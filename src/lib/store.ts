@@ -40,6 +40,11 @@ export interface RegistroEpisodio {
   melhor: number;
   total: number;
   tentativas: number;
+  /** Sistema de notas: a melhor soma de pontos numa rodada e a soma dos pesos. Ausentes em progressos antigos. */
+  pontos?: number;
+  pesos?: number;
+  /** Bugs da aba Depuração do episódio, que entram na nota. */
+  bugs?: string[];
 }
 
 export interface SessaoEpisodio {
@@ -50,6 +55,9 @@ export interface SessaoEpisodio {
   xp: number;
   melhorCombo: number;
   iniciadaEm: string;
+  /** Sistema de notas: pontos de cada questão (0 a peso, já com o teto) e o peso de cada uma. */
+  pontos?: (number | null)[];
+  pesos?: number[];
 }
 
 export interface RegistroExame {
@@ -111,6 +119,10 @@ export interface Progresso {
   desafios: Record<string, string>;
   /** Bugs da aba Depuração já resolvidos: dia e se acertou a linha de primeira. Opcional em progressos antigos. */
   bugs?: Record<string, { em: string; dePrimeira: boolean }>;
+  /** Quantas vezes cada questão de episódio foi respondida, para o teto por tentativa. */
+  tentativas?: Record<string, number>;
+  /** Ajuda usada em cada desafio antes de entregar: abriu dica, viu a solução. */
+  ajudaDesafio?: Record<string, { dica?: boolean; solucao?: boolean }>;
   /** Etapas de projetos: critérios marcados, se abriu a solução e quando concluiu. Opcional em progressos antigos. */
   etapas?: Record<string, RegistroEtapa>;
   /** Projetos com todas as etapas concluídas: dia da conclusão. Opcional em progressos antigos. */
@@ -257,10 +269,18 @@ interface Estado {
   selecionarPerfil: (id: string | null) => void;
 
   marcarAula: (episodioId: string) => void;
-  iniciarSessao: (episodioId: string, total: number, recomecar?: boolean) => void;
-  responderNoEpisodio: (episodioId: string, exercicioId: string, indice: number, certo: boolean, tipo: string, comDica?: boolean) => number;
+  iniciarSessao: (episodioId: string, pesos: number[], recomecar?: boolean) => void;
+  responderNoEpisodio: (
+    episodioId: string,
+    exercicioId: string,
+    indice: number,
+    certo: boolean,
+    tipo: string,
+    comDica?: boolean,
+    pontos?: number,
+  ) => number;
   avancarSessao: (episodioId: string, indice: number) => void;
-  concluirEpisodio: (episodioId: string) => { acertos: number; total: number; xp: number; primeira: boolean };
+  concluirEpisodio: (episodioId: string, bugs?: string[]) => { acertos: number; total: number; xp: number; primeira: boolean };
   responderRevisao: (exercicioId: string, certo: boolean, comDica?: boolean) => number;
   registrarExame: (
     tipo: 'prova' | 'avaliacao',
@@ -269,6 +289,7 @@ interface Estado {
   ) => void;
   registrarSimulado: (r: RegistroSimulado & { aprovado: boolean; erradas: string[] }) => void;
   concluirDesafio: (episodioId: string) => void;
+  usarAjudaDesafio: (episodioId: string, ajuda: 'dica' | 'solucao') => void;
   resolverBug: (bugId: string, dePrimeira: boolean) => void;
   marcarCriterio: (etapaId: string, indice: number, marcado: boolean) => void;
   verSolucaoEtapa: (etapaId: string) => void;
@@ -369,11 +390,19 @@ export const useStore = create<Estado>()(
             ganhar(p, perfil, XP.aula, 'Aula assistida');
           }),
 
-        iniciarSessao: (episodioId, total, recomecar = false) =>
+        iniciarSessao: (episodioId, pesos, recomecar = false) =>
           mutar((p) => {
             p.ultimoEpisodio = episodioId;
+            const total = pesos.length;
             const atual = p.sessoes[episodioId];
-            if (atual && !recomecar && atual.resultados.length === total) return;
+            if (atual && !recomecar && atual.resultados.length === total) {
+              // sessão de antes das notas: começa a contar pontos daqui em diante
+              if (!atual.pontos) {
+                atual.pontos = atual.resultados.map(() => null);
+                atual.pesos = pesos;
+              }
+              return;
+            }
             p.sessoes[episodioId] = {
               resultados: Array(total).fill(null),
               indice: 0,
@@ -381,16 +410,21 @@ export const useStore = create<Estado>()(
               xp: 0,
               melhorCombo: 0,
               iniciadaEm: diaLocal(),
+              pontos: Array(total).fill(null),
+              pesos,
             };
           }),
 
-        responderNoEpisodio: (episodioId, exercicioId, indice, certo, tipo, comDica = false) =>
+        responderNoEpisodio: (episodioId, exercicioId, indice, certo, tipo, comDica = false, pontos) =>
           mutar((p, perfil) => {
             const s = p.sessoes[episodioId];
             if (!s || s.resultados[indice] !== null) return 0;
             const jaAcertou = (p.respostas[exercicioId]?.acertos ?? 0) > 0;
             registrarResposta(p, exercicioId, certo);
             s.resultados[indice] = certo;
+            p.tentativas ??= {};
+            p.tentativas[exercicioId] = (p.tentativas[exercicioId] ?? 0) + 1;
+            if (s.pontos && pontos !== undefined) s.pontos[indice] = pontos;
             let ganho = 0;
             if (certo && comDica) {
               // acerto com dica: conta para o episódio, mas não rende XP nem aumenta a sequência
@@ -416,16 +450,28 @@ export const useStore = create<Estado>()(
             if (s) s.indice = indice;
           }),
 
-        concluirEpisodio: (episodioId) =>
+        concluirEpisodio: (episodioId, bugs) =>
           mutar((p, perfil) => {
             const s = p.sessoes[episodioId];
             const acertos = s ? s.resultados.filter((r) => r === true).length : 0;
             const total = s ? s.resultados.length : 0;
             const reg = p.episodios[episodioId] ?? { melhor: 0, total, tentativas: 0 };
             const primeira = !reg.concluidoEm;
+            // nota guardada até aqui; em progresso antigo, a dos acertos
+            const antes = primeira ? -1 : (reg.pontos ?? reg.melhor) / ((reg.pesos ?? reg.total) || 1);
             reg.tentativas += 1;
             reg.melhor = Math.max(reg.melhor, acertos);
             reg.total = total;
+            if (s?.pontos && s.pesos && s.pontos.every((x) => x !== null)) {
+              // refazer guarda a maior nota
+              const pontos = s.pontos.reduce<number>((a, x) => a + (x ?? 0), 0);
+              const pesos = s.pesos.reduce((a, x) => a + x, 0);
+              if (pesos && pontos / pesos > antes) {
+                reg.pontos = pontos;
+                reg.pesos = pesos;
+              }
+            }
+            if (bugs) reg.bugs = bugs;
             let xp = 0;
             if (primeira) {
               reg.concluidoEm = diaLocal();
@@ -509,6 +555,13 @@ export const useStore = create<Estado>()(
             if (p.desafios[episodioId]) return;
             p.desafios[episodioId] = diaLocal();
             ganhar(p, perfil, XP.desafio, 'Desafio de código');
+          }),
+
+        usarAjudaDesafio: (episodioId, ajuda) =>
+          mutar((p) => {
+            if (p.desafios[episodioId]) return;
+            p.ajudaDesafio ??= {};
+            (p.ajudaDesafio[episodioId] ??= {})[ajuda] = true;
           }),
 
         resolverBug: (bugId, dePrimeira) =>

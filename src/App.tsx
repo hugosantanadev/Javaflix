@@ -6,6 +6,7 @@ import { useAplicarAparencia } from './lib/aparencia';
 import { usePerfil } from './lib/store';
 import { Assistir } from './pages/Assistir';
 import { Materiais, Videos } from './pages/Biblioteca';
+import { Boletim } from './pages/Boletim';
 import { Conquistas } from './pages/Conquistas';
 import { Conta } from './pages/Conta';
 import { Avaliacao, ProvaTemporada, Simulado } from './pages/Exames';
@@ -45,6 +46,7 @@ const router = createBrowserRouter([
       { path: '/simulado', element: <Simulado /> },
       { path: '/videos', element: <Videos /> },
       { path: '/materiais', element: <Materiais /> },
+      { path: '/boletim', element: <Boletim /> },
       { path: '/conquistas', element: <Conquistas /> },
       { path: '/conta', element: <Conta /> },
       { path: '/prova/:temporadaId', element: <ProvaTemporada /> },

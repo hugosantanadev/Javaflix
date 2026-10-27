@@ -244,6 +244,8 @@ interface ExercicioBase {
   /** Pista que ajuda sem entregar a resposta. Quem abre a dica não ganha XP na questão. */
   dica?: string;
   dificuldade: 1 | 2 | 3;
+  /** Peso da questão na média do episódio (sistema de notas). Padrão 1. */
+  peso?: number;
   /** Sobrescreve as provas do episódio, se a questão for mais restrita. */
   provas?: Prova[];
   /**

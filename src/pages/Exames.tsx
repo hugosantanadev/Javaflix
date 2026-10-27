@@ -13,6 +13,7 @@ import {
   useTodas,
 } from '../lib/conteudo';
 import { estadoTemporada, pendenciasDaPromocao } from '../lib/progresso';
+import { textoDaProva } from '../lib/notas';
 import { embaralhar } from '../lib/respostas';
 import { useProgresso, usePerfil, useStore } from '../lib/store';
 
@@ -67,6 +68,9 @@ export function ProvaTemporada() {
         questoes={questoes}
         minutos={Math.ceil(questoes.length * 2.4)}
         aoEntregar={(r) => registrar('prova', meta.id, r)}
+        notas={!!st.nota}
+        aprovacao={st.nota ? 70 : undefined}
+        extraIntro={st.nota && <p className="exame-nota">{textoDaProva(st.nota)}</p>}
         voltar={() => nav(`/?t=${meta.id}`)}
       />
     </div>

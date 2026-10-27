@@ -20,6 +20,7 @@ import {
   provasDe,
   temporadaDesbloqueada,
 } from '../lib/progresso';
+import { fmtNota, ROTULO_SITUACAO, textoDaProva } from '../lib/notas';
 import { useProgresso, usePerfil } from '../lib/store';
 import { Arte } from './Arte';
 
@@ -140,9 +141,19 @@ function ConteudoModal({ temporadaId, fechar, trocar }: { temporadaId: string; f
               <dt>Seu progresso</dt>
               <dd>
                 {st.concluidos} de {st.relevantes.length} episódios
-                {st.provaAprovada ? ', prova aprovada' : ''}
+                {!st.nota && st.provaAprovada ? ', prova aprovada' : ''}
               </dd>
             </div>
+            {st.nota && (
+              <div>
+                <dt>Média</dt>
+                <dd>
+                  <span className={`nota-valor ${st.nota.media >= 7 ? 'boa' : ''}`}>{fmtNota(st.nota.media)}</span>{' '}
+                  <span className={`situacao ${st.nota.situacao}`}>{ROTULO_SITUACAO[st.nota.situacao]}</span>
+                  <small className="nota-pesos">Exercícios 30%, desafios 20%, prova 50%</small>
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
 
@@ -215,7 +226,11 @@ function ConteudoModal({ temporadaId, fechar, trocar }: { temporadaId: string; f
                     </span>
                   </span>
                   <span className="episodio-status">
-                    {ee.concluido ? (
+                    {st.nota && ee.concluido ? (
+                      <span className="nota-chip" title="Nota do episódio">
+                        {fmtNota(st.nota.episodios.find((x) => x.meta.id === e.id)?.nota ?? 0)}
+                      </span>
+                    ) : ee.concluido ? (
                       <CheckIcon size={20} weight="bold" className="ok" />
                     ) : !st.disponivel ? null : !liberada ? (
                       <LockSimpleIcon size={18} />
@@ -233,13 +248,23 @@ function ConteudoModal({ temporadaId, fechar, trocar }: { temporadaId: string; f
             <div>
               <strong>Prova da temporada</strong>
               <span>
-                {nProva} questões no formato da certificação, {Math.ceil(nProva * 2.4)} min. Aprovação com 68%.
-                {regProva && ` Melhor nota: ${regProva.melhorPct}%.`}
+                {nProva} questões no formato da certificação, {Math.ceil(nProva * 2.4)} min.{' '}
+                {st.nota ? (
+                  <>
+                    {regProva && `Melhor nota: ${fmtNota(regProva.melhorPct / 10)}. `}
+                    {textoDaProva(st.nota)}
+                  </>
+                ) : (
+                  <>
+                    Aprovação com 68%.
+                    {regProva && ` Melhor nota: ${regProva.melhorPct}%.`}
+                  </>
+                )}
               </span>
             </div>
             {st.provaLiberada || perfil.config.modoLivre ? (
               <Link to={`/prova/${temporada.id}`} className={`btn ${st.provaAprovada ? 'btn-linha' : 'btn-accent'} btn-sm`}>
-                {st.provaAprovada ? 'Refazer' : regProva ? 'Tentar de novo' : 'Fazer a prova'}
+                {st.nota?.situacao === 'recuperacao' ? 'Recuperação' : st.provaAprovada ? 'Refazer' : regProva ? 'Tentar de novo' : 'Fazer a prova'}
               </Link>
             ) : (
               <span className="bloco-prova-trava">

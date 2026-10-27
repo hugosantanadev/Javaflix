@@ -271,7 +271,7 @@ export function BotaoReportar({ exercicioId }: { exercicioId: string }) {
 }
 
 /** A dica custa o XP da questão: o aviso fica no próprio botão, antes de abrir. */
-export function DicaDaQuestao({ dica, aberta, abrir }: { dica: string; aberta: boolean; abrir: () => void }) {
+export function DicaDaQuestao({ dica, aberta, abrir, comNotas = false }: { dica: string; aberta: boolean; abrir: () => void; comNotas?: boolean }) {
   if (aberta)
     return (
       <div className="dica surgir questao-dica">
@@ -281,7 +281,7 @@ export function DicaDaQuestao({ dica, aberta, abrir }: { dica: string; aberta: b
     );
   return (
     <button type="button" className="btn btn-linha btn-sm questao-dica-botao" onClick={abrir}>
-      <LightbulbIcon size={18} /> Pedir dica <small>(sem XP nesta questão)</small>
+      <LightbulbIcon size={18} /> Pedir dica <small>{comNotas ? '(sem XP e nota máxima 7 nesta questão)' : '(sem XP nesta questão)'}</small>
     </button>
   );
 }
