@@ -2,6 +2,7 @@ import { CopyIcon, DownloadSimpleIcon, TrashIcon, UploadSimpleIcon } from '@phos
 import { useRef, useState, type CSSProperties } from 'react';
 import { Avatar, AVATARES } from '../components/Marca';
 import { PROVAS, type Prova } from '../content/types';
+import { CONTA_DRIVE, importarVideos, ORIGEM_VIDEOS, removerVideos, VIDEOS } from '../content/videos';
 import { ACENTOS, TEMAS, temaEfetivo, useAparencia } from '../lib/aparencia';
 import { METAS, useProgresso, usePerfil, useStore } from '../lib/store';
 
@@ -28,6 +29,8 @@ export function Conta() {
   const [nome, setNome] = useState(perfil.nome);
   const [aviso, setAviso] = useState<string | null>(null);
   const arquivo = useRef<HTMLInputElement>(null);
+  const arquivoVideos = useRef<HTMLInputElement>(null);
+  const [avisoVideos, setAvisoVideos] = useState<string | null>(null);
   const { tema, acento, mudarTema, mudarAcento } = useAparencia();
   const claro = temaEfetivo(tema) === 'claro';
 
@@ -37,6 +40,15 @@ export function Conta() {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `javaflix-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const exportarVideos = () => {
+    const blob = new Blob([JSON.stringify({ tipo: 'javaflix-videos', versao: 1, CONTA_DRIVE, VIDEOS }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'javaflix-videos.json';
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -212,6 +224,61 @@ export function Conta() {
             </button>
           </>
         )}
+      </section>
+
+      <section className="conta-secao">
+        <h2>Vídeos do curso</h2>
+        <p className="conta-texto">
+          {ORIGEM_VIDEOS === 'arquivo'
+            ? `${VIDEOS.length} vídeos vindos do arquivo local. Exporte para usar no site publicado: lá, importe o arquivo aqui mesmo, e ele fica salvo só naquele navegador.`
+            : ORIGEM_VIDEOS === 'importados'
+              ? `${VIDEOS.length} vídeos importados, salvos só neste navegador. Os links não ficam no código do site.`
+              : 'Nenhum vídeo neste navegador. Importe o arquivo exportado da versão local; ele fica salvo só aqui, fora do código do site.'}
+        </p>
+        <div className="conta-botoes">
+          {VIDEOS.length > 0 && (
+            <button type="button" className="btn btn-linha btn-sm" onClick={exportarVideos}>
+              <DownloadSimpleIcon size={16} /> Exportar vídeos
+            </button>
+          )}
+          {ORIGEM_VIDEOS !== 'arquivo' && (
+            <button type="button" className="btn btn-linha btn-sm" onClick={() => arquivoVideos.current?.click()}>
+              <UploadSimpleIcon size={16} /> Importar vídeos
+            </button>
+          )}
+          <input
+            ref={arquivoVideos}
+            type="file"
+            accept="application/json"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              if (!f) return;
+              try {
+                importarVideos(await f.text());
+                window.location.reload();
+              } catch (err) {
+                setAvisoVideos((err as Error).message);
+              }
+            }}
+          />
+          {ORIGEM_VIDEOS === 'importados' && (
+            <button
+              type="button"
+              className="btn btn-linha btn-sm perigo"
+              onClick={() => {
+                if (confirm('Remover os vídeos importados deste navegador?')) {
+                  removerVideos();
+                  window.location.reload();
+                }
+              }}
+            >
+              <TrashIcon size={16} /> Remover vídeos
+            </button>
+          )}
+        </div>
+        {avisoVideos && <p className="conta-aviso">{avisoVideos}</p>}
       </section>
 
       <section className="conta-secao">

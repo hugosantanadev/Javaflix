@@ -33,7 +33,7 @@ export function Videos() {
             Os vídeos do seu curso no Google Drive aparecem aqui e dentro de cada episódio, na seção <em>Reforço em vídeo</em>. Para
             ligar: copie os links dos vídeos para <code>videos.txt</code> na raiz do projeto, um por linha com o título, e rode{' '}
             <code>npm run videos:importar</code>. O script sugere os episódios pelo título. O passo a passo está em{' '}
-            <code>docs/VIDEOS.md</code>.
+            <code>docs/VIDEOS.md</code>. No site publicado, exporte os vídeos em Conta na versão local e importe o arquivo lá.
           </p>
           <pre className="vazio-exemplo">{`# videos.txt
 Módulo 1 | Aula 03 - Tipos primitivos | https://drive.google.com/file/d/1AbC.../view
