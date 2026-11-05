@@ -23,13 +23,13 @@
   <line x1="206" y1="52" x2="206" y2="320" stroke="#43454a"/>
   <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bcbec4">
     <text x="28" y="72" fill="#dfe1e5" font-weight="600">Project</text>
-    <text x="34" y="96">▾  javaflix</text>
-    <text x="52" y="118">▸  .idea</text>
-    <text x="52" y="140">▾  src</text>
+    <text x="34" y="96" xml:space="preserve">▾  javaflix</text>
+    <text x="52" y="118" xml:space="preserve">▸  .idea</text>
+    <text x="52" y="140" xml:space="preserve">▾  src</text>
     <rect x="62" y="148" width="132" height="20" rx="3" fill="#2e436e"/>
     <circle cx="80" cy="158" r="5.5" fill="#3574f0"/>
     <text x="92" y="162" fill="#dfe1e5">Main</text>
-    <text x="52" y="188">▸  External Libraries</text>
+    <text x="52" y="188" xml:space="preserve">▸  External Libraries</text>
   </g>
 
   <!-- editor -->
@@ -46,7 +46,7 @@
     <text x="272" y="108"><tspan fill="#cf8e6d">public class</tspan><tspan fill="#bcbec4"> Main {</tspan></text>
     <text x="272" y="132"><tspan fill="#cf8e6d">    public static void</tspan><tspan fill="#56a8f5"> main</tspan><tspan fill="#bcbec4">(String[] args) {</tspan></text>
     <text x="272" y="156"><tspan fill="#bcbec4">        System.</tspan><tspan fill="#c77dbb" font-style="italic">out</tspan><tspan fill="#bcbec4">.println(</tspan><tspan fill="#6aab73">"Olá, Javaflix!"</tspan><tspan fill="#bcbec4">);</tspan></text>
-    <text x="272" y="180" fill="#bcbec4">    }</text>
+    <text x="272" y="180" fill="#bcbec4" xml:space="preserve">    }</text>
     <text x="272" y="204" fill="#bcbec4">}</text>
   </g>
 

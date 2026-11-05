@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Uma classe genérica do código-fonte ao bytecode: a declaração class Caixa com o parâmetro de tipo T; os usos Caixa de String e Caixa de Integer, com os argumentos de tipo String e Integer, conferidos pelo compilador, que recusa guardar 10 numa Caixa de String; e, no bytecode, uma única classe Caixa em que T virou Object, com um checkcast no ponto em que o valor é usado</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">
+    <text x="20" y="28">Declaração</text>
+    <text x="270" y="28">Usos, conferidos pelo javac</text>
+    <text x="540" y="28">Bytecode</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="20" y="40" width="210" height="140" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="32" y="64" fill="#f3eee7">class Caixa&lt;<tspan fill="#ff7a1a" font-weight="700">T</tspan>&gt; {</text>
+    <text x="44" y="88" fill="#bdb5aa">T conteudo;</text>
+    <text x="44" y="110" fill="#bdb5aa">void guardar(T item)</text>
+    <text x="44" y="132" fill="#bdb5aa">T abrir()</text>
+    <text x="32" y="154" fill="#f3eee7">}</text>
+
+    <rect x="270" y="40" width="230" height="64" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="282" y="62" fill="#f3eee7">Caixa&lt;<tspan fill="#4fd68b" font-weight="700">String</tspan>&gt; bilhete</text>
+    <text x="282" y="86" fill="#db5c5c">bilhete.guardar(10); // erro</text>
+
+    <rect x="270" y="116" width="230" height="64" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="282" y="138" fill="#f3eee7">Caixa&lt;<tspan fill="#4fd68b" font-weight="700">Integer</tspan>&gt; moedas</text>
+    <text x="282" y="162" fill="#bdb5aa">int v = moedas.abrir();</text>
+
+    <rect x="540" y="40" width="200" height="140" rx="8" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="552" y="64" fill="#f2c75c" font-weight="700">uma classe Caixa</text>
+    <text x="552" y="88" fill="#bdb5aa">Object conteudo</text>
+    <text x="552" y="110" fill="#bdb5aa">guardar(Object)</text>
+    <text x="552" y="132" fill="#bdb5aa">Object abrir()</text>
+    <text x="552" y="158" fill="#f2c75c">+ checkcast no uso</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M230 80 L267 72"/>
+    <path d="M230 120 L267 148"/>
+    <path d="M500 110 L537 110"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="20" y="222" fill="#ff7a1a">T: parâmetro de tipo, declarado pela classe</text>
+    <text x="20" y="244" fill="#4fd68b">String, Integer: argumentos de tipo, passados por quem usa</text>
+    <text x="20" y="266" fill="#f3eee7">Caixa&lt;String&gt;: um tipo parametrizado</text>
+  </g>
+  <text x="20" y="306" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">A verificação acontece na compilação; na execução, existe uma Caixa só, para todos os argumentos.</text>
+</svg>

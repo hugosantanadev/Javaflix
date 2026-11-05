@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" role="img" aria-labelledby="t">
+  <title id="t">As cinco partes de um bom pedido a um assistente de código: contexto (versões, código, erro), tarefa (o que fazer, uma coisa só), restrições (segurança, padrões do projeto, o que não mudar), formato (como a resposta deve vir) e verificação (testes e casos que provam que funcionou)</title>
+  <rect width="760" height="340" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <rect x="20" y="24" width="180" height="50" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="36" y="55" font-size="14" font-weight="700" fill="#f3eee7">1. Contexto</text>
+    <text x="220" y="45" font-size="13" fill="#bdb5aa">Java 25, Spring Boot 4, o código envolvido e a mensagem de erro inteira.</text>
+    <text x="220" y="64" font-size="12" fill="#8a8277">O modelo não vê o seu projeto: o que não está aqui, ele adivinha.</text>
+
+    <rect x="20" y="86" width="180" height="50" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="36" y="117" font-size="14" font-weight="700" fill="#f3eee7">2. Tarefa</text>
+    <text x="220" y="107" font-size="13" fill="#bdb5aa">Uma coisa só, com verbo: "escreva o teste", "explique o erro".</text>
+    <text x="220" y="126" font-size="12" fill="#8a8277">"Melhore este código" não diz o que é melhor.</text>
+
+    <rect x="20" y="148" width="180" height="50" rx="8" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="36" y="179" font-size="14" font-weight="700" fill="#ff7a1a">3. Restrições</text>
+    <text x="220" y="169" font-size="13" fill="#bdb5aa">Segurança, padrões do projeto e o que não pode mudar.</text>
+    <text x="220" y="188" font-size="12" fill="#8a8277">É a parte que quase todo mundo esquece, e a que evita o retrabalho.</text>
+
+    <rect x="20" y="210" width="180" height="50" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="36" y="241" font-size="14" font-weight="700" fill="#f3eee7">4. Formato</text>
+    <text x="220" y="231" font-size="13" fill="#bdb5aa">Só o diff, um arquivo inteiro, uma tabela, JSON com campos definidos.</text>
+    <text x="220" y="250" font-size="12" fill="#8a8277">Um formato fixo deixa a resposta fácil de conferir e de processar.</text>
+
+    <rect x="20" y="272" width="180" height="50" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="36" y="303" font-size="14" font-weight="700" fill="#4fd68b">5. Verificação</text>
+    <text x="220" y="293" font-size="13" fill="#bdb5aa">Os casos que provam que funcionou, e como você vai conferir.</text>
+    <text x="220" y="312" font-size="12" fill="#8a8277">Pedir os testes junto obriga a resposta a se comprometer com algo verificável.</text>
+  </g>
+</svg>

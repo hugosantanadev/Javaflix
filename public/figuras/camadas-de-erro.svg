@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">As barreiras que uma requisição atravessa: o Jackson recusa JSON malformado com 400; o @Valid recusa campos inválidos com 400 e a lista de campos; o serviço lança exceções de domínio, como produto inexistente, 404, e estoque insuficiente, 422; o banco recusa o que escapou das outras, como e-mail duplicado; e um @RestControllerAdvice traduz cada exceção num Problem Details</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+    <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" text-anchor="middle">
+    <rect x="20" y="40" width="130" height="64" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="85" y="66" font-size="13" font-weight="700" fill="#f3eee7">Jackson</text>
+    <text x="85" y="86" font-size="11" fill="#bdb5aa">JSON ilegível</text>
+    <rect x="170" y="40" width="130" height="64" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="235" y="66" font-size="13" font-weight="700" fill="#f3eee7">@Valid</text>
+    <text x="235" y="86" font-size="11" fill="#bdb5aa">campos inválidos</text>
+    <rect x="320" y="40" width="130" height="64" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="385" y="66" font-size="13" font-weight="700" fill="#f3eee7">Serviço</text>
+    <text x="385" y="86" font-size="11" fill="#bdb5aa">regras do negócio</text>
+    <rect x="470" y="40" width="130" height="64" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="535" y="66" font-size="13" font-weight="700" fill="#f3eee7">Banco</text>
+    <text x="535" y="86" font-size="11" fill="#bdb5aa">restrições</text>
+    <rect x="620" y="40" width="120" height="64" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="680" y="66" font-size="13" font-weight="700" fill="#4fd68b">Sucesso</text>
+    <text x="680" y="86" font-size="11" fill="#bdb5aa">200, 201, 204</text>
+
+    <rect x="170" y="190" width="430" height="56" rx="8" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="385" y="214" font-size="13" font-weight="700" fill="#ff7a1a">@RestControllerAdvice</text>
+    <text x="385" y="234" font-size="11" fill="#bdb5aa">cada exceção vira um Problem Details com o status certo</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.4" fill="none" marker-end="url(#a)">
+    <path d="M150 72 L167 72"/>
+    <path d="M300 72 L317 72"/>
+    <path d="M450 72 L467 72"/>
+    <path d="M600 72 L617 72"/>
+  </g>
+  <g stroke="#ff7a1a" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#l)">
+    <path d="M85 104 L200 187"/>
+    <path d="M235 104 L260 187"/>
+    <path d="M385 104 L385 187"/>
+    <path d="M535 104 L510 187"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" font-weight="700" fill="#ff7a1a">
+    <text x="96" y="150">400</text>
+    <text x="250" y="150">400 + campos</text>
+    <text x="394" y="150">404, 422</text>
+    <text x="530" y="150">409</text>
+  </g>
+  <text x="20" y="282" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Exceção que nenhum tratador conhece: 500, com mensagem genérica para o cliente e os detalhes só no log.</text>
+</svg>

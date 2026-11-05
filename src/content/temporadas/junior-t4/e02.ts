@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Os métodos são `get`, `accept`, `test` e `apply`; nas versões primitivas, `applyAsInt` e afins.',
     '`f.andThen(g)` aplica `f` primeiro; `f.compose(g)` aplica `g` primeiro.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a escolher a interface de `java.util.function` certa para uma lambda e a trocar classes anônimas por lambdas. Use-a como tutora para os nomes dos métodos, conferindo cada um no compilador.',
+    pedido:
+      'Revise as lambdas deste código Java 21.\n<cole o código aqui>\n- Para cada lambda, diga a interface funcional e o nome do método que ela implementa.\n- Aponte onde uma versão primitiva (IntPredicate, ToIntFunction) evitaria autoboxing.\n- Diga a ordem de execução de cada andThen e compose.',
+    erros: [
+      'Inventa nomes de métodos, como `predicate.apply` ou `supplier.call`.',
+      'Usa chaves numa lambda de uma linha e esquece o `return`.',
+      'Usa `Function<Integer, Integer>` em laços pesados, com autoboxing a cada chamada.',
+    ],
+    conferir: [
+      'Compile: nomes de método errados e `return` ausente aparecem na hora.',
+      'Teste `andThen` e `compose` com números que deem resultados diferentes nas duas ordens.',
+      'Passe `null` para a lambda e veja se ela trata o caso.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Using Lambdas Expressions in Your Application',
@@ -140,6 +156,98 @@ public class Senhas {
     comentarios:
       'Cada regra é um objeto independente, testável sozinho e reaproveitável em outro validador. O `and` cria um predicado novo a partir dos outros, sem `if` aninhado, e para no primeiro falso, como o `&&`. Trocar a política de senhas vira trocar a combinação, não reescrever a lógica.',
   },
+  bugs: [
+    {
+      id: 'junior-t4-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: not a statement`, apontando a lambda.',
+      codigo: `import java.util.function.Function;
+
+public class Precos {
+    public static void main(String[] args) {
+        Function<Double, Double> comImposto = p -> { p * 1.5; };
+        System.out.println(comImposto.apply(10.0));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.function.Function;
+
+public class Precos {
+    public static void main(String[] args) {
+        Function<Double, Double> comImposto = p -> p * 1.5;
+        System.out.println(comImposto.apply(10.0));
+    }
+}`,
+      saidaCorrigida: '15.0',
+      dica: 'Com chaves, o corpo da lambda é um bloco de comandos. Uma conta solta é um comando?',
+      explicacao: 'Dentro de chaves, a lambda é um bloco, e cada linha precisa ser um comando; para devolver um valor, é preciso `return`. Com uma expressão só, basta tirar as chaves: `p -> p * 1.5`.',
+    },
+    {
+      id: 'junior-t4-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O preço de 100 deveria ter 10% de desconto e depois 20 de frete, totalizando `110.0`, mas sai `108.0`.',
+      codigo: `import java.util.function.UnaryOperator;
+
+public class Carrinho {
+    public static void main(String[] args) {
+        UnaryOperator<Double> desconto = p -> p * 0.9;
+        UnaryOperator<Double> frete = p -> p + 20;
+        System.out.println(desconto.compose(frete).apply(100.0));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: '108.0' },
+      correcao: `import java.util.function.UnaryOperator;
+
+public class Carrinho {
+    public static void main(String[] args) {
+        UnaryOperator<Double> desconto = p -> p * 0.9;
+        UnaryOperator<Double> frete = p -> p + 20;
+        System.out.println(desconto.andThen(frete).apply(100.0));
+    }
+}`,
+      saidaCorrigida: '110.0',
+      dica: 'Em `f.compose(g)`, quem é aplicado primeiro: `f` ou `g`?',
+      explicacao: '`desconto.compose(frete)` aplica o frete primeiro e depois o desconto sobre o total: (100 + 20) × 0,9 = 108. `andThen` segue a ordem da leitura: desconto, depois frete. Na dúvida, teste com números em que a ordem muda o resultado.',
+    },
+    {
+      id: 'junior-t4-e02-b03',
+      dificuldade: 3,
+      sintoma: 'Somar o estoque de dois depósitos lança `NullPointerException` dentro da lambda quando um produto falta num deles.',
+      codigo: `import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BinaryOperator;
+
+public class Estoque {
+    public static void main(String[] args) {
+        Map<String, Integer> sp = new HashMap<>();
+        Map<String, Integer> rj = new HashMap<>();
+        sp.put("caneta", 10);
+        BinaryOperator<Integer> soma = (a, b) -> a + b;
+        System.out.println(soma.apply(sp.get("caneta"), rj.get("caneta")));
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BinaryOperator;
+
+public class Estoque {
+    public static void main(String[] args) {
+        Map<String, Integer> sp = new HashMap<>();
+        Map<String, Integer> rj = new HashMap<>();
+        sp.put("caneta", 10);
+        BinaryOperator<Integer> soma = (a, b) -> a + b;
+        System.out.println(soma.apply(sp.getOrDefault("caneta", 0), rj.getOrDefault("caneta", 0)));
+    }
+}`,
+      saidaCorrigida: '10',
+      dica: 'O que `Map.get` devolve para uma chave que não existe? E o que acontece com `a + b` quando um deles é esse valor?',
+      explicacao: '`rj.get("caneta")` devolve `null`, e `a + b` desembrulha os dois `Integer` para `int`, o que lança `NullPointerException`. `getOrDefault` devolve 0 para a chave ausente. Com `BinaryOperator<Integer>`, todo `null` que entra vira exceção na conta.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t4-e02-q01',
@@ -154,6 +262,7 @@ public class Senhas {
       ],
       resposta: 0,
       explicacao: 'A anotação é opcional: ela só pede ao compilador que confira a regra. Qualquer interface com um único método abstrato, em qualquer pacote, é funcional.',
+      dica: 'Conte os métodos abstratos, não as anotações.',
     },
     {
       id: 'junior-t4-e02-q02',
@@ -169,6 +278,7 @@ Calculo quadrado = x -> x * x;
 System.out.println(dobro.fazer(5) + quadrado.fazer(5) + " " + quadrado.fazer(dobro.fazer(3)));`,
       resposta: '35 36',
       explicacao: 'As duas primeiras chamadas dão 10 e 25, somados antes do texto: 35. Depois, o quadrado do dobro de 3: 36.',
+      dica: '10 + 25 vira número antes de encontrar o texto; depois, o quadrado de 6.',
     },
     {
       id: 'junior-t4-e02-q03',
@@ -185,6 +295,7 @@ System.out.println(dobro.fazer(5) + quadrado.fazer(5) + " " + quadrado.fazer(dob
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Métodos `default` e métodos abstratos de `Object` não contam. `D` tem dois métodos abstratos, e `E` nenhum: os dois falham na conferência da anotação.',
+      dica: '`default` e os métodos de `Object` não contam como abstratos.',
     },
     {
       id: 'junior-t4-e02-q04',
@@ -197,6 +308,7 @@ System.out.println(dobro.apply(4));`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 1 },
       explicacao: 'Com chaves, o corpo é um bloco de comandos, e `x * 2;` não é um comando válido. O certo seria `x -> x * 2` ou `x -> { return x * 2; }`.',
+      dica: 'Com chaves, a lambda precisa de comandos completos e de `return`.',
     },
     {
       id: 'junior-t4-e02-q05',
@@ -210,6 +322,7 @@ System.out.println(par.and(grande).test(12) + " " + par.or(grande).test(7) + " "
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '12 é par e maior que 10. 7 não é par nem maior que 10. E a negação de "par" para 7 é verdadeira.',
+      dica: '12 é par e grande; 7 não é par nem grande.',
     },
     {
       id: 'junior-t4-e02-q06',
@@ -227,6 +340,7 @@ public class Fornecedor {
       respostas: ['get'],
       saida: 'pronto',
       explicacao: '`Supplier` não recebe nada e devolve um valor, pelo método `get()`. A lambda sem parâmetros é escrita com parênteses vazios.',
+      dica: 'Um fornecedor entrega o valor com qual método?',
     },
     {
       id: 'junior-t4-e02-q07',
@@ -246,6 +360,7 @@ public class Lambdas {
 }`,
       resposta: 8,
       explicacao: 'Uma lambda precisa de uma interface funcional como alvo, para saber o tipo do parâmetro e do retorno. `Object` não é interface funcional.',
+      dica: 'Uma lambda precisa de uma interface funcional como alvo.',
     },
     {
       id: 'junior-t4-e02-q08',
@@ -259,6 +374,7 @@ System.out.println(mais1.andThen(vezes10).apply(2) + " " + mais1.compose(vezes10
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`andThen` aplica `mais1` e depois `vezes10`: (2 + 1) × 10. `compose` aplica primeiro o argumento: 2 × 10 + 1.',
+      dica: '`andThen` aplica o da esquerda primeiro; `compose`, o de dentro.',
     },
     {
       id: 'junior-t4-e02-q09',
@@ -274,6 +390,7 @@ System.out.println(mais1.andThen(vezes10).apply(2) + " " + mais1.compose(vezes10
       ],
       respostas: [0, 1, 2],
       explicacao: '`Function` e os operadores usam `apply`. `run()` é de `Runnable`, que não recebe nem devolve nada.',
+      dica: 'Lembre a tabela: `get`, `accept`, `test`, `apply`.',
     },
     {
       id: 'junior-t4-e02-q10',
@@ -288,6 +405,7 @@ System.out.println(junta.apply(corta.apply("javaflix", 4), inverte.apply("abc"))
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`corta` recebe dois tipos diferentes e devolve um terceiro. `BinaryOperator` e `UnaryOperator` são versões de `BiFunction` e `Function` com todos os tipos iguais.',
+      dica: 'Corte os 4 primeiros caracteres, inverta "abc" e junte com hífen.',
     },
     {
       id: 'junior-t4-e02-q11',
@@ -301,6 +419,7 @@ somar.accept(5);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: 'A lambda captura `total`, que precisaria ser efetivamente final, e ainda tenta alterá-la. A mesma regra vale para classes anônimas e locais.',
+      dica: 'Lambdas só capturam variáveis locais efetivamente final.',
     },
     {
       id: 'junior-t4-e02-q12',
@@ -317,6 +436,7 @@ System.out.println(log);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A variável `log` nunca é reatribuída, então é efetivamente final; alterar o objeto apontado é permitido. `andThen` roda `a` e depois `b` com o mesmo argumento.',
+      dica: '`a.andThen(b)` roda `a` e depois `b` com o mesmo argumento.',
     },
     {
       id: 'junior-t4-e02-q13',
@@ -331,6 +451,7 @@ System.out.println(log);`,
       ],
       resposta: 0,
       explicacao: 'Toda classe já herda `equals` de `Object`, então esse método nunca fica sem implementação. Só `compare` precisa ser fornecido pela lambda.',
+      dica: 'Toda classe já tem `equals`, herdado de `Object`.',
     },
     {
       id: 'junior-t4-e02-q14',
@@ -346,6 +467,7 @@ System.out.println(r + " " + impar.test(r));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '"lambda" tem 6 letras, e o triplo é 18, par. As versões primitivas trabalham com `int` direto, sem autoboxing, e usam `applyAsInt` no lugar de `apply`.',
+      dica: '"lambda" tem 6 letras; o triplo é par ou ímpar?',
     },
     {
       id: 'junior-t4-e02-q15',
@@ -360,6 +482,7 @@ System.out.println(r + " " + impar.test(r));`,
       ],
       resposta: 0,
       explicacao: 'O `LambdaMetafactory` cria uma classe oculta na primeira vez que a linha roda. Por isso lambdas não deixam arquivos `Main$1.class`, e o JDK pode mudar essa estratégia sem recompilação.',
+      dica: 'Lambdas não geram um `.class` na compilação.',
     },
   ],
 };

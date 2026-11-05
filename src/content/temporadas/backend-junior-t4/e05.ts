@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Senhas e tokens nunca no `application.properties` versionado: use `${VARIAVEL}` e o ambiente.',
     'Esquecer de ativar o perfil de produção faz a aplicação usar os padrões, como um notificador que só imprime no console.',
   ],
+  ia: {
+    uso:
+      'Configuração é um assunto cheio de regras pequenas (nomes de variáveis, ordem das fontes, unidades), e a IA explica bem cada uma. Use-a para montar o `@ConfigurationProperties` com validação e os arquivos de perfil; confira o que ela faz com segredos e com nomes de variáveis de ambiente.',
+    pedido:
+      'Projeto Spring Boot 4.1 com Java 25.\n<cole aqui o application.properties e a lista das configurações que mudam por ambiente>\n- Escreva um record LojaProperties com @ConfigurationProperties("loja") e @Validated, com Duration e BigDecimal onde couber.\n- Separe o que muda por ambiente em application-dev.properties e application-prod.properties.\n- Senhas e tokens só como ${NOME}, sem valor padrão.\n- Liste os nomes das variáveis de ambiente que o servidor de produção deve definir.',
+    erros: [
+      'Escreve senhas de exemplo, como `password=123456`, nos arquivos versionados.',
+      'Traduz `gratis-a-partir` para `GRATIS_A_PARTIR` na variável de ambiente.',
+      'Deixa durações sem unidade, que viram milissegundos.',
+      'Usa vários `@Value` espalhados em vez de um `@ConfigurationProperties`.',
+    ],
+    conferir: [
+      'Suba a aplicação com cada perfil e imprima o `LojaProperties` no log.',
+      'Defina uma variável de ambiente e confira que ela vence o arquivo.',
+      'Procure `password`, `secret` e `token` com valor em todos os arquivos de configuração.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Spring Boot: Externalized Configuration',
@@ -193,6 +210,127 @@ public class Vinculador {
     comentarios:
       'A primeira linha é idêntica ao `LojaProperties` que o Spring Boot montou na aula, e o erro tem as mesmas três informações do relatório real de falha na inicialização. A recursão para os `record`s aninhados é o que transforma `loja.frete.gratis-a-partir` no `frete.gratisAPartir`. O `Binder` de verdade vai muito além: aceita vários formatos de nome na mesma busca, porque a propriedade pode vir de uma variável de ambiente, converte dezenas de tipos com o mesmo serviço de conversão do Spring MVC, preenche mapas e listas indexadas, como `loja.cupons[0]`, e registra a origem de cada valor, que aparece no relatório como `from property source "commandLineArgs"`.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t4-e05-b01',
+      dificuldade: 1,
+      sintoma: 'Depois de uma mudança de configuração, todo pagamento passou a expirar na hora: `tempo limite do pagamento: PT0.015S`.',
+      codigo: `import java.time.Duration;
+import java.util.Map;
+
+public class TempoLimite {
+    static Duration converter(String v) {
+        if (v.endsWith("m")) return Duration.ofMinutes(Long.parseLong(v.substring(0, v.length() - 1)));
+        if (v.endsWith("s")) return Duration.ofSeconds(Long.parseLong(v.substring(0, v.length() - 1)));
+        return Duration.ofMillis(Long.parseLong(v));
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> propriedades = Map.of(
+                "loja.tempo-limite-pagamento", "15");
+        System.out.println("tempo limite do pagamento: " + converter(propriedades.get("loja.tempo-limite-pagamento")));
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'saida', saida: 'tempo limite do pagamento: PT0.015S' },
+      correcao: `import java.time.Duration;
+import java.util.Map;
+
+public class TempoLimite {
+    static Duration converter(String v) {
+        if (v.endsWith("m")) return Duration.ofMinutes(Long.parseLong(v.substring(0, v.length() - 1)));
+        if (v.endsWith("s")) return Duration.ofSeconds(Long.parseLong(v.substring(0, v.length() - 1)));
+        return Duration.ofMillis(Long.parseLong(v));
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> propriedades = Map.of(
+                "loja.tempo-limite-pagamento", "15m");
+        System.out.println("tempo limite do pagamento: " + converter(propriedades.get("loja.tempo-limite-pagamento")));
+    }
+}`,
+      saidaCorrigida: 'tempo limite do pagamento: PT15M',
+      dica: 'Que unidade o conversor usa quando o valor não tem sufixo?',
+      explicacao:
+        'Sem unidade, o valor é lido em milissegundos, que é a regra do próprio Spring para `Duration`: `15` vira 15 ms, 60.000 vezes menos que 15 minutos. Escreva sempre a unidade, `15m`, `30s`, ou use o formato ISO, `PT15M`.',
+    },
+    {
+      id: 'backend-junior-t4-e05-b02',
+      dificuldade: 2,
+      sintoma: 'A variável de ambiente do servidor foi ignorada, e o frete grátis continuou a partir de R$ 200: `frete grátis a partir de 200.00 (procurou LOJA_FRETE_GRATIS_A_PARTIR)`.',
+      codigo: `import java.util.Map;
+
+public class VariavelDeAmbiente {
+    static String nomeNoAmbiente(String propriedade) {
+        return propriedade.replace('-', '_').replace('.', '_').toUpperCase();
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> ambiente = Map.of("LOJA_FRETE_GRATISAPARTIR", "150");
+        String chave = nomeNoAmbiente("loja.frete.gratis-a-partir");
+        System.out.println("frete grátis a partir de " + ambiente.getOrDefault(chave, "200.00") + " (procurou " + chave + ")");
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'frete grátis a partir de 200.00 (procurou LOJA_FRETE_GRATIS_A_PARTIR)' },
+      correcao: `import java.util.Map;
+
+public class VariavelDeAmbiente {
+    static String nomeNoAmbiente(String propriedade) {
+        return propriedade.replace("-", "").replace('.', '_').toUpperCase();
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> ambiente = Map.of("LOJA_FRETE_GRATISAPARTIR", "150");
+        String chave = nomeNoAmbiente("loja.frete.gratis-a-partir");
+        System.out.println("frete grátis a partir de " + ambiente.getOrDefault(chave, "200.00") + " (procurou " + chave + ")");
+    }
+}`,
+      saidaCorrigida: 'frete grátis a partir de 150 (procurou LOJA_FRETE_GRATISAPARTIR)',
+      dica: 'A regra da vinculação relaxada troca o hífen por `_` ou o remove?',
+      explicacao:
+        'Na tradução para variável de ambiente, os pontos viram `_`, os hífens são **removidos** e tudo vai para maiúsculas: `LOJA_FRETE_GRATISAPARTIR`. Trocar o hífen por `_` gera outro nome, que ninguém definiu, e o padrão do arquivo vence em silêncio.',
+    },
+    {
+      id: 'backend-junior-t4-e05-b03',
+      dificuldade: 3,
+      sintoma: 'O argumento `--loja.frete.gratis-a-partir=99`, passado para um teste de campanha, não teve efeito: `frete grátis a partir de 200.00`.',
+      codigo: `import java.util.List;
+import java.util.Map;
+
+public class Prioridade {
+    public static void main(String[] args) {
+        Map<String, String> arquivo = Map.of("loja.frete.gratis-a-partir", "200.00");
+        Map<String, String> ambiente = Map.of("loja.frete.gratis-a-partir", "150");
+        Map<String, String> linhaDeComando = Map.of("loja.frete.gratis-a-partir", "99");
+        List<Map<String, String>> fontes = List.of(arquivo, ambiente, linhaDeComando);
+        String valor = fontes.stream().filter(f -> f.containsKey("loja.frete.gratis-a-partir"))
+                .findFirst().map(f -> f.get("loja.frete.gratis-a-partir")).orElse("não definida");
+        System.out.println("frete grátis a partir de " + valor);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'frete grátis a partir de 200.00' },
+      correcao: `import java.util.List;
+import java.util.Map;
+
+public class Prioridade {
+    public static void main(String[] args) {
+        Map<String, String> arquivo = Map.of("loja.frete.gratis-a-partir", "200.00");
+        Map<String, String> ambiente = Map.of("loja.frete.gratis-a-partir", "150");
+        Map<String, String> linhaDeComando = Map.of("loja.frete.gratis-a-partir", "99");
+        List<Map<String, String>> fontes = List.of(linhaDeComando, ambiente, arquivo);
+        String valor = fontes.stream().filter(f -> f.containsKey("loja.frete.gratis-a-partir"))
+                .findFirst().map(f -> f.get("loja.frete.gratis-a-partir")).orElse("não definida");
+        System.out.println("frete grátis a partir de " + valor);
+    }
+}`,
+      saidaCorrigida: 'frete grátis a partir de 99',
+      dica: 'As fontes são consultadas em ordem, e a primeira que tem a propriedade vence. Quem está primeiro na lista?',
+      explicacao:
+        'A busca para na primeira fonte que tem a propriedade, então a ordem da lista é a ordem de prioridade. O arquivo do projeto estava em primeiro, e a linha de comando, a mais forte, nunca era consultada. A lista precisa ir da mais forte para a mais fraca, como no `Environment` do Spring.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t4-e05-q01',
@@ -207,6 +345,7 @@ public class Vinculador {
       ],
       resposta: 0,
       explicacao: 'O arquivo vai junto no JAR com os padrões, e cada ambiente sobrepõe só o que precisa.',
+      dica: 'Um arquivo dentro de `src/main/resources`.',
     },
     {
       id: 'backend-junior-t4-e05-q02',
@@ -216,6 +355,7 @@ public class Vinculador {
       opcoes: ['`suporte@loja.exemplo`, o padrão depois dos dois-pontos', '`null`', 'Uma string vazia', 'A aplicação não sobe'],
       resposta: 0,
       explicacao: 'Sem o padrão, uma propriedade ausente faria a aplicação falhar na inicialização.',
+      dica: 'O valor depois dos dois-pontos é o padrão.',
     },
     {
       id: 'backend-junior-t4-e05-q03',
@@ -230,6 +370,7 @@ public class Vinculador {
       ],
       resposta: 0,
       explicacao: 'A configuração da loja fica num lugar, testável e documentada pelo próprio tipo, em vez de strings repetidas em várias classes.',
+      dica: 'Um record liga o prefixo inteiro, com tipos e validação.',
     },
     {
       id: 'backend-junior-t4-e05-q04',
@@ -239,6 +380,7 @@ public class Vinculador {
       opcoes: ['`gratisAPartir`', '`gratis_a_partir`', '`gratis-a-partir`, que precisa ter esse nome no Java', 'Nenhum: os nomes precisam ser idênticos'],
       resposta: 0,
       explicacao: 'É a vinculação relaxada: o *kebab case* dos arquivos corresponde ao *camel case* do Java.',
+      dica: 'A vinculação relaxada transforma o nome com hífens no nome Java em camelCase.',
     },
     {
       id: 'backend-junior-t4-e05-q05',
@@ -248,6 +390,7 @@ public class Vinculador {
       opcoes: ['`LOJA_FRETE_GRATISAPARTIR`', '`LOJA.FRETE.GRATIS-A-PARTIR`', '`loja_frete_gratis_a_partir`', '`LOJA_FRETE_GRATIS_A_PARTIR`'],
       resposta: 0,
       explicacao: 'Pontos viram `_`, hífens são removidos, e tudo vai para maiúsculas. Variáveis de ambiente não aceitam pontos nem hífens.',
+      dica: 'Pontos viram `_`, hífens somem e tudo vai para maiúsculas.',
     },
     {
       id: 'backend-junior-t4-e05-q06',
@@ -257,6 +400,7 @@ public class Vinculador {
       opcoes: ['`99`', '`150`', '`200`', 'A aplicação falha por conflito'],
       resposta: 0,
       explicacao: 'Argumentos de linha de comando têm a maior prioridade, seguidos das variáveis de ambiente e dos arquivos.',
+      dica: 'A linha de comando está no topo da ordem de prioridade.',
     },
     {
       id: 'backend-junior-t4-e05-q07',
@@ -271,6 +415,7 @@ public class Vinculador {
       ],
       resposta: 0,
       explicacao: 'O arquivo do perfil sobrepõe só o que define; o resto continua vindo do arquivo padrão.',
+      dica: 'O arquivo do perfil sobrepõe só o que ele define.',
     },
     {
       id: 'backend-junior-t4-e05-q08',
@@ -285,6 +430,7 @@ public class Vinculador {
       ],
       resposta: 0,
       explicacao: 'O `!` nega o perfil. Com nenhum perfil, com `dev` ou com `teste`, o bean existe.',
+      dica: 'O `!` inverte a condição do perfil.',
     },
     {
       id: 'backend-junior-t4-e05-q09',
@@ -299,6 +445,7 @@ public class Vinculador {
       ],
       resposta: 0,
       explicacao: 'O mesmo JAR, ou a mesma imagem, serve a todos os ambientes; só as variáveis mudam.',
+      dica: 'Em contêineres, a configuração vem do ambiente.',
     },
     {
       id: 'backend-junior-t4-e05-q10',
@@ -314,6 +461,7 @@ public class Vinculador {
       ],
       respostas: [0, 1],
       explicacao: 'Tudo o que vai para o Git é visto por todos com acesso ao repositório, para sempre, inclusive no histórico.',
+      dica: 'Fora do repositório: no ambiente ou num cofre.',
     },
     {
       id: 'backend-junior-t4-e05-q11',
@@ -331,6 +479,7 @@ public class Vinculador {
 }`,
       resposta: 'SPRING_DATASOURCE_URL SERVER_MAXHTTPREQUESTHEADERSIZE',
       explicacao: 'Os hífens desaparecem, e não viram `_`. É por isso que o nome da variável parece estranho para propriedades com hífens.',
+      dica: 'Aplique a regra: sem hífens, pontos viram `_`, maiúsculas.',
     },
     {
       id: 'backend-junior-t4-e05-q12',
@@ -347,6 +496,7 @@ public class Vinculador {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Cada maiúscula ganha um hífen antes, e o `toLowerCase` termina o *kebab case*. É o nome que o Spring Boot procura no arquivo.',
+      dica: 'Siga a conversão do programa no nome da propriedade.',
     },
     {
       id: 'backend-junior-t4-e05-q13',
@@ -356,6 +506,7 @@ public class Vinculador {
       opcoes: ['A duração de 15 minutos, `PT15M`', 'A duração de 15 meses', 'A duração de 15 milissegundos', 'A aplicação falha: `Duration` só aceita `PT15M`'],
       resposta: 0,
       explicacao: 'O Spring Boot aceita sufixos como `ms`, `s`, `m`, `h` e `d`, além do formato ISO 8601. Sem sufixo, o padrão é milissegundos.',
+      dica: 'O sufixo `m` é de minutos.',
     },
     {
       id: 'backend-junior-t4-e05-q14',
@@ -370,6 +521,7 @@ public class Vinculador {
       ],
       resposta: 0,
       explicacao: 'Falhar cedo transforma um defeito escondido num aviso imediato, quando quem implantou ainda está olhando.',
+      dica: 'Quando você prefere descobrir o erro: na implantação ou de madrugada?',
     },
     {
       id: 'backend-junior-t4-e05-q15',
@@ -387,6 +539,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`PT1H30M` é o formato ISO 8601 de uma hora e trinta minutos: 90 minutos. O `T` separa a parte de data da parte de horas.',
+      dica: 'Siga o programa e veja de qual fonte vem cada valor.',
     },
   ],
 };

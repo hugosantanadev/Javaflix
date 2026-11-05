@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     '`NOT IN` com subconsulta que devolve nulo não encontra nada; prefira `NOT EXISTS`.',
     'Junção entre tabelas grandes sem índice na coluna do `ON` é uma das causas mais comuns de lentidão.',
   ],
+  ia: {
+    uso:
+      'Montar JOINs entre várias tabelas é tarefa em que a IA rende bem, desde que tenha o esquema com as chaves estrangeiras. O trabalho que continua seu é decidir o que fazer com as linhas sem par e conferir se a junção multiplicou valores antes de uma soma.',
+    pedido:
+      'Banco PostgreSQL com estas tabelas e chaves estrangeiras:\n<cole aqui os CREATE TABLE de clientes, pedidos e itens_pedido>\n- Escreva a consulta: todos os clientes, inclusive os sem pedido, com a quantidade de pedidos e o valor total dos itens.\n- Não some colunas de pedidos depois de juntar com itens; agregue cada nível separadamente se for preciso.\n- Explique o tipo de cada JOIN e o que acontece com os clientes sem pedido.\n- Sugira três linhas de teste que mostrem se a consulta duplica algum valor.',
+    erros: [
+      'Usa INNER JOIN quando o relatório precisa de todas as linhas da esquerda.',
+      'Põe no `WHERE` uma condição sobre a tabela da direita de um LEFT JOIN.',
+      'Soma uma coluna da tabela "um" depois de juntar com a tabela "muitos".',
+      'Usa `NOT IN` com uma subconsulta que pode ter nulos.',
+    ],
+    conferir: [
+      'Compare o `COUNT(*)` da consulta com o número de linhas que você espera.',
+      'Inclua no teste um cliente sem pedidos e um pedido com vários itens.',
+      'Confira os totais de uma linha à mão.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Documentação do PostgreSQL: Joined Tables',
@@ -160,6 +177,135 @@ public class Juntar {
     comentarios:
       'O código mostra por que a posição da condição importa. No `ON`, ela age enquanto as linhas são casadas: um cliente sem pedido pago fica sem par e ganha o `NULL`, mas continua lá. No `WHERE`, ela age sobre o resultado já pronto, e as linhas com `NULL` simplesmente não passam no teste. O mapa por `clienteId` é exatamente a estrutura que um *hash join* monta em memória; a diferença é que o banco escolhe sozinho qual tabela vira o mapa, normalmente a menor, e, se ela não couber na memória, divide o trabalho em partes gravadas em disco.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t3-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O painel "pedidos por cliente" mostra `Elisa: null` em vez de zero, e o gráfico da tela quebra com o valor nulo.',
+      codigo: `import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+public class PedidosPorCliente {
+    record Pedido(int id, String cliente) {}
+
+    public static void main(String[] args) {
+        List<String> clientes = List.of("Ana", "Bruno", "Elisa");
+        List<Pedido> pedidos = List.of(new Pedido(101, "Ana"), new Pedido(102, "Bruno"), new Pedido(103, "Ana"));
+        Map<String, Long> porCliente = pedidos.stream().collect(Collectors.groupingBy(Pedido::cliente, TreeMap::new, Collectors.counting()));
+        for (String c : clientes) {
+            System.out.println(c + ": " + porCliente.get(c));
+        }
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'saida', saida: 'Ana: 2\nBruno: 1\nElisa: null' },
+      correcao: `import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+public class PedidosPorCliente {
+    record Pedido(int id, String cliente) {}
+
+    public static void main(String[] args) {
+        List<String> clientes = List.of("Ana", "Bruno", "Elisa");
+        List<Pedido> pedidos = List.of(new Pedido(101, "Ana"), new Pedido(102, "Bruno"), new Pedido(103, "Ana"));
+        Map<String, Long> porCliente = pedidos.stream().collect(Collectors.groupingBy(Pedido::cliente, TreeMap::new, Collectors.counting()));
+        for (String c : clientes) {
+            System.out.println(c + ": " + porCliente.getOrDefault(c, 0L));
+        }
+    }
+}`,
+      saidaCorrigida: 'Ana: 2\nBruno: 1\nElisa: 0',
+      dica: 'O que o `get` de um `Map` devolve para uma chave que não está nele?',
+      explicacao:
+        'A contagem só tem os clientes que aparecem nos pedidos, como num INNER JOIN; o laço pelos clientes faz o papel do LEFT JOIN e encontra a Elisa sem par, e o `get` devolve `null`. É o mesmo `NULL` do SQL, e a correção é a mesma ideia do `COALESCE`: `getOrDefault(c, 0L)`.',
+    },
+    {
+      id: 'backend-junior-t3-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O relatório de "clientes vizinhos" lista cada par duas vezes: `Ana e Carla` e depois `Carla e Ana`.',
+      codigo: `import java.util.List;
+
+public class Vizinhos {
+    record Cliente(int id, String nome, String cidade) {}
+
+    public static void main(String[] args) {
+        List<Cliente> clientes = List.of(new Cliente(1, "Ana", "São Paulo"), new Cliente(3, "Carla", "São Paulo"), new Cliente(2, "Bruno", "Recife"));
+        for (Cliente a : clientes) {
+            for (Cliente b : clientes) {
+                if (a.cidade().equals(b.cidade()) && a.id() != b.id()) {
+                    System.out.println(a.nome() + " e " + b.nome());
+                }
+            }
+        }
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: 'Ana e Carla\nCarla e Ana' },
+      correcao: `import java.util.List;
+
+public class Vizinhos {
+    record Cliente(int id, String nome, String cidade) {}
+
+    public static void main(String[] args) {
+        List<Cliente> clientes = List.of(new Cliente(1, "Ana", "São Paulo"), new Cliente(3, "Carla", "São Paulo"), new Cliente(2, "Bruno", "Recife"));
+        for (Cliente a : clientes) {
+            for (Cliente b : clientes) {
+                if (a.cidade().equals(b.cidade()) && a.id() < b.id()) {
+                    System.out.println(a.nome() + " e " + b.nome());
+                }
+            }
+        }
+    }
+}`,
+      saidaCorrigida: 'Ana e Carla',
+      dica: 'Para um par de clientes, quantas vezes a condição é verdadeira com `!=`?',
+      explicacao:
+        'Com `!=`, o par aparece nas duas ordens: (Ana, Carla) e (Carla, Ana). Com `<`, só a ordem em que o primeiro id é menor passa, e cada par sai uma vez. É o `a.id < b.id` da autojunção da aula.',
+    },
+    {
+      id: 'backend-junior-t3-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O fechamento do dia mostra `frete do dia: R$ 85`, mas só houve dois pedidos, com fretes de R$ 15 e R$ 20.',
+      codigo: `import java.util.List;
+import java.util.stream.Collectors;
+
+public class FreteDoDia {
+    record Linha(int pedido, int frete, String item) {}
+
+    public static void main(String[] args) {
+        List<Linha> juncao = List.of(
+                new Linha(101, 15, "Mouse"), new Linha(101, 15, "Teclado"), new Linha(101, 15, "Cabo"),
+                new Linha(102, 20, "Monitor"), new Linha(102, 20, "Suporte"));
+        int total = juncao.stream().mapToInt(Linha::frete).sum();
+        System.out.println("frete do dia: R$ " + total);
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'frete do dia: R$ 85' },
+      correcao: `import java.util.List;
+import java.util.stream.Collectors;
+
+public class FreteDoDia {
+    record Linha(int pedido, int frete, String item) {}
+
+    public static void main(String[] args) {
+        List<Linha> juncao = List.of(
+                new Linha(101, 15, "Mouse"), new Linha(101, 15, "Teclado"), new Linha(101, 15, "Cabo"),
+                new Linha(102, 20, "Monitor"), new Linha(102, 20, "Suporte"));
+        int total = juncao.stream().collect(Collectors.toMap(Linha::pedido, Linha::frete, (a, b) -> a)).values().stream().mapToInt(Integer::intValue).sum();
+        System.out.println("frete do dia: R$ " + total);
+    }
+}`,
+      saidaCorrigida: 'frete do dia: R$ 35',
+      dica: 'Quantas linhas da junção cada pedido gerou, e quantas vezes o frete dele foi somado?',
+      explicacao:
+        'A junção de pedidos com itens repete a linha do pedido para cada item: o frete de 15 entrou três vezes, e o de 20, duas. O frete é do pedido, então tem de ser somado uma vez por pedido, aqui com um mapa por `pedido`. No SQL, a saída é somar o frete numa consulta sem a junção, ou agregar os itens antes de juntar.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t3-e02-q01',
@@ -174,6 +320,7 @@ public class Juntar {
       ],
       resposta: 0,
       explicacao: 'O LEFT JOIN mantém todas as linhas da esquerda e preenche `p.id` com `NULL`. `JOIN` e `INNER JOIN` são a mesma coisa.',
+      dica: 'Qual junção mantém todas as linhas da tabela da esquerda?',
     },
     {
       id: 'backend-junior-t3-e02-q02',
@@ -183,6 +330,7 @@ public class Juntar {
       opcoes: ['Só o Monitor 24', 'Todos os produtos', 'Nenhum produto', 'Os produtos 1 a 5'],
       resposta: 0,
       explicacao: 'É a anti-junção: só os produtos que ficaram sem par, com as colunas de `itens_pedido` nulas.',
+      dica: 'O LEFT JOIN completa com nulo quem não tem par, e o `IS NULL` fica só com esses.',
     },
     {
       id: 'backend-junior-t3-e02-q03',
@@ -197,6 +345,7 @@ public class Juntar {
       ],
       resposta: 0,
       explicacao: 'Com `ON p.cliente_id = c.id AND p.criado_em >= DATE \'2025-09-10\'`, a data faz parte do casamento, e os clientes sem pedido recente ficam com `NULL`.',
+      dica: 'Um filtro no `WHERE` sobre a tabela da direita descarta as linhas que vieram com nulo.',
     },
     {
       id: 'backend-junior-t3-e02-q04',
@@ -206,6 +355,7 @@ public class Juntar {
       opcoes: ['30', '11', '6', '5'],
       resposta: 0,
       explicacao: 'O CROSS JOIN combina cada cliente com cada pedido: 5 × 6.',
+      dica: 'Cada linha de uma combinada com cada linha da outra.',
     },
     {
       id: 'backend-junior-t3-e02-q05',
@@ -220,6 +370,7 @@ public class Juntar {
       ],
       resposta: 0,
       explicacao: 'Sem `pedidos.cliente_id = clientes.id`, a vírgula produz o produto cartesiano. Com `JOIN ... ON`, a condição de ligação fica explícita e difícil de esquecer.',
+      dica: 'Duas tabelas na vírgula e nenhuma condição ligando as duas.',
     },
     {
       id: 'backend-junior-t3-e02-q06',
@@ -234,6 +385,7 @@ public class Juntar {
       ],
       resposta: 0,
       explicacao: 'Trocar as tabelas de lado transforma um RIGHT num LEFT. É por isso que o RIGHT JOIN é raro: o LEFT é mais fácil de ler.',
+      dica: 'Troque a ordem das tabelas e o RIGHT vira LEFT.',
     },
     {
       id: 'backend-junior-t3-e02-q07',
@@ -249,6 +401,7 @@ public class Juntar {
       ],
       respostas: [0, 1],
       explicacao: 'O FULL mantém as linhas sem par dos dois lados. Teclado e Monitor têm par e apareceriam em qualquer junção.',
+      dica: 'O FULL mantém os sem par dos dois lados.',
     },
     {
       id: 'backend-junior-t3-e02-q08',
@@ -275,6 +428,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O cliente 1 gera duas linhas, o 3 gera uma, e os clientes 2 e 4, sem pedidos, geram uma cada, com `NULL`.',
+      dica: 'Conte as linhas: clientes com pedido aparecem uma vez por pedido, e os sem pedido, uma vez.',
     },
     {
       id: 'backend-junior-t3-e02-q09',
@@ -296,6 +450,7 @@ public class Teste {
 }`,
       resposta: '12',
       explicacao: '4 × 3. Com um milhão de linhas de cada lado, seriam um trilhão de comparações, por isso o banco usa índices ou *hash join*.',
+      dica: 'Laços aninhados comparam cada linha de uma com cada linha da outra: multiplique os tamanhos.',
     },
     {
       id: 'backend-junior-t3-e02-q10',
@@ -310,6 +465,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Sem ele, Ana apareceria pareada com Ana, e o par Ana e Carla apareceria também como Carla e Ana.',
+      dica: 'Sem a condição, cada cliente casa consigo mesmo, e cada par aparece duas vezes.',
     },
     {
       id: 'backend-junior-t3-e02-q11',
@@ -324,6 +480,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Um pedido com três itens aparece três vezes. Some o frete direto de `pedidos`, ou agregue os itens numa subconsulta antes de juntar.',
+      dica: 'Quantas vezes a linha de um pedido com três itens aparece depois da junção?',
     },
     {
       id: 'backend-junior-t3-e02-q12',
@@ -338,6 +495,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Um único nulo na lista do `NOT IN` torna a condição desconhecida para todas as linhas, e o resultado fica vazio.',
+      dica: 'Lembre da lógica de três valores do episódio anterior.',
     },
     {
       id: 'backend-junior-t3-e02-q13',
@@ -352,6 +510,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O banco não adivinha qual `id` você quer. Escreva `p.id` ou `c.id`, e de preferência qualifique todas as colunas numa junção.',
+      dica: 'As duas tabelas têm uma coluna com esse nome.',
     },
     {
       id: 'backend-junior-t3-e02-q14',
@@ -366,6 +525,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Com poucas linhas de um lado e um índice do outro, cada busca é instantânea. *Hash* e *merge* compensam quando as duas entradas são grandes.',
+      dica: 'Poucas linhas de um lado e um índice do outro.',
     },
     {
       id: 'backend-junior-t3-e02-q15',
@@ -380,6 +540,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O Mouse custava 119,90 no pedido 103 e custa 129,90 hoje. Sem a cópia, o histórico dos pedidos mudaria a cada reajuste.',
+      dica: 'O preço de hoje é o mesmo do dia da compra?',
     },
   ],
 };

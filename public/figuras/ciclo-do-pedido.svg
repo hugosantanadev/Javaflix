@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Ciclo de vida de um pedido: CRIADO vai para PAGO, PAGO vai para ENVIADO, ENVIADO vai para ENTREGUE; CRIADO e PAGO podem ir para CANCELADO; ENVIADO e ENTREGUE não podem ser cancelados</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker>
+  </defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" text-anchor="middle">
+    <rect x="30" y="60" width="130" height="44" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="95" y="87" fill="#f3eee7">CRIADO</text>
+    <rect x="215" y="60" width="130" height="44" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="280" y="87" fill="#f3eee7">PAGO</text>
+    <rect x="400" y="60" width="130" height="44" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="465" y="87" fill="#f3eee7">ENVIADO</text>
+    <rect x="585" y="60" width="140" height="44" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="655" y="87" fill="#4fd68b">ENTREGUE</text>
+    <rect x="122" y="200" width="140" height="44" rx="8" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="192" y="227" fill="#ff7a1a">CANCELADO</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.8" fill="none" marker-end="url(#s)">
+    <path d="M160 82 L212 82"/>
+    <path d="M345 82 L397 82"/>
+    <path d="M530 82 L582 82"/>
+  </g>
+  <g stroke="#ff7a1a" stroke-width="1.8" stroke-dasharray="5 3" fill="none" marker-end="url(#c)">
+    <path d="M95 104 L170 197"/>
+    <path d="M280 104 L215 197"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa" text-anchor="middle">
+    <text x="186" y="52">pagar</text>
+    <text x="371" y="52">enviar</text>
+    <text x="556" y="52">entregar</text>
+    <text x="98" y="160">cancelar</text>
+    <text x="290" y="160">cancelar</text>
+  </g>
+  <text x="400" y="222" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">ENVIADO e ENTREGUE não voltam atrás:</text>
+  <text x="400" y="240" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">cancelar ali é 409 Conflict, não 500.</text>
+  <text x="30" y="285" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Cada seta é uma regra de negócio, e cada seta que falta é um teste que a API precisa ter.</text>
+</svg>

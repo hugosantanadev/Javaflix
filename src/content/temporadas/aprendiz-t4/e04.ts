@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     '`LinkedList.get(i)` é O(n): é preciso caminhar pelos nós.',
     'Coleções genéricas não aceitam primitivos: `Queue<int>` não compila; use `Queue<Integer>`.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a escolher entre pilha, fila e lista e a implementar essas estruturas do zero para estudo. Confira o par de métodos usado em cada caso e prefira as classes do Java em código de produção.',
+    pedido:
+      'Implemente em Java uma fila com array circular de capacidade fixa.\n- Explique como o índice dá a volta e como a fila sabe se está cheia ou vazia.\n- Escreva testes que enchem a fila, esvaziam, enchem de novo dando a volta e tentam retirar da fila vazia.\n- Compare com o ArrayDeque do JDK: o que ele faz quando enche?',
+    erros: [
+      'Usa `Stack` e `LinkedList` como fila por hábito de material antigo.',
+      'Mistura `push` com `poll` num `Deque`, trocando a ordem de atendimento.',
+      'Tenta guardar `null` num `ArrayDeque`.',
+    ],
+    conferir: [
+      'Insira 1, 2, 3 e confira a ordem de saída: LIFO ou FIFO.',
+      'Teste a estrutura vazia: `poll` e `peek` devolvem `null`, `pop` lança exceção.',
+      'Teste o array circular dando várias voltas.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de Deque',
@@ -162,6 +178,132 @@ public class PosFixa {
     comentarios:
       'A notação pós-fixa não precisa de parênteses nem de regras de precedência: a ordem dos símbolos já diz tudo. Por isso calculadoras HP antigas a usavam, e por isso o bytecode da JVM é pós-fixo: `iload a, iload b, imul, iload c, iadd` é `a b * c +`. Converter uma expressão comum para pós-fixa também se faz com uma pilha, no algoritmo shunting-yard de Dijkstra.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t4-e04-b01',
+      dificuldade: 1,
+      sintoma: 'A fila de atendimento chama primeiro o último cliente que chegou: imprime `Caio Bia Ana`.',
+      codigo: `import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class Atendimento {
+    public static void main(String[] args) {
+        Deque<String> fila = new ArrayDeque<>();
+        for (String cliente : new String[] {"Ana", "Bia", "Caio"}) {
+            fila.push(cliente);
+        }
+        StringBuilder ordem = new StringBuilder();
+        while (!fila.isEmpty()) ordem.append(fila.poll()).append(' ');
+        System.out.println(ordem.toString().trim());
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'Caio Bia Ana' },
+      correcao: `import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class Atendimento {
+    public static void main(String[] args) {
+        Deque<String> fila = new ArrayDeque<>();
+        for (String cliente : new String[] {"Ana", "Bia", "Caio"}) {
+            fila.offer(cliente);
+        }
+        StringBuilder ordem = new StringBuilder();
+        while (!fila.isEmpty()) ordem.append(fila.poll()).append(' ');
+        System.out.println(ordem.toString().trim());
+    }
+}`,
+      saidaCorrigida: 'Ana Bia Caio',
+      dica: 'Em que ponta do `Deque` o `push` insere? E de que ponta o `poll` retira?',
+      explicacao: 'O `push` insere na frente, e o `poll` também retira da frente: o último a entrar sai primeiro, como numa pilha. Para fila, insira no fim com `offer`.',
+    },
+    {
+      id: 'aprendiz-t4-e04-b02',
+      dificuldade: 2,
+      sintoma: 'Montar a fila de tarefas lança `NullPointerException` quando uma das tarefas lidas está vazia.',
+      codigo: `import java.util.ArrayDeque;
+import java.util.Queue;
+
+public class Tarefas {
+    public static void main(String[] args) {
+        String[] lidas = {"backup", null, "relatório"};
+        Queue<String> fila = new ArrayDeque<>();
+        for (String t : lidas) {
+            fila.offer(t);
+        }
+        System.out.println(fila);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `import java.util.ArrayDeque;
+import java.util.Queue;
+
+public class Tarefas {
+    public static void main(String[] args) {
+        String[] lidas = {"backup", null, "relatório"};
+        Queue<String> fila = new ArrayDeque<>();
+        for (String t : lidas) {
+            if (t != null) fila.offer(t);
+        }
+        System.out.println(fila);
+    }
+}`,
+      saidaCorrigida: '[backup, relatório]',
+      dica: 'Que valor o `poll` devolve para dizer "fila vazia"? O `ArrayDeque` pode guardar esse mesmo valor?',
+      explicacao: 'O `ArrayDeque` recusa `null`, porque `null` é o que `poll` e `peek` devolvem para indicar fila vazia; aceitar `null` tornaria as duas situações indistinguíveis. Filtre os nulos antes de inserir.',
+    },
+    {
+      id: 'aprendiz-t4-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O verificador diz que `((x)` está balanceado: imprime `true`.',
+      codigo: `import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class Balanceado {
+    static boolean balanceado(String s) {
+        Deque<Character> pilha = new ArrayDeque<>();
+        for (char c : s.toCharArray()) {
+            if (c == '(') pilha.push(c);
+            else if (c == ')') {
+                if (pilha.isEmpty()) return false;
+                pilha.pop();
+            }
+        }
+        return true;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(balanceado("((x)"));
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'saida', saida: 'true' },
+      correcao: `import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class Balanceado {
+    static boolean balanceado(String s) {
+        Deque<Character> pilha = new ArrayDeque<>();
+        for (char c : s.toCharArray()) {
+            if (c == '(') pilha.push(c);
+            else if (c == ')') {
+                if (pilha.isEmpty()) return false;
+                pilha.pop();
+            }
+        }
+        return pilha.isEmpty();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(balanceado("((x)"));
+    }
+}`,
+      saidaCorrigida: 'false',
+      dica: 'Depois de ler o texto inteiro, o que sobra na pilha para `((x)`?',
+      explicacao: 'O laço confere que nenhum fechamento chega sem abertura, mas não confere o contrário: aberturas que ficaram sem fechar. Elas sobram na pilha. O texto só está balanceado se a pilha terminar vazia.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t4-e04-q01',
@@ -171,6 +313,7 @@ public class PosFixa {
       opcoes: ['Pilha', 'Fila', 'Fila de prioridade', 'Lista ordenada'],
       resposta: 0,
       explicacao: 'Na pilha, só o topo é acessível: o último empilhado é o primeiro a sair. A fila é FIFO, e a fila de prioridade entrega o menor (ou o de maior prioridade), qualquer que seja a ordem de chegada.',
+      dica: 'Pense numa pilha de pratos.',
     },
     {
       id: 'aprendiz-t4-e04-q02',
@@ -186,6 +329,7 @@ p.push("d");
 System.out.println(p.peek() + " " + p.size() + " " + p);`,
       resposta: 'd 3 [d, b, a]',
       explicacao: 'Depois de empilhar a, b, c, o `pop` tira o c, e o `push` coloca o d no topo. `peek` mostra o topo sem remover. O `push` do `ArrayDeque` insere no começo, então o `toString` lista do topo para a base.',
+      dica: '`push` e `pop` mexem no topo; confira o que sobra.',
     },
     {
       id: 'aprendiz-t4-e04-q03',
@@ -203,6 +347,7 @@ System.out.println(f);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Fila é FIFO: `poll` tira o primeiro a ter entrado, o 1, e `offer` põe o 4 no fim.',
+      dica: 'Siga as operações uma a uma, anotando a estrutura.',
     },
     {
       id: 'aprendiz-t4-e04-q04',
@@ -219,6 +364,7 @@ System.out.println(q.poll() + " " + q.poll());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A `PriorityQueue` sempre entrega o menor elemento (pela ordem natural), não o primeiro que entrou. Por dentro é um *heap* binário: `poll` custa O(log n).',
+      dica: 'A `PriorityQueue` devolve o menor, não o primeiro.',
     },
     {
       id: 'aprendiz-t4-e04-q05',
@@ -236,6 +382,7 @@ System.out.println(pilha.pop());`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NoSuchElementException' },
       explicacao: '`pop` é o equivalente de `removeFirst`, que lança `NoSuchElementException` com o deque vazio. Para receber `null` em vez de exceção, use `poll`. `EmptyStackException` é da classe legada `Stack`.',
+      dica: 'Que métodos lançam exceção com a estrutura vazia?',
     },
     {
       id: 'aprendiz-t4-e04-q06',
@@ -251,6 +398,7 @@ try { q.remove(); } catch (NoSuchElementException x) { r = true; }
 try { q.element(); } catch (NoSuchElementException x) { e = true; }
 System.out.println(q.poll() + " " + q.peek() + " " + r + " " + e);`,
       explicacao: 'A interface `Queue` oferece cada operação em duas versões: `remove`/`element` lançam `NoSuchElementException`, e `poll`/`peek` devolvem `null`. Escolha conforme fila vazia seja erro ou situação normal.',
+      dica: 'Os que devolvem um valor especial em vez de lançar exceção.',
     },
     {
       id: 'aprendiz-t4-e04-q07',
@@ -265,6 +413,7 @@ System.out.println(q.poll() + " " + q.peek() + " " + r + " " + e);`,
       ],
       resposta: 0,
       explicacao: 'A sincronização tem custo mesmo quando só uma thread usa a pilha, e herdar de `Vector` expõe métodos como `get(i)` e `add(i, x)`, que não fazem sentido numa pilha. A documentação de `Stack` recomenda `Deque`.',
+      dica: '`Stack` é antiga, sincronizada e permite acesso por posição.',
     },
     {
       id: 'aprendiz-t4-e04-q08',
@@ -287,6 +436,7 @@ System.out.println(q.poll() + " " + q.peek() + " " + r + " " + e);`,
 }`,
       resposta: '321',
       explicacao: 'Cada novo nó é inserido no começo e aponta para a cabeça anterior. O último inserido, o 3, vira a cabeça, e a lista é percorrida a partir dele: 3, 2, 1. Inserir no começo inverte a ordem de chegada, como uma pilha.',
+      dica: 'Empilhe e desempilhe: a ordem se inverte.',
     },
     {
       id: 'aprendiz-t4-e04-q09',
@@ -304,6 +454,7 @@ System.out.println(q.poll() + " " + q.peek() + " " + r + " " + e);`,
       respostas: ['%'],
       saida: '0',
       explicacao: 'Na última posição (3), avançar leva a 4, que não existe num array de 4. O resto por 4 traz de volta para 0: é a aritmética modular que transforma o array numa fila circular.',
+      dica: 'O índice precisa voltar a 0 ao chegar na capacidade.',
     },
     {
       id: 'aprendiz-t4-e04-q10',
@@ -313,6 +464,7 @@ System.out.println(q.poll() + " " + q.peek() + " " + r + " " + e);`,
       opcoes: ['O(n)', 'O(1)', 'O(log n)', 'O(n²)'],
       resposta: 0,
       explicacao: 'Não há como pular direto para o nó i: é preciso seguir as referências desde uma das pontas (a `LinkedList` começa pela mais próxima, mas ainda é O(n)). Num `ArrayList`, `get(i)` é uma conta de endereço, O(1).',
+      dica: 'Achar a posição i exige seguir i referências.',
     },
     {
       id: 'aprendiz-t4-e04-q11',
@@ -332,6 +484,7 @@ System.out.println(fila.size());`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: 'O `ArrayDeque` proíbe `null`, porque `poll` e `peek` usam `null` para dizer "vazio": se `null` pudesse ser elemento, seria impossível distinguir os dois casos. A `LinkedList` aceita `null`, e esse é um dos motivos de ela ser uma fila pior.',
+      dica: 'Confira se a estrutura aceita o valor inserido.',
     },
     {
       id: 'aprendiz-t4-e04-q12',
@@ -347,6 +500,7 @@ System.out.println(fila.size());`,
       ],
       respostas: [0, 1],
       explicacao: 'A busca em largura visita os vértices na ordem em que foram descobertos, e o atendimento justo segue a ordem de chegada: FIFO. Desfazer, parênteses e a pilha de chamadas dependem do mais recente: LIFO.',
+      dica: 'Ordem de chegada importa em quais deles?',
     },
     {
       id: 'aprendiz-t4-e04-q13',
@@ -367,6 +521,7 @@ public class Filas {
 }`,
       resposta: 7,
       explicacao: 'Argumentos de tipo genérico precisam ser tipos de referência. `int` é primitivo; use `Integer`, como na linha 5, e o autoboxing converte os valores automaticamente.',
+      dica: 'Confira o tipo genérico e os argumentos de cada chamada.',
     },
     {
       id: 'aprendiz-t4-e04-q14',
@@ -384,6 +539,7 @@ p.push(2);
 p.push(p.pop() * p.pop());
 System.out.println(p.pop());`,
       explicacao: 'Empilha 3 e 4; o `+` desempilha os dois e empilha 7; empilha 2; o `*` desempilha 2 e 7 e empilha 14. Em notação comum, (3 + 4) × 2. O 11 seria 3 + 4 × 2, outra expressão.',
+      dica: 'Empilhe 3 e 4, some, empilhe 2, multiplique.',
     },
     {
       id: 'aprendiz-t4-e04-q15',
@@ -398,6 +554,7 @@ System.out.println(p.pop());`,
       ],
       resposta: 0,
       explicacao: 'O O(1) da lista ligada vale só quando você já tem o nó em mãos. Chegar até ele é uma caminhada de O(n) por nós espalhados, cada um uma provável falha de cache. O array também é O(n) para deslocar, mas é uma cópia de memória contígua, uma das operações mais rápidas do processador.',
+      dica: 'Pense no cache e na memória contígua.',
     },
   ],
 };

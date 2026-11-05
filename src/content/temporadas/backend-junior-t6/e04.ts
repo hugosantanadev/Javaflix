@@ -346,6 +346,7 @@ public class Tratadores {
       opcoes: ['`@WebMvcTest(ProdutoController.class)`', '`@SpringBootTest`', '`@DataJpaTest`', '`@ExtendWith(MockitoExtension.class)`'],
       resposta: 0,
       explicacao: 'A fatia web sobe controllers, tratadores de erro, conversão de JSON e validação, e deixa serviços e repositórios de fora.',
+      dica: 'Procure a fatia da camada web.',
     },
     {
       id: 'backend-junior-t6-e04-q02',
@@ -360,6 +361,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'O serviço está fora da fatia. O `@MockitoBean` registra um mock como bean do contexto; o `@Mock` só cria um objeto no teste, que o Spring não conhece.',
+      dica: 'Na fatia web, o que está fora dela precisa ser um mock registrado no contexto.',
     },
     {
       id: 'backend-junior-t6-e04-q03',
@@ -374,6 +376,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'Requisição e resposta são objetos em memória, e o `DispatcherServlet` real os processa. Por isso o teste pega erros de mapeamento e de JSON.',
+      dica: 'O `MockMvc` passa pelo Spring MVC inteiro, mas sem rede.',
     },
     {
       id: 'backend-junior-t6-e04-q04',
@@ -388,6 +391,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'O `@DataJpaTest` é transacional, com rollback padrão. Na aula, o log mostrou "Began transaction" e "Rolled back transaction" em cada teste.',
+      dica: 'No `@DataJpaTest`, o que acontece com a transação de cada teste no fim?',
     },
     {
       id: 'backend-junior-t6-e04-q05',
@@ -402,6 +406,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'Sequências e colunas de identidade não participam da transação. Na aula, o produto do segundo teste ganhou o id 2 com a tabela vazia.',
+      dica: 'O rollback desfaz as linhas. E a sequência de ids?',
     },
     {
       id: 'backend-junior-t6-e04-q06',
@@ -416,6 +421,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'O rollback do teste só alcança o que roda na thread do teste. Com servidor de verdade, os testes precisam limpar o que criam.',
+      dica: 'Quem atende a requisição HTTP é outra thread, com outra transação.',
     },
     {
       id: 'backend-junior-t6-e04-q07',
@@ -425,6 +431,7 @@ public class Tratadores {
       opcoes: ['Dois: o conjunto de mocks faz parte da chave do cache', 'Um, compartilhado', 'Nenhum: mocks dispensam contexto', 'Um por método de teste'],
       resposta: 0,
       explicacao: 'O mock troca um bean, e o contexto resultante é diferente. Padronizar os mocks dos testes de integração evita subidas extras.',
+      dica: 'O conjunto de mocks faz parte da configuração que o cache compara.',
     },
     {
       id: 'backend-junior-t6-e04-q08',
@@ -440,6 +447,7 @@ public class Tratadores {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Serviços, repositórios e o banco ficam fora da fatia web. Para testá-los juntos, `@SpringBootTest`; para o repositório, `@DataJpaTest`.',
+      dica: 'A fatia web sobe o que participa de uma requisição antes de chegar ao serviço.',
     },
     {
       id: 'backend-junior-t6-e04-q09',
@@ -454,6 +462,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'O de teste vem antes no classpath e esconde o outro. Para ajustar poucas propriedades, use um perfil de teste ou o atributo `properties` do `@SpringBootTest`.',
+      dica: 'Dois arquivos com o mesmo nome no classpath: qual é encontrado primeiro?',
     },
     {
       id: 'backend-junior-t6-e04-q10',
@@ -482,6 +491,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Conjuntos iguais em qualquer ordem tornam as configurações iguais, e `b` reaproveita o contexto de `a`. Com um mock a menos, `c` é outra chave.',
+      dica: 'Records com os mesmos componentes são iguais como chave.',
     },
     {
       id: 'backend-junior-t6-e04-q11',
@@ -509,6 +519,7 @@ public class Teste {
 }`,
       resposta: 'teste 1: id 1, linhas 1; teste 2: id 2, linhas 1; no fim: 0',
       explicacao: 'Cada teste começa com a tabela vazia e termina desfeito, mas a sequência fica fora da fotografia e continua de onde parou.',
+      dica: 'A sequência continua; as linhas voltam para zero no rollback.',
     },
     {
       id: 'backend-junior-t6-e04-q12',
@@ -523,6 +534,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Por baixo, é o mesmo MockMvc. A diferença é a forma de verificar: `assertThat(mvc.get().uri(...)).hasStatusOk().bodyJson()...`.',
+      dica: 'Pense nas asserções do episódio de AssertJ.',
     },
     {
       id: 'backend-junior-t6-e04-q13',
@@ -537,6 +549,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Em testes de unidade, `@Mock` basta. Em testes com contexto, só um bean do contexto chega aos objetos que o Spring monta.',
+      dica: 'Um deles não precisa do Spring; o outro troca um bean do contexto.',
     },
     {
       id: 'backend-junior-t6-e04-q14',
@@ -571,6 +584,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`NumberFormatException` herda de `IllegalArgumentException`, e `IllegalStateException`, só de `RuntimeException`. Testes de controller verificam justamente esse mapeamento.',
+      dica: 'Vale o tratador da classe mais próxima na hierarquia da exceção.',
     },
     {
       id: 'backend-junior-t6-e04-q15',
@@ -585,6 +599,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Mockar o repositório testaria o mock. A consulta só é verificada de verdade executando o SQL que o Spring Data gera.',
+      dica: 'Uma consulta derivada precisa rodar num banco para ser testada.',
     },
   ],
 };

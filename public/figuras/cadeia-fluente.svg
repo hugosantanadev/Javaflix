@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Como funciona uma cadeia do AssertJ: assertThat(itens) devolve um ListAssert de Item; extracting(Item::produto) devolve um novo ListAssert, agora de String; containsExactly verifica e lança AssertionError se a lista for diferente; embaixo, o assertThat é sobrecarregado e devolve uma classe de asserções para cada tipo: String dá StringAssert, com startsWith; List dá ListAssert, com hasSize; BigDecimal dá BigDecimalAssert, com isEqualByComparingTo</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <text x="20" y="30" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">Cada método devolve um objeto de asserções</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="20" y="44" width="200" height="64" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="32" y="66" fill="#f3eee7" font-weight="700">assertThat(itens)</text>
+    <text x="32" y="90" fill="#bdb5aa">ListAssert&lt;Item&gt;</text>
+
+    <rect x="270" y="44" width="220" height="64" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="282" y="66" fill="#f3eee7" font-weight="700">.extracting(Item::produto)</text>
+    <text x="282" y="90" fill="#bdb5aa">ListAssert&lt;String&gt;, novo</text>
+
+    <rect x="540" y="44" width="200" height="64" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="552" y="66" fill="#ff7a1a" font-weight="700">.containsExactly(...)</text>
+    <text x="552" y="90" fill="#bdb5aa">verifica aqui</text>
+
+    <rect x="540" y="132" width="200" height="40" rx="6" fill="#1b1916" stroke="#ff7a1a" stroke-dasharray="4 3"/>
+    <text x="552" y="156" fill="#ff7a1a">AssertionError</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M220 76 L267 76"/>
+    <path d="M490 76 L537 76"/>
+    <path d="M640 108 L640 129"/>
+  </g>
+  <text x="652" y="124" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">se diferente</text>
+  <text x="20" y="150" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">Sem o último método, nada é verificado.</text>
+
+  <text x="20" y="206" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">O compilador escolhe o assertThat pelo tipo do argumento</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="20" y="220" width="230" height="64" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="32" y="242" fill="#4fd68b" font-weight="700">String</text>
+    <text x="32" y="266" fill="#bdb5aa">StringAssert: startsWith</text>
+
+    <rect x="265" y="220" width="230" height="64" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="277" y="242" fill="#4fd68b" font-weight="700">List</text>
+    <text x="277" y="266" fill="#bdb5aa">ListAssert: hasSize</text>
+
+    <rect x="510" y="220" width="230" height="64" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="522" y="242" fill="#4fd68b" font-weight="700">BigDecimal</text>
+    <text x="522" y="262" fill="#bdb5aa">BigDecimalAssert:</text>
+    <text x="522" y="276" fill="#bdb5aa">isEqualByComparingTo</text>
+  </g>
+  <text x="20" y="314" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Por isso o autocompletar só oferece as verificações que fazem sentido para aquele tipo.</text>
+</svg>

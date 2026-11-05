@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="310" viewBox="0 0 760 310" role="img" aria-labelledby="t">
+  <title id="t">À esquerda, a linha record Ponto(int x, int y). À direita, o que o compilador gera a partir dela: uma classe final que estende Record, com os campos private final x e y, o construtor canônico, os acessores x() e y(), e os métodos equals, hashCode e toString</title>
+  <rect width="760" height="310" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker></defs>
+  <text x="30" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">você escreve</text>
+  <rect x="30" y="130" width="260" height="50" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+  <text x="46" y="160" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">record Ponto(int x, int y)</text>
+  <path d="M294 155 L366 155" stroke="#ff7a1a" stroke-width="2" fill="none" marker-end="url(#s)"/>
+  <text x="380" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">o compilador gera</text>
+  <rect x="370" y="46" width="360" height="226" rx="8" fill="#1b1916" stroke="#43403a"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <text x="386" y="72" fill="#f3eee7">final class Ponto extends Record</text>
+    <text x="402" y="100" fill="#bdb5aa">private final int x, y;</text>
+    <text x="402" y="126" fill="#bdb5aa">Ponto(int x, int y)</text>
+    <text x="580" y="126" fill="#8a8277" font-size="11">canônico</text>
+    <text x="402" y="152" fill="#4fd68b" xml:space="preserve">int x()   int y()</text>
+    <text x="580" y="152" fill="#8a8277" font-size="11">sem "get"</text>
+    <text x="402" y="178" fill="#bdb5aa">equals(Object)</text>
+    <text x="402" y="204" fill="#bdb5aa">hashCode()</text>
+    <text x="402" y="230" fill="#bdb5aa">toString()</text>
+    <text x="580" y="204" fill="#8a8277" font-size="11">todos os</text>
+    <text x="580" y="218" fill="#8a8277" font-size="11">componentes</text>
+    <text x="402" y="256" fill="#8a8277">// sem setters, sem outros campos</text>
+  </g>
+  <text x="30" y="298" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Uma linha no lugar de umas 40: o estado é exatamente o que está entre os parênteses.</text>
+</svg>

@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Num `catch` com hierarquia própria, a exceção mais específica vem antes.',
     'O construtor de quatro argumentos de `Throwable` desliga o stack trace e a supressão.',
   ],
+  ia: {
+    uso:
+      'Para exceções customizadas, a IA ajuda a esboçar uma hierarquia de domínio e a escrever os construtores repetitivos. O cuidado é com as decisões: ela costuma estender `Exception` por hábito, esquecer de passar a mensagem para o `super` e criar uma classe para cada erro, mesmo os que são tratados do mesmo jeito.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\nPreciso das exceções de um sistema de matrículas: turma lotada, aluno inadimplente e curso inexistente.\n- Proponha uma exceção base do domínio e as filhas, dizendo para cada uma se deve ser checked ou unchecked, pelo critério do Effective Java.\n- Inclua o construtor com mensagem e causa, e campos só para dados que quem trata vai usar.\n- Mostre a ordem dos catch para tratar a turma lotada à parte e o resto de forma geral.\n- Não use records nem estenda Throwable ou Error.',
+    erros: [
+      'Estende `Exception` em todas as exceções de domínio, e cada método da cadeia passa a precisar de `throws`.',
+      'Cria construtores que guardam os dados em campos, mas não chamam `super(mensagem)`, e `getMessage()` devolve `null`.',
+      'Declara a exceção como `record`, o que não compila.',
+      'Põe o `catch` da exceção base antes do da filha, e o segundo `catch` não compila.',
+    ],
+    conferir: [
+      'Compile e escreva um teste que lança cada exceção e imprime `getMessage()`.',
+      'Confira a hierarquia com `Ctrl+H` no IntelliJ: toda filha estende a base do domínio?',
+      'Troque a ordem dos `catch` e veja o compilador recusar o inalcançável.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Throwing Exceptions, Creating Exception Classes',
@@ -144,6 +161,223 @@ public class Cadastro {
     comentarios:
       'Lançar na primeira regra quebrada obrigaria o usuário a corrigir um erro por vez. Acumular os erros e lançá-los juntos, numa exceção com dados, dá uma resposta completa, que uma API pode devolver como uma lista de problemas por campo. A lista é copiada no construtor, porque uma exceção também não deve ser alterada depois de criada.',
   },
+  bugs: [
+    {
+      id: 'pleno-t1-e05-b01',
+      dificuldade: 1,
+      sintoma: 'A nova exceção de cartão recusado não compila: `constructor PagamentoException in class PagamentoException cannot be applied to given types;`.',
+      codigo: `public class Pagamento {
+    static class PagamentoException extends Exception {
+        PagamentoException(String mensagem) {
+            super(mensagem);
+        }
+    }
+
+    static class CartaoRecusadoException extends PagamentoException {
+        final String bandeira;
+
+        CartaoRecusadoException(String bandeira) { this.bandeira = bandeira; }
+    }
+
+    static void pagar(String bandeira, double valor) throws PagamentoException {
+        if (valor > 1000) throw new CartaoRecusadoException(bandeira);
+        System.out.println("pago com " + bandeira);
+    }
+
+    public static void main(String[] args) {
+        try {
+            pagar("visa", 250);
+            pagar("elo", 1500);
+        } catch (PagamentoException e) {
+            System.out.println("recusado: " + e.getMessage());
+        }
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Pagamento {
+    static class PagamentoException extends Exception {
+        PagamentoException(String mensagem) {
+            super(mensagem);
+        }
+    }
+
+    static class CartaoRecusadoException extends PagamentoException {
+        final String bandeira;
+
+        CartaoRecusadoException(String bandeira) { super("cartão " + bandeira + " recusado"); this.bandeira = bandeira; }
+    }
+
+    static void pagar(String bandeira, double valor) throws PagamentoException {
+        if (valor > 1000) throw new CartaoRecusadoException(bandeira);
+        System.out.println("pago com " + bandeira);
+    }
+
+    public static void main(String[] args) {
+        try {
+            pagar("visa", 250);
+            pagar("elo", 1500);
+        } catch (PagamentoException e) {
+            System.out.println("recusado: " + e.getMessage());
+        }
+    }
+}`,
+      saidaCorrigida: 'pago com visa\nrecusado: cartão elo recusado',
+      dica: 'Que construtores `PagamentoException` tem? Qual deles o construtor da filha chama, se você não escrever nenhum `super`?',
+      explicacao:
+        'Sem um `super(...)` explícito, o compilador insere `super()`, e `PagamentoException` só tem o construtor com `String`. Exceção customizada é uma classe comum: a regra de construtores da herança vale para ela. Chame `super` com a mensagem, como `super("cartão " + bandeira + " recusado")`, na primeira linha do construtor.',
+    },
+    {
+      id: 'pleno-t1-e05-b02',
+      dificuldade: 2,
+      sintoma: 'Quando o saldo não basta, o app sugere um depósito de zero reais: `saldo insuficiente, faltam 50.0 | sugerir depósito de 0.0`.',
+      codigo: `public class Saque {
+    static class SaldoInsuficienteException extends Exception {
+        private double faltam;
+
+        SaldoInsuficienteException(double faltam) {
+            super("saldo insuficiente, faltam " + faltam);
+            faltam = faltam;
+        }
+
+        double getFaltam() {
+            return faltam;
+        }
+    }
+
+    static double saldo = 100;
+
+    static void sacar(double valor) throws SaldoInsuficienteException {
+        if (valor > saldo) throw new SaldoInsuficienteException(valor - saldo);
+        saldo -= valor;
+    }
+
+    public static void main(String[] args) {
+        try {
+            sacar(150);
+        } catch (SaldoInsuficienteException e) {
+            System.out.println(e.getMessage() + " | sugerir depósito de " + e.getFaltam());
+        }
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'saldo insuficiente, faltam 50.0 | sugerir depósito de 0.0' },
+      correcao: `public class Saque {
+    static class SaldoInsuficienteException extends Exception {
+        private double faltam;
+
+        SaldoInsuficienteException(double faltam) {
+            super("saldo insuficiente, faltam " + faltam);
+            this.faltam = faltam;
+        }
+
+        double getFaltam() {
+            return faltam;
+        }
+    }
+
+    static double saldo = 100;
+
+    static void sacar(double valor) throws SaldoInsuficienteException {
+        if (valor > saldo) throw new SaldoInsuficienteException(valor - saldo);
+        saldo -= valor;
+    }
+
+    public static void main(String[] args) {
+        try {
+            sacar(150);
+        } catch (SaldoInsuficienteException e) {
+            System.out.println(e.getMessage() + " | sugerir depósito de " + e.getFaltam());
+        }
+    }
+}`,
+      saidaCorrigida: 'saldo insuficiente, faltam 50.0 | sugerir depósito de 50.0',
+      dica: 'No construtor, o nome `faltam` se refere ao campo ou ao parâmetro?',
+      explicacao:
+        'O parâmetro `faltam` esconde o campo de mesmo nome, e `faltam = faltam` atribui o parâmetro a ele mesmo: o campo fica com o valor padrão, `0.0`. Use `this.faltam = faltam`. Declarar o campo como `final` faria o compilador acusar o erro, porque o campo nunca seria inicializado.',
+    },
+    {
+      id: 'pleno-t1-e05-b03',
+      dificuldade: 3,
+      sintoma: 'A vitrine trata os erros da loja com um aviso ao cliente, mas o produto esgotado derruba o processamento com `EstoqueEsgotadoException: estoque esgotado: X2`.',
+      codigo: `public class Loja {
+    static void comprar(String codigo) {
+        if (codigo.equals("X2")) throw new EstoqueEsgotadoException(codigo);
+        if (!codigo.equals("X1")) throw new ProdutoNaoEncontradoException(codigo);
+        System.out.println("comprado: " + codigo);
+    }
+
+    public static void main(String[] args) {
+        for (String codigo : new String[] {"X1", "Z9", "X2"}) {
+            try {
+                comprar(codigo);
+            } catch (LojaException e) {
+                System.out.println("aviso ao cliente: " + e.getMessage());
+            }
+        }
+    }
+}
+
+class LojaException extends RuntimeException {
+    LojaException(String mensagem) {
+        super(mensagem);
+    }
+}
+
+class ProdutoNaoEncontradoException extends LojaException {
+    ProdutoNaoEncontradoException(String codigo) {
+        super("produto não encontrado: " + codigo);
+    }
+}
+
+class EstoqueEsgotadoException extends RuntimeException {
+    EstoqueEsgotadoException(String codigo) {
+        super("estoque esgotado: " + codigo);
+    }
+}`,
+      linha: 31,
+      efeito: { tipo: 'excecao', nome: 'EstoqueEsgotadoException' },
+      correcao: `public class Loja {
+    static void comprar(String codigo) {
+        if (codigo.equals("X2")) throw new EstoqueEsgotadoException(codigo);
+        if (!codigo.equals("X1")) throw new ProdutoNaoEncontradoException(codigo);
+        System.out.println("comprado: " + codigo);
+    }
+
+    public static void main(String[] args) {
+        for (String codigo : new String[] {"X1", "Z9", "X2"}) {
+            try {
+                comprar(codigo);
+            } catch (LojaException e) {
+                System.out.println("aviso ao cliente: " + e.getMessage());
+            }
+        }
+    }
+}
+
+class LojaException extends RuntimeException {
+    LojaException(String mensagem) {
+        super(mensagem);
+    }
+}
+
+class ProdutoNaoEncontradoException extends LojaException {
+    ProdutoNaoEncontradoException(String codigo) {
+        super("produto não encontrado: " + codigo);
+    }
+}
+
+class EstoqueEsgotadoException extends LojaException {
+    EstoqueEsgotadoException(String codigo) {
+        super("estoque esgotado: " + codigo);
+    }
+}`,
+      saidaCorrigida: 'comprado: X1\naviso ao cliente: produto não encontrado: Z9\naviso ao cliente: estoque esgotado: X2',
+      dica: 'O `catch` pega `LojaException`. Na hierarquia, a exceção de estoque é uma `LojaException`?',
+      explicacao:
+        '`EstoqueEsgotadoException` estendia `RuntimeException` direto, fora da hierarquia do domínio, e o `catch (LojaException e)` não a reconhecia. Toda exceção do domínio precisa estender a base do domínio; um teste que lança cada uma e confere que o tratamento central a pega evita esse esquecimento.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t1-e05-q01',
@@ -153,6 +387,7 @@ public class Cadastro {
       opcoes: ['`Exception`', '`RuntimeException`', '`Error`', '`Throwable`'],
       resposta: 0,
       explicacao: 'Estendendo `Exception` sem passar por `RuntimeException`, ela é checked. `Throwable` e `Error` não são usados para exceções de aplicação.',
+      dica: 'Checked é tudo o que estende essa classe, menos as `RuntimeException`.',
     },
     {
       id: 'pleno-t1-e05-q02',
@@ -176,6 +411,7 @@ public class Cadastro {
 }`,
       resposta: 'limite de 10 excedido | true',
       explicacao: 'O construtor monta a mensagem e a repassa com `super`. Como estende `RuntimeException`, a exceção é unchecked.',
+      dica: 'A mensagem foi montada no construtor; e a superclasse é qual?',
     },
     {
       id: 'pleno-t1-e05-q03',
@@ -202,6 +438,7 @@ public class Cadastro {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 9 },
       explicacao: 'Por estender `Exception`, a exceção é checked. Seria preciso `static void entrar(String usuario) throws AcessoNegadoException`.',
+      dica: '`AcessoNegadoException` estende `Exception`. O que `entrar` precisa fazer?',
     },
     {
       id: 'pleno-t1-e05-q04',
@@ -218,6 +455,7 @@ public class Cadastro {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Uma exceção sem construtor declarado ganha o padrão, que chama `Exception()`. Records não estendem classes, e `Exception` não tem construtor com `int`.',
+      dica: 'Procure o `record`, que não pode estender classes, e o `super` com um argumento que nenhum construtor aceita.',
     },
     {
       id: 'pleno-t1-e05-q05',
@@ -257,6 +495,7 @@ public class Cadastro {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Cada exceção cai no primeiro `catch` compatível, do mais específico ao mais geral. A `IllegalStateException` não pertence à hierarquia da aplicação e só cai no último.',
+      dica: 'Cada exceção cai no primeiro `catch` compatível, de cima para baixo.',
     },
     {
       id: 'pleno-t1-e05-q06',
@@ -285,6 +524,7 @@ public class Cadastro {
       respostas: ['RuntimeException', 'IllegalStateException'],
       saida: 'pedido 7 já enviado',
       explicacao: 'Qualquer `RuntimeException` serve, inclusive uma subclasse dela, como `IllegalStateException`. Com `Exception`, o método precisaria de `throws`.',
+      dica: 'Uma exceção que dispensa `throws` estende qual classe?',
     },
     {
       id: 'pleno-t1-e05-q07',
@@ -297,6 +537,7 @@ public class Cadastro {
 }`,
       resposta: 3,
       explicacao: 'Records não podem ter `extends`: todos já estendem `java.lang.Record`. Uma exceção precisa ser uma classe comum.',
+      dica: 'Records não podem estender classes.',
     },
     {
       id: 'pleno-t1-e05-q08',
@@ -330,6 +571,7 @@ public class Cadastro {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A exceção customizada carrega a original como causa, graças ao construtor com `Throwable`. As duas mensagens continuam acessíveis.',
+      dica: 'A mensagem é da exceção nova; a causa guarda a original.',
     },
     {
       id: 'pleno-t1-e05-q09',
@@ -353,6 +595,7 @@ public class Cadastro {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'É a regra de construtores da herança: sem chamada explícita, o compilador insere `super()`. Bastaria `Filha() { super("filha"); }`.',
+      dica: 'Sem `super(...)` explícito, o compilador insere `super()`.',
     },
     {
       id: 'pleno-t1-e05-q10',
@@ -362,6 +605,7 @@ public class Cadastro {
       opcoes: ['`SaldoInsuficienteException`', '`ErroSaldo`', '`SaldoInsuficiente`', '`ExcecaoDeSaldo`'],
       resposta: 0,
       explicacao: 'Por convenção, o nome descreve o problema e termina em `Exception`, como as exceções da biblioteca.',
+      dica: 'A convenção é terminar o nome com uma palavra em inglês.',
     },
     {
       id: 'pleno-t1-e05-q11',
@@ -382,6 +626,7 @@ public class Cadastro {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O construtor protegido de quatro argumentos recebe a mensagem, a causa e dois interruptores: suprimidas e stack trace gravável. Com o segundo desligado, o stack trace fica vazio.',
+      dica: 'O construtor de quatro argumentos desliga o stack trace.',
     },
     {
       id: 'pleno-t1-e05-q12',
@@ -396,6 +641,7 @@ public class Cadastro {
       ],
       resposta: 0,
       explicacao: 'Checked obrigam quem chama a pensar no problema, o que faz sentido se houver o que fazer. Erros de programação devem ser unchecked: corrige-se o código, não o `catch`.',
+      dica: 'Checked é para quando quem chama tem o que fazer.',
     },
     {
       id: 'pleno-t1-e05-q13',
@@ -411,6 +657,7 @@ public class Cadastro {
       ],
       respostas: [0, 1],
       explicacao: 'A causa preserva a origem, e os campos permitem decidir o que fazer sem analisar o texto da mensagem. `Throwable` e `Error` não são para exceções de aplicação.',
+      dica: 'Pense no que ajuda quem trata o erro a decidir e a investigar.',
     },
     {
       id: 'pleno-t1-e05-q14',
@@ -441,6 +688,7 @@ public class Cadastro {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `toString` de `Throwable` usa o nome da classe e o resultado de `getLocalizedMessage()`, que chama o `getMessage()` sobrescrito. O nome de uma classe aninhada leva o `$`.',
+      dica: 'O `getMessage` foi sobrescrito, e o `toString` usa o `getMessage`.',
     },
     {
       id: 'pleno-t1-e05-q15',
@@ -455,6 +703,7 @@ public class Cadastro {
       ],
       resposta: 0,
       explicacao: 'O `fillInStackTrace` registra cada quadro da pilha. O `throw` em si é barato. Por isso exceções não devem ser usadas como fluxo normal num laço quente.',
+      dica: 'O caro está no construtor de `Throwable`.',
     },
   ],
 };

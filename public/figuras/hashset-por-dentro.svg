@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Como o HashSet guarda e procura um elemento: o Ponto de x 1 e y 2 tem hashCode 994, que leva ao compartimento 2 de uma tabela de 16; depois que o campo x muda para 9, o hashCode passa a 1242, que leva ao compartimento 10, vazio; o objeto continua no compartimento 2, contado em size, mas contains procura no 10 e não o encontra</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+    <marker id="v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#db5c5c"/></marker>
+  </defs>
+  <text x="20" y="28" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">A tabela interna, com 16 compartimentos</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="10">
+    <rect x="20" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="38" y="61" fill="#6b645b">0</text>
+    <rect x="64" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="82" y="61" fill="#6b645b">1</text>
+    <rect x="108" y="40" width="44" height="34" fill="#13221a" stroke="#4fd68b"/><text x="126" y="61" fill="#4fd68b">2</text>
+    <rect x="152" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="170" y="61" fill="#6b645b">3</text>
+    <rect x="196" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="214" y="61" fill="#6b645b">4</text>
+    <rect x="240" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="258" y="61" fill="#6b645b">5</text>
+    <rect x="284" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="302" y="61" fill="#6b645b">6</text>
+    <rect x="328" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="346" y="61" fill="#6b645b">7</text>
+    <rect x="372" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="390" y="61" fill="#6b645b">8</text>
+    <rect x="416" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="434" y="61" fill="#6b645b">9</text>
+    <rect x="460" y="40" width="44" height="34" fill="#2a1414" stroke="#db5c5c"/><text x="475" y="61" fill="#db5c5c">10</text>
+    <rect x="504" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="519" y="61" fill="#6b645b">11</text>
+    <rect x="548" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="563" y="61" fill="#6b645b">12</text>
+    <rect x="592" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="607" y="61" fill="#6b645b">13</text>
+    <rect x="636" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="651" y="61" fill="#6b645b">14</text>
+    <rect x="680" y="40" width="44" height="34" fill="#1b1916" stroke="#43403a"/><text x="695" y="61" fill="#6b645b">15</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="70" y="120" width="140" height="44" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="82" y="146" fill="#f3eee7">Ponto(1, 2)</text>
+    <text x="20" y="200" fill="#4fd68b">add: hashCode() = 994</text>
+    <text x="20" y="218" fill="#bdb5aa">994 &amp; 15 = 2, o compartimento 2</text>
+
+    <rect x="420" y="120" width="140" height="44" rx="6" fill="#2a1414" stroke="#db5c5c" stroke-dasharray="4 3"/>
+    <text x="432" y="146" fill="#db5c5c">vazio</text>
+    <text x="380" y="200" fill="#db5c5c">depois de p.x = 9: hashCode() = 1242</text>
+    <text x="380" y="218" fill="#bdb5aa">1242 &amp; 15 = 10, o compartimento 10</text>
+  </g>
+  <g stroke-width="1.5" fill="none">
+    <path d="M130 74 L140 117" stroke="#4fd68b" marker-end="url(#a)"/>
+    <path d="M482 74 L490 117" stroke="#db5c5c" marker-end="url(#v)"/>
+  </g>
+  <text x="20" y="262" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">O objeto continua no compartimento 2 e conta em size(), mas contains(p) procura no 10.</text>
+  <text x="20" y="282" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">Procurando o valor antigo, o conjunto acha o compartimento 2, e o equals falha.</text>
+  <text x="20" y="314" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">O hash escolhe o compartimento; o equals só compara quem está lá dentro.</text>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Os tipos que cada coringa aceita, na hierarquia Object, Number, Integer e Double: List de extends Number aceita listas de Number, Integer e Double, lê os elementos como Number e não aceita escrita; List de super Integer aceita listas de Integer, Number e Object, aceita escrever Integer e lê só Object</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <rect x="300" y="24" width="160" height="40" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="352" y="49" fill="#f3eee7">Object</text>
+    <rect x="300" y="110" width="160" height="40" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="352" y="135" fill="#f3eee7">Number</text>
+    <rect x="210" y="200" width="150" height="40" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="252" y="225" fill="#f3eee7">Integer</text>
+    <rect x="400" y="200" width="150" height="40" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="448" y="225" fill="#f3eee7">Double</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M380 110 L380 67"/>
+    <path d="M285 200 L350 153"/>
+    <path d="M475 200 L410 153"/>
+  </g>
+
+  <rect x="186" y="94" width="388" height="162" rx="12" stroke="#ff7a1a" stroke-width="2" fill="none" stroke-dasharray="6 4"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="592" y="132" fill="#ff7a1a" font-weight="700">? extends Number</text>
+    <text x="592" y="152" fill="#bdb5aa">Number, Integer, Double</text>
+    <text x="592" y="172" fill="#4fd68b">lê como Number</text>
+    <text x="592" y="192" fill="#db5c5c">não escreve (só null)</text>
+  </g>
+
+  <path d="M290 14 L470 14 L470 160 L374 160 L374 250 L200 250 L200 190 L290 190 Z" stroke="#4fd68b" stroke-width="2" fill="none" stroke-linejoin="round"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="20" y="100" fill="#4fd68b" font-weight="700">? super Integer</text>
+    <text x="20" y="120" fill="#bdb5aa">Integer, Number,</text>
+    <text x="20" y="138" fill="#bdb5aa">Object</text>
+    <text x="20" y="158" fill="#4fd68b">escreve Integer</text>
+    <text x="20" y="178" fill="#db5c5c">lê só Object</text>
+  </g>
+  <text x="20" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Pense no pior caso: em extends, a lista pode ser de Double; em super, pode ser de Object.</text>
+</svg>

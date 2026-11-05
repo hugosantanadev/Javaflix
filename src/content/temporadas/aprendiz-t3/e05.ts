@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     '`ArrayList.contains` é O(n). Dentro de um laço, vira O(n²).',
     '`HashMap` é O(1) **em média**; o pior caso depende das colisões.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a estimar a complexidade de um trecho e a sugerir a estrutura de dados certa. Peça que ela conte também o custo das chamadas de biblioteca dentro dos laços, e confira medindo com entradas de tamanhos diferentes.',
+    pedido:
+      'Analise a complexidade deste código Java.\n<cole o código aqui>\n- Dê o Big-O de tempo e de espaço, contando o custo de cada chamada de biblioteca (contains, indexOf, +=, sort).\n- Aponte o trecho dominante.\n- Proponha uma versão de complexidade menor e diga quanto ela ganha com n = 100.000.',
+    erros: [
+      'Ignora o custo de `list.contains` ou `String +=` dentro de laços.',
+      'Calcula log₂ com `Math.log(n) / Math.log(2)` e trunca com `(int)`, errando por 1.',
+      'Escreve recursões de profundidade n para entradas grandes.',
+    ],
+    conferir: [
+      'Meça o tempo com n e com 10n: O(n) multiplica por 10, O(n²) por 100.',
+      'Para logaritmos de inteiros, use `Integer.numberOfLeadingZeros`.',
+      'Teste recursões com a maior entrada esperada.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de ArrayList',
@@ -194,6 +210,92 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Cada vez que n é multiplicado por 10, a coluna linear também é multiplicada por 10, a binária ganha só cerca de 3,3 (log₂ 10) e os pares são multiplicados por 100. É Big-O medido em vez de deduzido. A coluna binária é exatamente o número de bits de n, ⌊log₂ n⌋ + 1. Experimente acrescentar n = 1.000.000: a coluna de pares passa de 499 bilhões e o programa demora visivelmente, enquanto a binária responde 20.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t3-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O contador de dígitos diz que 1000 tem `3` dígitos.',
+      codigo: `public class Digitos {
+    static int digitos(int n) {
+        return (int) (Math.log(n) / Math.log(10)) + 1;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(digitos(1000));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '3' },
+      correcao: `public class Digitos {
+    static int digitos(int n) {
+        return (int) Math.log10(n) + 1;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(digitos(1000));
+    }
+}`,
+      saidaCorrigida: '4',
+      dica: 'Imprima `Math.log(1000) / Math.log(10)`. Dá exatamente 3?',
+      explicacao: 'A divisão de dois logaritmos naturais dá 2,9999999999999996 por causa do ponto flutuante, e o cast para `int` corta para 2. `Math.log10` é calculado de forma a acertar potências exatas de 10. Para contar dígitos sem risco, `String.valueOf(n).length()` também serve.',
+    },
+    {
+      id: 'aprendiz-t3-e05-b02',
+      dificuldade: 2,
+      sintoma: 'A função diz que 1.000.000 precisa de `19` bits, mas `Integer.toBinaryString(1_000_000)` tem 20 caracteres.',
+      codigo: `public class Bits {
+    static int bitsNecessarios(int n) {
+        return 31 - Integer.numberOfLeadingZeros(n);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(bitsNecessarios(1_000_000));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '19' },
+      correcao: `public class Bits {
+    static int bitsNecessarios(int n) {
+        return 32 - Integer.numberOfLeadingZeros(n);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(bitsNecessarios(1_000_000));
+    }
+}`,
+      saidaCorrigida: '20',
+      dica: 'Quanto vale a fórmula para n = 1, que precisa de 1 bit?',
+      explicacao: '`31 - numberOfLeadingZeros(n)` é ⌊log₂ n⌋, a posição do bit mais alto, contada a partir de 0. O número de bits é essa posição mais 1: ⌊log₂ n⌋ + 1, ou `32 - numberOfLeadingZeros(n)`.',
+    },
+    {
+      id: 'aprendiz-t3-e05-b03',
+      dificuldade: 3,
+      sintoma: 'A soma de 1 a 1.000.000 com recursão derruba o programa com `StackOverflowError`.',
+      codigo: `public class Soma {
+    static long soma(int n) {
+        return n == 0 ? 0 : n + soma(n - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(soma(1_000_000));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'StackOverflowError' },
+      correcao: `public class Soma {
+    static long soma(int n) {
+        return (long) n * (n + 1) / 2;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(soma(1_000_000));
+    }
+}`,
+      saidaCorrigida: '500000500000',
+      dica: 'A recursão faz O(n) chamadas. Quanto de pilha isso ocupa com n = 1.000.000?',
+      explicacao: 'A recursão linear usa O(n) de espaço na pilha: um milhão de quadros não cabem na pilha padrão. A fórmula de Gauss, n(n + 1)/2, dá o resultado em O(1), sem laço nem recursão; o `long` evita o estouro da multiplicação.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t3-e05-q01',
@@ -205,6 +307,7 @@ const episodio: EpisodioConteudo = {
       verificar: { tipo: 'executa', saida: '1048576' },
       codigoVerificacao: `System.out.println(1 << 20);`,
       explicacao: '2¹⁰ = 1.024 ≈ mil, então 2²⁰ = (2¹⁰)² ≈ mil × mil = um milhão. O valor exato é 1.048.576. A regra é: 10 bits valem cerca de 3 dígitos decimais.',
+      dica: '2¹⁰ ≈ mil; 2²⁰ = (2¹⁰)².',
     },
     {
       id: 'aprendiz-t3-e05-q02',
@@ -216,6 +319,7 @@ const episodio: EpisodioConteudo = {
       verificar: { tipo: 'executa', saida: '10' },
       codigoVerificacao: `System.out.println(31 - Integer.numberOfLeadingZeros(1024));`,
       explicacao: '2¹⁰ = 1024, então log₂ 1024 = 10. Outra leitura: dividindo 1024 ao meio 10 vezes, chega-se a 1. O 512 é 1024 ÷ 2, o primeiro corte.',
+      dica: 'A que potência se eleva 2 para chegar a 1024?',
     },
     {
       id: 'aprendiz-t3-e05-q03',
@@ -227,6 +331,7 @@ const episodio: EpisodioConteudo = {
       verificar: { tipo: 'executa', saida: '30' },
       codigoVerificacao: `System.out.println(32 - Integer.numberOfLeadingZeros(1_000_000_000));`,
       explicacao: 'Cada comparação descarta metade, e 2³⁰ ≈ um bilhão: cerca de 30 cortes esgotam o array. 500 milhões seria o caso médio da busca linear; 9 é a quantidade de zeros de um bilhão.',
+      dica: 'Um bilhão ≈ 2³⁰.',
     },
     {
       id: 'aprendiz-t3-e05-q04',
@@ -241,6 +346,7 @@ System.out.println(a);
 System.out.println(b);`,
       resposta: '10\n10',
       explicacao: 'O primeiro laço divide 1024 ao meio até chegar a 1: 10 vezes. O segundo dobra `i` de 1 até passar de 1000: 1, 2, 4, ..., 512, também 10 voltas. Dividir e dobrar são os dois lados do mesmo logaritmo.',
+      dica: 'Conte os cortes ao meio e as dobras até passar do limite.',
     },
     {
       id: 'aprendiz-t3-e05-q05',
@@ -250,6 +356,7 @@ System.out.println(b);`,
       opcoes: ['O(n²)', 'O(3n²)', 'O(n² + n)', 'O(100n)', 'O(n³)'],
       resposta: 0,
       explicacao: 'Para n grande, o termo n² domina, e constantes multiplicativas são descartadas. O(3n²) e O(n² + n) descrevem a mesma classe, mas não estão na forma simplificada. O(n³) seria um limite verdadeiro, mas folgado.',
+      dica: 'Fique com o termo dominante e descarte a constante.',
     },
     {
       id: 'aprendiz-t3-e05-q06',
@@ -268,6 +375,7 @@ System.out.println(cont);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Para cada `i`, o laço de dentro roda n − 1 − i vezes: 99 + 98 + ... + 0 = 99 · 100 / 2 = 4950, a soma de Gauss. São os pares sem repetição, n(n − 1)/2, que continua sendo O(n²). O 5050 é 1 + ... + 100.',
+      dica: 'São os pares (i, j) com i < j: n(n − 1)/2.',
     },
     {
       id: 'aprendiz-t3-e05-q07',
@@ -284,6 +392,7 @@ System.out.println(cont);`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'O `ArrayList` acessa o índice direto no array interno. `HashMap` e `HashSet` calculam o balde pelo hash. Já `ArrayList.contains` percorre a lista (O(n)), o `TreeMap` desce uma árvore balanceada (O(log n)) e a `LinkedList` anda nó por nó até o índice (O(n)).',
+      dica: 'Acesso por índice, `HashMap.get` e `push` numa pilha.',
     },
     {
       id: 'aprendiz-t3-e05-q08',
@@ -307,6 +416,7 @@ for (int i = 1; i < n; i *= 2) {
 }
 System.out.println(ops);`,
       explicacao: 'O laço de fora dobra `i`, então roda cerca de log₂ n vezes. O de dentro roda n vezes a cada volta. Aninhados, multiplicam: n · log n. Para n = 1024, são 10 × 1024 = 10.240 operações, bem longe de 1024² ≈ um milhão.',
+      dica: 'O laço de fora dobra; o de dentro é completo.',
     },
     {
       id: 'aprendiz-t3-e05-q09',
@@ -327,6 +437,7 @@ System.out.println(ops);`,
 }`,
       resposta: '5 15',
       explicacao: 'fib(5) = 5. Cada chamada com n ≥ 2 gera duas outras, e o total de chamadas para fib(n) é 2 · F(n + 1) − 1, com F(6) = 8: 15 chamadas. Esse número cresce cerca de 1,6 vez a cada n a mais: é exponencial.',
+      dica: 'Conte as chamadas de fib(4) desenhando a árvore.',
     },
     {
       id: 'aprendiz-t3-e05-q10',
@@ -345,6 +456,7 @@ System.out.println(ops);`,
       respostas: ['/='],
       saida: '20',
       explicacao: '1.048.576 é 2²⁰, então são 20 cortes ao meio até chegar a 1: log₂ n. Cuidado com `>>=`: `k >>= 2` desloca dois bits, ou seja, divide por 4, e daria só 10 voltas. Para dividir por 2 com deslocamento, seria `k >>= 1`.',
+      dica: 'Que operador divide e atribui ao mesmo tempo?',
     },
     {
       id: 'aprendiz-t3-e05-q11',
@@ -359,6 +471,7 @@ System.out.println(ops);`,
       ],
       resposta: 0,
       explicacao: 'Pela mudança de base, log₂ n ≈ 3,32 · log₁₀ n: as duas funções crescem no mesmo ritmo e diferem por um fator fixo. Como Big-O ignora constantes, qualquer base serve. Os valores, porém, são diferentes: log₂ 1000 ≈ 10 e log₁₀ 1000 = 3.',
+      dica: 'Mudança de base: os logaritmos diferem por uma constante.',
     },
     {
       id: 'aprendiz-t3-e05-q12',
@@ -370,6 +483,7 @@ System.out.println(ops);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A divisão dá 2,9999999999999996 por causa do arredondamento dos dois logaritmos, e o cast para `int` trunca em direção a zero: 2. Para logaritmos inteiros, use contas exatas: `Math.log10` para base 10 ou `31 - Integer.numberOfLeadingZeros(n)` para base 2.',
+      dica: 'A divisão de logaritmos dá um pouco menos que 3.',
     },
     {
       id: 'aprendiz-t3-e05-q13',
@@ -379,6 +493,7 @@ System.out.println(ops);`,
       opcoes: ['n²/2', '5n² + 1000n', 'n log n', 'n³', '2ⁿ'],
       respostas: [0, 1, 2],
       explicacao: 'Big-O é um limite superior: f = O(g) se f fica abaixo de c · g a partir de algum n. n²/2 e 5n² + 1000n cabem com c = 1 e c = 6. n log n cresce mais devagar que n², então também cabe, ainda que O(n log n) seja a descrição mais útil. n³ e 2ⁿ passam de qualquer c · n² para n grande.',
+      dica: 'O(n²) é um limite superior: funções menores também cabem.',
     },
     {
       id: 'aprendiz-t3-e05-q14',
@@ -398,6 +513,7 @@ System.out.println(ops);`,
       ],
       resposta: 0,
       explicacao: 'São n buscas, e cada `contains` num `ArrayList` percorre até n elementos: n · n. No `HashSet`, cada busca é O(1) em média, e o laço inteiro fica O(n). O laço continua precisando visitar cada pedido, então não chega a O(1).',
+      dica: '`contains` numa lista percorre tudo; num `HashSet`, é O(1) em média.',
     },
     {
       id: 'aprendiz-t3-e05-q15',
@@ -407,6 +523,7 @@ System.out.println(ops);`,
       opcoes: ['Cerca de 3 horas', 'Cerca de 100 segundos', 'Cerca de 10 segundos', 'Cerca de 1 minuto', 'Cerca de 1 ano'],
       resposta: 0,
       explicacao: 'n foi multiplicado por 100, então n² é multiplicado por 100² = 10.000: 10.000 segundos, perto de 2 horas e 47 minutos. Quem responde 100 segundos fez a conta de um algoritmo linear.',
+      dica: 'n multiplicado por 100; em O(n²), o tempo por 100².',
     },
   ],
 };

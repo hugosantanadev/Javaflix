@@ -13,6 +13,22 @@ const episodio: EpisodioConteudo = {
     'Circuito combinacional não guarda estado; memória exige realimentação.',
     'Com n bits de endereço se acessam 2ⁿ posições, não n.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a entender circuitos passo a passo: pode montar a tabela-verdade de um somador, explicar o flip-flop ou simular um circuito em Java. Peça sempre a simulação junto com a explicação e rode-a.',
+    pedido:
+      'Estou estudando circuitos digitais.\n- Explique o somador completo com uma tabela-verdade das 8 combinações de entrada.\n- Escreva um programa Java que simula o somador e imprime essa tabela.\n- Mostre como 4 somadores encadeados calculam 6 + 7 em binário, coluna por coluna.',
+    erros: [
+      'Troca as fórmulas do vai-um do somador completo.',
+      'Diz que a SRAM é a memória principal do computador.',
+      'Afirma que o processador "dá erro" no overflow, em vez de dar a volta.',
+    ],
+    conferir: [
+      'Rode a simulação com as 8 combinações e compare com a tabela.',
+      'Compare `somar8Bits` com `(x + y) % 256` para vários pares.',
+      'Teste o overflow em Java com `Integer.MAX_VALUE + 1`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Wikipédia: Somador',
@@ -158,6 +174,112 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Entrar com vai-um 1 na primeira coluna é o "+ 1" do complemento de dois sem precisar de uma segunda soma, e é assim que o hardware faz. `8 − 50` dá `11010110` em 8 bits, que sem sinal é 214 e com sinal é -42: os mesmos bits, duas leituras.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t1-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O meio-somador diz que 1 + 1 dá soma `1` e vai-um `1`, o que seria 3.',
+      codigo: `public class MeioSomador {
+    public static void main(String[] args) {
+        int a = 1;
+        int b = 1;
+        int soma = a | b;
+        int vaiUm = a & b;
+        System.out.println("soma " + soma + ", vai-um " + vaiUm);
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'soma 1, vai-um 1' },
+      correcao: `public class MeioSomador {
+    public static void main(String[] args) {
+        int a = 1;
+        int b = 1;
+        int soma = a ^ b;
+        int vaiUm = a & b;
+        System.out.println("soma " + soma + ", vai-um " + vaiUm);
+    }
+}`,
+      saidaCorrigida: 'soma 0, vai-um 1',
+      dica: 'Compare a coluna Soma da tabela do meio-somador com as tabelas do OR e do XOR. Em que linha elas diferem?',
+      explicacao: 'A soma de dois bits é 1 só quando eles são diferentes: é a tabela do XOR. O OR também dá 1 quando os dois são 1, e a conta 1 + 1 vira 11 em vez de 10.',
+    },
+    {
+      id: 'aprendiz-t1-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O somador de 8 bits diz que 100 + 50 é `22`, mas 150 cabe em 8 bits.',
+      codigo: `public class Somador {
+    static int somar8Bits(int x, int y) {
+        int resultado = 0;
+        int vaiUm = 0;
+        for (int i = 0; i < 7; i++) {
+            int a = (x >> i) & 1;
+            int b = (y >> i) & 1;
+            resultado |= (a ^ b ^ vaiUm) << i;
+            vaiUm = (a & b) | (vaiUm & (a ^ b));
+        }
+        return resultado;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(somar8Bits(100, 50));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: '22' },
+      correcao: `public class Somador {
+    static int somar8Bits(int x, int y) {
+        int resultado = 0;
+        int vaiUm = 0;
+        for (int i = 0; i < 8; i++) {
+            int a = (x >> i) & 1;
+            int b = (y >> i) & 1;
+            resultado |= (a ^ b ^ vaiUm) << i;
+            vaiUm = (a & b) | (vaiUm & (a ^ b));
+        }
+        return resultado;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(somar8Bits(100, 50));
+    }
+}`,
+      saidaCorrigida: '150',
+      dica: 'Um byte tem bits de 0 a 7. Quais posições o laço visita?',
+      explicacao: 'Com `i < 7`, o laço calcula só os bits 0 a 6 e nunca escreve o bit 7, que vale 128. 150 = 128 + 22, e o resultado perde exatamente esses 128. Para n bits, o índice vai de 0 a n − 1: `i < 8`.',
+    },
+    {
+      id: 'aprendiz-t1-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O teste de estouro nunca dispara: a soma de dois saldos enormes imprime `ok: -294967296`.',
+      codigo: `public class Estouro {
+    public static void main(String[] args) {
+        int a = 2_000_000_000;
+        int b = 2_000_000_000;
+        if (a + b > Integer.MAX_VALUE) {
+            System.out.println("estouro!");
+        } else {
+            System.out.println("ok: " + (a + b));
+        }
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'ok: -294967296' },
+      correcao: `public class Estouro {
+    public static void main(String[] args) {
+        int a = 2_000_000_000;
+        int b = 2_000_000_000;
+        if ((long) a + b > Integer.MAX_VALUE) {
+            System.out.println("estouro!");
+        } else {
+            System.out.println("ok: " + (a + b));
+        }
+    }
+}`,
+      saidaCorrigida: 'estouro!',
+      dica: 'Um `int` consegue ser maior que `Integer.MAX_VALUE`? Em que tipo a soma `a + b` é feita?',
+      explicacao: 'A soma de dois `int` é feita em 32 bits e já dá a volta antes da comparação, ficando negativa. Nenhum `int` passa de `MAX_VALUE`, e o teste nunca é verdadeiro. Convertendo um dos lados para `long`, a soma é feita em 64 bits e o valor real aparece.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t1-e03-q01',
@@ -167,6 +289,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['Soma 0 e vai-um 1', 'Soma 1 e vai-um 1', 'Soma 1 e vai-um 0', 'Soma 0 e vai-um 0', 'Soma 2 e vai-um 0'],
       resposta: 0,
       explicacao: '1 + 1 = 10 em binário: o dígito da coluna é 0 e sobe um. A soma é o XOR (1 XOR 1 = 0) e o vai-um é o AND (1 AND 1 = 1).',
+      dica: '1 + 1 em binário é 10.',
     },
     {
       id: 'aprendiz-t1-e03-q02',
@@ -179,6 +302,7 @@ int vaiUm = (a & b) | (vemUm & (a ^ b));
 System.out.println(soma + " " + vaiUm);`,
       resposta: '1 1',
       explicacao: '1 + 1 + 1 = 3, que em binário é `11`: o dígito da coluna é 1 e sobe 1. Pelo XOR de três bits, a soma é 1 quando há um número ímpar de uns.',
+      dica: 'Com três 1, a soma é 3, que em binário é 11.',
     },
     {
       id: 'aprendiz-t1-e03-q03',
@@ -188,6 +312,7 @@ System.out.println(soma + " " + vaiUm);`,
       opcoes: ['32', '16', '64', '1', '31'],
       resposta: 0,
       explicacao: 'Um somador completo por coluna de bits, com o vai-um de cada um ligado no próximo. Alguns projetos usam um meio-somador no primeiro bit, mas a pergunta pede só somadores completos.',
+      dica: 'Um somador completo por bit.',
     },
     {
       id: 'aprendiz-t1-e03-q04',
@@ -202,6 +327,7 @@ System.out.println(soma + " " + vaiUm);`,
       ],
       resposta: 0,
       explicacao: 'O vai-um atravessa os bits em cascata, então o tempo cresce junto com o número de bits. Os somadores com antecipação de vai-um calculam os vai-uns em paralelo para evitar essa espera.',
+      dica: 'Cada coluna depende do vai-um da vizinha.',
     },
     {
       id: 'aprendiz-t1-e03-q05',
@@ -211,6 +337,7 @@ System.out.println(soma + " " + vaiUm);`,
       opcoes: ['Flip-flop', 'Registrador', 'Somador completo', 'Porta XOR', 'Multiplexador'],
       respostas: [0, 1],
       explicacao: 'O flip-flop guarda um bit, e o registrador é um conjunto de flip-flops. Somador, XOR e multiplexador são combinacionais: a saída depende só das entradas daquele momento.',
+      dica: 'Quais guardam um valor entre um pulso de clock e outro?',
     },
     {
       id: 'aprendiz-t1-e03-q06',
@@ -238,6 +365,7 @@ System.out.println(soma + " " + vaiUm);`,
 }`,
       resposta: '0\n0\n127',
       explicacao: '255 + 1 = 256 e 128 + 128 = 256: os dois precisam de um nono bit, que é descartado, e sobra 0. Já 100 + 27 = 127 cabe em 8 bits.',
+      dica: 'Em 8 bits, tudo que passa de 255 dá a volta: subtraia 256.',
     },
     {
       id: 'aprendiz-t1-e03-q07',
@@ -258,6 +386,7 @@ System.out.println(soma + " " + vaiUm);`,
       respostas: ['^'],
       saida: '01101001',
       explicacao: 'O bit de soma é o XOR das três entradas: vale 1 quando há um número ímpar de uns. Com `+`, a precedência faria `a ^ (b + vemUm)` e o resultado poderia ser 2, que nem é um bit.',
+      dica: 'O bit de soma é o XOR das três entradas.',
     },
     {
       id: 'aprendiz-t1-e03-q08',
@@ -272,6 +401,7 @@ System.out.println(soma + " " + vaiUm);`,
       ],
       resposta: 0,
       explicacao: 'Em complemento de dois, −B = ~B + 1. Então A − B = A + ~B + 1, e o mesmo somador serve para as duas operações. O "+ 1" entra como vai-um inicial.',
+      dica: 'A − B = A + (NOT B) + 1.',
     },
     {
       id: 'aprendiz-t1-e03-q09',
@@ -282,6 +412,7 @@ System.out.println(soma + " " + vaiUm);`,
 System.out.println(~3);`,
       resposta: '4\n-4',
       explicacao: '`~3 + 1` é −3 em complemento de dois, então a primeira linha é 7 − 3 = 4. Sozinho, `~3` é −4: inverter os bits equivale a calcular −x − 1.',
+      dica: '`~3` é −4 em complemento de dois; somar 1 completa a subtração.',
     },
     {
       id: 'aprendiz-t1-e03-q10',
@@ -296,6 +427,7 @@ System.out.println(~3);`,
       ],
       resposta: 0,
       explicacao: 'O flip-flop D "fotografa" a entrada no instante da borda do clock. Entre uma borda e outra, mudanças em D são ignoradas. É isso que mantém um processador sincronizado.',
+      dica: 'O flip-flop D captura a entrada na subida do clock.',
     },
     {
       id: 'aprendiz-t1-e03-q11',
@@ -310,6 +442,7 @@ System.out.println(~3);`,
       ],
       resposta: 0,
       explicacao: 'A DRAM guarda cada bit como carga num capacitor minúsculo, que vaza em milissegundos. O controlador relê e regrava todas as linhas o tempo todo. A SRAM, feita de transistores em realimentação, não tem esse problema.',
+      dica: 'Pense no componente que guarda cada bit na DRAM.',
     },
     {
       id: 'aprendiz-t1-e03-q12',
@@ -319,6 +452,7 @@ System.out.println(~3);`,
       opcoes: ['Zero', 'Negativo', 'Overflow', 'Ponteiro', 'Compilado', 'Coleta de lixo'],
       respostas: [0, 1, 2],
       explicacao: 'Zero, negativo, carry e overflow descrevem o resultado da última operação, e são usadas pelos saltos condicionais. Ponteiro, compilação e coleta de lixo são conceitos de software.',
+      dica: 'As flags contam algo sobre o resultado da conta.',
     },
     {
       id: 'aprendiz-t1-e03-q13',
@@ -333,6 +467,7 @@ System.out.println(s);`,
       resposta: 1,
       verificar: { tipo: 'saida' },
       explicacao: '200 não cabe num `byte` com sinal (máximo 127). Ao truncar para 8 bits, sobra `11001000`, que em complemento de dois é 200 − 256 = −56. O cast permite a compilação, e overflow nunca lança exceção.',
+      dica: '200 não cabe num `byte`, que vai de -128 a 127.',
     },
     {
       id: 'aprendiz-t1-e03-q14',
@@ -342,6 +477,7 @@ System.out.println(s);`,
       opcoes: ['10', '1024', '8', '32', '512'],
       resposta: 0,
       explicacao: 'Com n bits de endereço se distinguem 2ⁿ posições, e 2¹⁰ = 1024. É o logaritmo na base 2 do número de posições.',
+      dica: 'Com n bits de endereço, 2ⁿ posições.',
     },
     {
       id: 'aprendiz-t1-e03-q15',
@@ -354,6 +490,7 @@ System.out.println(linhas);
 System.out.println(Integer.toBinaryString(linhas));`,
       resposta: '32\n100000',
       explicacao: '`0b101` é 5. Deslocar 1 cinco posições à esquerda liga só o bit 5: `100000`, que vale 32. É o padrão "um bit por linha" de um decodificador de 3 entradas e 8 saídas.',
+      dica: 'Deslocar 1 para a esquerda 5 vezes liga o bit 5.',
     },
   ],
 };

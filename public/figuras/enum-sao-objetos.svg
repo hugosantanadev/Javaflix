@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">O enum Naipe por dentro: quatro campos static final, COPAS, ESPADAS, OUROS e PAUS, cada um apontando para um único objeto no heap, com o nome e o ordinal de 0 a 3. Uma variável n que recebe Naipe.OUROS aponta para o mesmo objeto, e por isso o == funciona</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker></defs>
+  <text x="30" y="30" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">final class Naipe extends Enum: campos static final</text>
+  <text x="430" y="30" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">um objeto por constante, criado na carga</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13.5">
+    <g fill="#1b1916" stroke="#43403a">
+      <rect x="30" y="44" width="220" height="40"/><rect x="30" y="94" width="220" height="40"/><rect x="30" y="144" width="220" height="40"/><rect x="30" y="194" width="220" height="40"/>
+    </g>
+    <g fill="#f3eee7"><text x="44" y="69">COPAS</text><text x="44" y="119">ESPADAS</text><text x="44" y="169">OUROS</text><text x="44" y="219">PAUS</text></g>
+    <g fill="#1b1916" stroke="#4fd68b">
+      <rect x="430" y="44" width="290" height="40" rx="6"/><rect x="430" y="94" width="290" height="40" rx="6"/><rect x="430" y="144" width="290" height="40" rx="6"/><rect x="430" y="194" width="290" height="40" rx="6"/>
+    </g>
+    <g fill="#bdb5aa"><text x="444" y="69" xml:space="preserve">name "COPAS"   ordinal 0</text><text x="444" y="119">name "ESPADAS" ordinal 1</text><text x="444" y="169" xml:space="preserve">name "OUROS"   ordinal 2</text><text x="444" y="219" xml:space="preserve">name "PAUS"    ordinal 3</text></g>
+    <text x="30" y="276" fill="#ff7a1a">Naipe n = Naipe.OUROS;</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none">
+    <path d="M252 64 L426 64" marker-end="url(#s)"/><path d="M252 114 L426 114" marker-end="url(#s)"/><path d="M252 164 L426 164" marker-end="url(#s)"/><path d="M252 214 L426 214" marker-end="url(#s)"/>
+  </g>
+  <path d="M220 270 C 330 270, 360 190, 426 172" stroke="#ff7a1a" stroke-width="1.6" fill="none" marker-end="url(#l)"/>
+  <text x="430" y="276" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">mesma seta, mesmo objeto: n == Naipe.OUROS</text>
+</svg>

@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Arquivos com marcadores `<<<<<<<` esquecidos compilam errado ou vão para produção quebrados: confira antes do commit.',
     '`git branch -d` recusa apagar uma branch não mesclada; `-D` força e pode perder commits.',
   ],
+  ia: {
+    uso:
+      'Num conflito, a IA ajuda a entender o que cada lado quis fazer e a propor a combinação, desde que receba as três versões e a intenção de cada mudança. Ela também explica bem o desenho do `git log --graph`. O que ela não sabe é qual regra de negócio vale: essa decisão é sua, ou de quem fez a outra mudança.',
+    pedido:
+      'Estou resolvendo um conflito de merge num projeto Java 25.\n<cole aqui a versão do ancestral (git show :1:arquivo), a nossa (:2:) e a deles (:3:)>\nA nossa branch aumentou o frete para 20; a deles criou o frete grátis acima de 200.\n- Proponha o conteúdo final do trecho, sem marcadores de conflito.\n- Explique o que mantém de cada lado e por quê.\n- Não mude nada fora das linhas em conflito.\n- Diga quais testes eu devo rodar para confirmar que o merge não quebrou nada.',
+    erros: [
+      'Escolhe um lado inteiro do conflito sem considerar a intenção do outro.',
+      'Junta as duas versões da linha, deixando o código duplicado ou inválido.',
+      'Esquece marcadores `<<<<<<<` ou `>>>>>>>` no meio do arquivo.',
+      'Sugere `git push --force` para "resolver" um histórico divergente.',
+    ],
+    conferir: [
+      'Procure `<<<<<<<`, `=======` e `>>>>>>>` no arquivo antes do `git add`.',
+      'Compile e rode a suíte de testes depois do merge, com ou sem conflito.',
+      'Confira com `git diff HEAD` que só as linhas do conflito mudaram.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Pro Git: Branches em Poucas Palavras',
@@ -155,6 +172,135 @@ public class Relatorio {
     comentarios:
       'A versão subiu para 1.1 nos dois lados e não gerou conflito: o merge de três vias só se preocupa com mudanças **diferentes** da mesma linha. Sem a base, comparando só as duas pontas, seria impossível saber que o `desconto=5` veio de uma mudança e não de uma remoção do outro lado. O Git de verdade também lida com linhas inseridas e removidas, o que exige um algoritmo de diff, mas a regra de decisão é exatamente esta.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t1-e02-b01',
+      dificuldade: 1,
+      sintoma: 'A ferramenta interna que mescla arquivos de configuração perdeu a mudança da outra branch: as parcelas continuaram `parcelas=3`, embora a branch tivesse mudado para 6.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Mescla {
+    static List<String> mesclar(List<String> base, List<String> nossa, List<String> deles) {
+        List<String> resultado = new ArrayList<>();
+        for (int i = 0; i < base.size(); i++) {
+            String b = base.get(i), n = nossa.get(i), d = deles.get(i);
+            if (n.equals(d)) resultado.add(n);
+            else if (n.equals(b)) resultado.add(n);
+            else if (d.equals(b)) resultado.add(n);
+            else resultado.add("CONFLITO");
+        }
+        return resultado;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(mesclar(List.of("frete=15", "parcelas=3"), List.of("frete=20", "parcelas=3"), List.of("frete=15", "parcelas=6")));
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: '[frete=20, parcelas=3]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Mescla {
+    static List<String> mesclar(List<String> base, List<String> nossa, List<String> deles) {
+        List<String> resultado = new ArrayList<>();
+        for (int i = 0; i < base.size(); i++) {
+            String b = base.get(i), n = nossa.get(i), d = deles.get(i);
+            if (n.equals(d)) resultado.add(n);
+            else if (n.equals(b)) resultado.add(d);
+            else if (d.equals(b)) resultado.add(n);
+            else resultado.add("CONFLITO");
+        }
+        return resultado;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(mesclar(List.of("frete=15", "parcelas=3"), List.of("frete=20", "parcelas=3"), List.of("frete=15", "parcelas=6")));
+    }
+}`,
+      saidaCorrigida: '[frete=20, parcelas=6]',
+      dica: 'Se a nossa linha é igual à da base, quem mudou foi quem?',
+      explicacao:
+        'Quando a nossa versão é igual à base, quem mudou foi o outro lado, e a mudança dele é que vale. O código devolvia a nossa linha, que é a antiga. Um teste com uma mudança só do outro lado pega esse erro na hora.',
+    },
+    {
+      id: 'backend-junior-t1-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O hook que barra commits com conflito não resolvido recusa o `README.md`, que não tem conflito nenhum: `conflito não resolvido: README.md`.',
+      codigo: `import java.util.List;
+
+public class SemConflito {
+    static boolean temConflito(List<String> linhas) {
+        return linhas.stream().anyMatch(l -> l.contains("======="));
+    }
+
+    public static void main(String[] args) {
+        List<String> readme = List.of("Loja Javaflix", "=============", "Vende cursos de Java.");
+        System.out.println(temConflito(readme) ? "conflito não resolvido: README.md" : "ok");
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'conflito não resolvido: README.md' },
+      correcao: `import java.util.List;
+
+public class SemConflito {
+    static boolean temConflito(List<String> linhas) {
+        return linhas.stream().anyMatch(l -> l.startsWith("<<<<<<< ") || l.startsWith(">>>>>>> "));
+    }
+
+    public static void main(String[] args) {
+        List<String> readme = List.of("Loja Javaflix", "=============", "Vende cursos de Java.");
+        System.out.println(temConflito(readme) ? "conflito não resolvido: README.md" : "ok");
+    }
+}`,
+      saidaCorrigida: 'ok',
+      dica: 'Uma linha de sinais de igual pode aparecer num arquivo sem conflito nenhum?',
+      explicacao:
+        'No Markdown, uma linha de `=` sublinha o título, e ela contém `=======`. Os marcadores que só existem em conflitos são os de abertura e de fechamento, no começo da linha e seguidos de espaço. O próprio Git usa essa regra no `git diff --check`.',
+    },
+    {
+      id: 'backend-junior-t1-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O painel da integração diz que a `feature/frete` precisa de merge de três vias, mas a `main` não recebeu nenhum commit desde que a branch foi criada: `merge de três vias`.',
+      codigo: `import java.util.List;
+
+public class Avanco {
+    static boolean podeAvancar(List<String> historicoMain, List<String> historicoFeature) {
+        String pontaDaFeature = historicoFeature.get(historicoFeature.size() - 1);
+        String pontaDaMain = historicoMain.get(historicoMain.size() - 1);
+        return historicoMain.contains(pontaDaFeature);
+    }
+
+    public static void main(String[] args) {
+        List<String> main = List.of("c8f5854", "c3c13c8");
+        List<String> feature = List.of("c8f5854", "c3c13c8", "9a1b2c3");
+        System.out.println(podeAvancar(main, feature) ? "fast-forward" : "merge de três vias");
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'merge de três vias' },
+      correcao: `import java.util.List;
+
+public class Avanco {
+    static boolean podeAvancar(List<String> historicoMain, List<String> historicoFeature) {
+        String pontaDaFeature = historicoFeature.get(historicoFeature.size() - 1);
+        String pontaDaMain = historicoMain.get(historicoMain.size() - 1);
+        return historicoFeature.contains(pontaDaMain);
+    }
+
+    public static void main(String[] args) {
+        List<String> main = List.of("c8f5854", "c3c13c8");
+        List<String> feature = List.of("c8f5854", "c3c13c8", "9a1b2c3");
+        System.out.println(podeAvancar(main, feature) ? "fast-forward" : "merge de três vias");
+    }
+}`,
+      saidaCorrigida: 'fast-forward',
+      dica: 'Para avançar o ponteiro da `main`, qual histórico precisa conter a ponta de qual?',
+      explicacao:
+        'O fast-forward é possível quando a ponta da `main` é um ancestral da feature, ou seja, quando o histórico da feature contém a ponta da `main`. O código fazia a pergunta ao contrário. Repare que `pontaDaMain` era calculada e nunca usada, um sinal que a IDE marca em cinza.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t1-e02-q01',
@@ -169,6 +315,7 @@ public class Relatorio {
       ],
       resposta: 0,
       explicacao: 'Por ser só um ponteiro, criar e apagar branches é instantâneo e barato.',
+      dica: 'Lembre do arquivo `.git/refs/heads/main` da aula: o que ele contém?',
     },
     {
       id: 'backend-junior-t1-e02-q02',
@@ -178,6 +325,7 @@ public class Relatorio {
       opcoes: ['`git switch -c feature/pix`', '`git branch feature/pix`', '`git merge feature/pix`', '`git switch feature/pix`'],
       resposta: 0,
       explicacao: '`git branch nome` só cria, sem trocar, e `git switch nome` só troca para uma branch que já existe. O antigo `git checkout -b` faz o mesmo que `switch -c`.',
+      dica: 'O comando novo para trocar de branch, com a opção que também cria.',
     },
     {
       id: 'backend-junior-t1-e02-q03',
@@ -192,6 +340,7 @@ public class Relatorio {
       ],
       resposta: 0,
       explicacao: 'Sem trabalho novo na `main`, não há nada a juntar. Para forçar um commit de merge mesmo assim, existe `git merge --no-ff`.',
+      dica: 'Se a `main` não andou, basta mover o ponteiro dela para a frente.',
     },
     {
       id: 'backend-junior-t1-e02-q04',
@@ -207,6 +356,7 @@ public class Relatorio {
       ],
       respostas: [0, 1],
       explicacao: 'Alterações em partes diferentes do mesmo arquivo se juntam sem conflito. Apagar a branch é um passo à parte, e sem commits novos na `main` o merge seria fast-forward.',
+      dica: 'Pense no ancestral comum e no commit que o merge cria. Mudar o mesmo arquivo em partes diferentes dá conflito?',
     },
     {
       id: 'backend-junior-t1-e02-q05',
@@ -221,6 +371,7 @@ public class Relatorio {
       ],
       resposta: 0,
       explicacao: '`HEAD` é a branch atual. A outra versão fica entre `=======` e `>>>>>>> nome-da-branch`.',
+      dica: '`HEAD` é a branch em que você está agora.',
     },
     {
       id: 'backend-junior-t1-e02-q06',
@@ -230,6 +381,7 @@ public class Relatorio {
       opcoes: ['`git add arquivo` e depois `git commit`', 'Só `git commit`', '`git merge --continue-all`', 'Nada: o Git detecta sozinho'],
       resposta: 0,
       explicacao: 'O `git add` marca o conflito como resolvido. Enquanto houver arquivos em `UU`, o Git não deixa commitar.',
+      dica: 'Depois de editar, é preciso avisar o Git que o conflito foi resolvido e concluir o merge.',
     },
     {
       id: 'backend-junior-t1-e02-q07',
@@ -239,6 +391,7 @@ public class Relatorio {
       opcoes: ['`git merge --abort`', '`git restore .`', '`git branch -D main`', '`git commit --amend`'],
       resposta: 0,
       explicacao: 'O `--abort` desfaz o merge em andamento e devolve o diretório de trabalho ao estado de antes.',
+      dica: 'Existe uma opção do próprio `merge` para desistir.',
     },
     {
       id: 'backend-junior-t1-e02-q08',
@@ -263,6 +416,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Se só um lado mudou, ele vence. Se os dois mudaram para o mesmo valor, não há conflito. Só mudanças diferentes nos dois lados precisam de decisão.',
+      dica: 'Para cada chamada: os dois iguais, só um lado mudou, ou os dois mudaram diferente?',
     },
     {
       id: 'backend-junior-t1-e02-q09',
@@ -277,6 +431,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: '`U` vem de *unmerged*. Depois de editar e dar `git add`, ele passa a aparecer como modificado e preparado.',
+      dica: 'As duas letras falam dos dois lados do merge, e U quer dizer "não mesclado".',
     },
     {
       id: 'backend-junior-t1-e02-q10',
@@ -291,6 +446,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O arquivo `.git/refs/heads/nome` guarda só 40 caracteres. Os objetos dos commits são compartilhados por todas as branches.',
+      dica: 'Uma branch nova copia arquivos ou só cria um ponteiro?',
     },
     {
       id: 'backend-junior-t1-e02-q11',
@@ -305,6 +461,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `-d` protege trabalho não mesclado. Se você tem certeza de que pode descartá-lo, `-D` força a remoção.',
+      dica: 'O `-d` protege commits que ainda não estão em nenhuma outra branch.',
     },
     {
       id: 'backend-junior-t1-e02-q12',
@@ -320,6 +477,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'Quanto mais tempo e mais código uma branch acumula, mais chances de alguém mexer nas mesmas linhas. Reformatações em massa tocam todas as linhas e geram conflitos com todo mundo.',
+      dica: 'O risco de conflito cresce com o tamanho e a duração das mudanças.',
     },
     {
       id: 'backend-junior-t1-e02-q13',
@@ -343,6 +501,7 @@ public class Teste {
 }`,
       resposta: 'x=5 y=9 z=3',
       explicacao: 'Cada linha mudou em no máximo um lado, e a mudança vence. Não há conflito nenhum.',
+      dica: 'Compare linha a linha com a base: x mudou só deles, y só nosso, z ninguém.',
     },
     {
       id: 'backend-junior-t1-e02-q14',
@@ -352,6 +511,7 @@ public class Teste {
       opcoes: ['`git log --oneline --graph --all`', '`git status --all`', '`git branch --graph`', '`git diff --all`'],
       resposta: 0,
       explicacao: 'O `--graph` desenha as linhas de cada branch, e o `--all` inclui todas, não só a atual.',
+      dica: 'O `git log` com as opções que desenham o grafo e incluem todas as branches.',
     },
     {
       id: 'backend-junior-t1-e02-q15',
@@ -366,6 +526,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O merge trabalha por trechos de linhas, não por arquivo. Só há conflito quando os dois lados alteram as mesmas linhas, ou linhas vizinhas.',
+      dica: 'O conflito acontece quando os dois lados mexem nas mesmas linhas, não no mesmo arquivo.',
     },
   ],
 };

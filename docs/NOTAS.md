@@ -4,7 +4,7 @@ Simula uma faculdade: cada questão tem nota, cada episódio tem média, e a tem
 
 ## Escopo
 
-Implementar e validar **só no cargo Estagiário** (T1 a T6). Os outros cargos recebem o sistema depois que o usuário aprovar o resultado.
+Validado no Estagiário e estendido ao Aprendiz e ao Júnior em 2026-10-27. Os cargos a partir do Pleno seguem as regras antigas até o usuário pedir.
 
 ## Pontuação de cada questão (0 a 1)
 

@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Depois de uma exceção, o resto do bloco `try` é abandonado.',
     'Sem `catch` compatível, a exceção sobe a pilha até derrubar a thread.',
   ],
+  ia: {
+    uso:
+      'Para estudar exceções, a IA é uma boa tutora: explica uma mensagem do `javac` ou um stack trace linha por linha e gera trechos de treino no estilo "compila ou não compila". O limite está na classificação: ela erra se exceções menos comuns são checked e inventa superclasses, então a última palavra é do Javadoc e do compilador.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código e a mensagem do javac>\n- Explique por que não compila, dizendo se cada exceção envolvida é checked ou unchecked e qual é a superclasse direta dela.\n- Mostre as duas correções possíveis, tratar e declarar, e diga quando cada uma faz sentido.\n- Não use catch vazio nem throws Exception genérico.\n- No fim, crie três trechos parecidos para eu dizer se compilam, com as respostas separadas.',
+    erros: [
+      'Afirma que `catch (Exception e)` também pega `StackOverflowError` e outros `Error`.',
+      'Classifica `InterruptedException` ou `CloneNotSupportedException`, que são checked, como unchecked.',
+      'Sugere um `catch` vazio, ou `throws Exception` no `main`, só para o código compilar.',
+      'Diz que `throws` é obrigatório também para exceções unchecked.',
+    ],
+    conferir: [
+      'Compile cada trecho sugerido e compare o resultado com o que a IA afirmou.',
+      'Abra o Javadoc da exceção e leia a hierarquia no topo da página.',
+      'Rode o programa e compare o stack trace real com a explicação.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: What Is an Exception?',
@@ -167,6 +184,139 @@ public class Configuracao {
     comentarios:
       'A configuração ausente é um problema do ambiente, que o programa deve prever: checked. Um texto que não é número e uma porta fora da faixa indicam dados errados, que o código chamador deveria ter validado: unchecked. Se o `catch` de `IllegalArgumentException` viesse antes do de `NumberFormatException`, o segundo seria inalcançável e o código não compilaria, assunto do próximo episódio.',
   },
+  bugs: [
+    {
+      id: 'pleno-t1-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O cadastro não compila depois que alguém acrescentou o tratamento de idade inválida: `exception IOException is never thrown in body of corresponding try statement`.',
+      codigo: `public class Idade {
+    static int idade(String texto) {
+        return Integer.parseInt(texto.trim());
+    }
+
+    public static void main(String[] args) {
+        String[] entradas = {"30", "trinta", " 42 "};
+        for (String e : entradas) {
+            try {
+                System.out.println("idade: " + idade(e));
+            } catch (java.io.IOException ex) {
+                System.out.println("inválida: " + e);
+            }
+        }
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Idade {
+    static int idade(String texto) {
+        return Integer.parseInt(texto.trim());
+    }
+
+    public static void main(String[] args) {
+        String[] entradas = {"30", "trinta", " 42 "};
+        for (String e : entradas) {
+            try {
+                System.out.println("idade: " + idade(e));
+            } catch (NumberFormatException ex) {
+                System.out.println("inválida: " + e);
+            }
+        }
+    }
+}`,
+      saidaCorrigida: 'idade: 30\ninválida: trinta\nidade: 42',
+      dica: 'Que exceção o `Integer.parseInt` lança quando o texto não é um número? Ela é checked?',
+      explicacao:
+        'Um `catch` de exceção checked exige que o `try` possa lançá-la, e nada ali faz entrada e saída. O `parseInt` lança `NumberFormatException`, uma unchecked, filha de `IllegalArgumentException`. Capture a exceção que o código realmente lança: o compilador recusa o `catch` que nunca seria usado.',
+    },
+    {
+      id: 'pleno-t1-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O relatório de erros do sistema marca uma `NullPointerException` como checked: `NullPointerException=checked IOException=checked StackOverflowError=error`.',
+      codigo: `import java.io.IOException;
+
+public class Classificador {
+    static String tipo(Throwable t) {
+        if (t instanceof Error) return "error";
+        if (t instanceof Exception) return "checked";
+        return "unchecked";
+    }
+
+    public static void main(String[] args) {
+        Throwable[] vistas = {new NullPointerException(), new IOException(), new StackOverflowError()};
+        StringBuilder relatorio = new StringBuilder();
+        for (Throwable t : vistas) {
+            relatorio.append(t.getClass().getSimpleName()).append('=').append(tipo(t)).append(' ');
+        }
+        System.out.println(relatorio.toString().trim());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'NullPointerException=checked IOException=checked StackOverflowError=error' },
+      correcao: `import java.io.IOException;
+
+public class Classificador {
+    static String tipo(Throwable t) {
+        if (t instanceof Error) return "error";
+        if (t instanceof Exception && !(t instanceof RuntimeException)) return "checked";
+        return "unchecked";
+    }
+
+    public static void main(String[] args) {
+        Throwable[] vistas = {new NullPointerException(), new IOException(), new StackOverflowError()};
+        StringBuilder relatorio = new StringBuilder();
+        for (Throwable t : vistas) {
+            relatorio.append(t.getClass().getSimpleName()).append('=').append(tipo(t)).append(' ');
+        }
+        System.out.println(relatorio.toString().trim());
+    }
+}`,
+      saidaCorrigida: 'NullPointerException=unchecked IOException=checked StackOverflowError=error',
+      dica: '`RuntimeException` também é uma `Exception`. O que o `instanceof Exception` responde para ela?',
+      explicacao:
+        '`RuntimeException` estende `Exception`, e por isso toda unchecked passa no teste `instanceof Exception`. Checked é `Exception` **menos** as `RuntimeException`: a condição precisa excluir esse ramo, ou testar `RuntimeException` antes. Na hierarquia, sempre confira o caso mais específico primeiro.',
+    },
+    {
+      id: 'pleno-t1-e01-b03',
+      dificuldade: 3,
+      sintoma: 'Com a taxa de juros escrita errado na configuração, o sistema deveria usar a taxa padrão, mas morre na inicialização com `ExceptionInInitializerError`, causada por `NumberFormatException: For input string: "2,5"`.',
+      codigo: `public class Configuracao {
+    static class Taxas {
+        static final int JUROS = Integer.parseInt("2,5");
+    }
+
+    public static void main(String[] args) {
+        int juros;
+        try {
+            juros = Taxas.JUROS;
+        } catch (Exception e) {
+            juros = 2;
+        }
+        System.out.println("juros: " + juros + "%");
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'excecao', nome: 'ExceptionInInitializerError' },
+      correcao: `public class Configuracao {
+    static class Taxas {
+        static final int JUROS = Integer.parseInt("2,5");
+    }
+
+    public static void main(String[] args) {
+        int juros;
+        try {
+            juros = Taxas.JUROS;
+        } catch (ExceptionInInitializerError e) {
+            juros = 2;
+        }
+        System.out.println("juros: " + juros + "%");
+    }
+}`,
+      saidaCorrigida: 'juros: 2%',
+      dica: 'Quando um inicializador `static` lança uma exceção, o que a JVM entrega para quem tentou usar a classe? E isso é uma `Exception`?',
+      explicacao:
+        'Uma exceção num inicializador `static` chega embrulhada num `ExceptionInInitializerError`, que é um `Error`, e `catch (Exception e)` não pega `Error`. A correção mostra o tipo certo, mas o melhor é não deixar o inicializador falhar: leia e valide a configuração num método comum. Depois desse erro, a classe fica inutilizável, e cada nova tentativa lança `NoClassDefFoundError`.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t1-e01-q01',
@@ -176,6 +326,7 @@ public class Configuracao {
       opcoes: ['`IOException`', '`NullPointerException`', '`IllegalArgumentException`', '`ArithmeticException`'],
       resposta: 0,
       explicacao: '`IOException` estende `Exception` sem passar por `RuntimeException`. As outras três são `RuntimeException`, portanto unchecked.',
+      dica: 'Checked é a que o compilador obriga a tratar: a que representa um problema do mundo lá fora.',
     },
     {
       id: 'pleno-t1-e01-q02',
@@ -200,6 +351,7 @@ public class Configuracao {
 }`,
       resposta: 'tamanho 3, não é texto, nulo',
       explicacao: 'O cast de um `Integer` para `String` lança `ClassCastException`. O cast de `null` funciona, e a exceção só aparece ao chamar `length()`.',
+      dica: 'Cada chamada segue um caminho diferente: o cast falha com um número, e o `null` passa no cast.',
     },
     {
       id: 'pleno-t1-e01-q03',
@@ -222,6 +374,7 @@ public class Configuracao {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 4 },
       explicacao: '`Exception` é a raiz das checked. Seria preciso `throws Exception` na assinatura, ou lançar uma unchecked, como `IllegalArgumentException`.',
+      dica: '`Exception` não é uma `RuntimeException`.',
     },
     {
       id: 'pleno-t1-e01-q04',
@@ -238,6 +391,7 @@ public class Configuracao {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Unchecked e erros dispensam declaração. Declarar `throws Exception` cobre uma `IOException`. Declarar só `RuntimeException` não cobre uma `Exception` checked.',
+      dica: 'Para cada `throw`, a exceção é checked? Se for, o método declara?',
     },
     {
       id: 'pleno-t1-e01-q05',
@@ -247,6 +401,7 @@ public class Configuracao {
       opcoes: ['`IllegalArgumentException`', '`ArithmeticException`', '`IOException`', '`Exception`'],
       resposta: 0,
       explicacao: 'Um texto que não representa um número é um argumento inválido. Por isso um `catch (IllegalArgumentException e)` também pega o erro do `parseInt`.',
+      dica: 'Ela nasce de um argumento inválido.',
     },
     {
       id: 'pleno-t1-e01-q06',
@@ -271,6 +426,7 @@ public class Leitor {
       respostas: ['throws'],
       saida: 'falha de leitura',
       explicacao: '`throws` na assinatura declara a exceção checked e passa a obrigação de tratá-la para quem chama, aqui o `main`.',
+      dica: 'A palavra que vai na assinatura é diferente da que lança.',
     },
     {
       id: 'pleno-t1-e01-q07',
@@ -293,6 +449,7 @@ public class Calculo {
 }`,
       resposta: 10,
       explicacao: 'Nada no `try` pode lançar `IOException`, que é checked, e o compilador recusa o `catch` inalcançável. Para unchecked, como `ArithmeticException`, o `catch` é sempre aceito.',
+      dica: 'Um `catch` de checked exige que o `try` possa lançá-la.',
     },
     {
       id: 'pleno-t1-e01-q08',
@@ -317,6 +474,7 @@ public class Calculo {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A exceção sai de `c`, atravessa `b` e `a` sem que o resto deles rode, e só para no `catch` do `main`. Sendo unchecked, ninguém precisa declará-la.',
+      dica: 'Depois do lançamento, o resto de cada método é abandonado.',
     },
     {
       id: 'pleno-t1-e01-q09',
@@ -342,6 +500,7 @@ public class Calculo {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NumberFormatException' },
       explicacao: 'O `catch` só pega `ArithmeticException`, que não tem relação com `NumberFormatException`. A exceção sai do `main` e derruba o programa.',
+      dica: 'O `catch` pega o tipo certo de exceção?',
     },
     {
       id: 'pleno-t1-e01-q10',
@@ -357,6 +516,7 @@ public class Calculo {
       ],
       respostas: [0, 1, 2],
       explicacao: 'As três primeiras estendem `RuntimeException`. `IOException` e `InterruptedException` estendem `Exception` diretamente e são checked.',
+      dica: 'Unchecked são as que estendem `RuntimeException`.',
     },
     {
       id: 'pleno-t1-e01-q11',
@@ -380,6 +540,7 @@ public class Calculo {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Error` e `Exception` são ramos separados de `Throwable`. O `catch` interno não pega o erro, que sobe até o `catch (Error e)` externo.',
+      dica: '`StackOverflowError` é um `Error`, e não uma `Exception`.',
     },
     {
       id: 'pleno-t1-e01-q12',
@@ -394,6 +555,7 @@ public class Calculo {
       ],
       resposta: 0,
       explicacao: '`throw new X()` é um comando, dentro do corpo. `throws X` faz parte da declaração do método e é obrigatório para checked não tratadas.',
+      dica: 'Uma das duas palavras termina com s.',
     },
     {
       id: 'pleno-t1-e01-q13',
@@ -412,6 +574,7 @@ System.out.println(a.getMessage() + " | " + a + " | " + b.getMessage());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`getMessage()` devolve só a mensagem, `null` se não houver. O `toString` de uma exceção é o nome completo da classe, dois-pontos e a mensagem.',
+      dica: 'O `toString` de uma exceção mostra o nome completo da classe; uma exceção sem mensagem tem mensagem `null`.',
     },
     {
       id: 'pleno-t1-e01-q14',
@@ -438,6 +601,7 @@ System.out.println(a.getMessage() + " | " + a + " | " + b.getMessage());`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'IllegalArgumentException', saida: '30' },
       explicacao: 'Exceções unchecked não precisam ser declaradas nem tratadas. A primeira chamada funciona; a segunda lança, e ninguém trata.',
+      dica: 'A primeira chamada roda inteira antes da segunda.',
     },
     {
       id: 'pleno-t1-e01-q15',
@@ -452,6 +616,7 @@ System.out.println(a.getMessage() + " | " + a + " | " + b.getMessage());`,
       ],
       resposta: 0,
       explicacao: 'Quando uma exceção é lançada com `athrow`, a JVM consulta a tabela do método atual e, se nada servir, desfaz o quadro e repete no método de quem chamou. Um `try` sem exceção não custa praticamente nada.',
+      dica: 'Um `try` não vira instrução: a informação fica numa tabela do método.',
     },
   ],
 };

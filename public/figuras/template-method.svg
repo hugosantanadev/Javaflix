@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="280" viewBox="0 0 760 280" role="img" aria-labelledby="t">
+  <title id="t">O método rodar da classe abstrata Tarefa é um roteiro fixo de dois passos: imprimir o nome, que é código pronto, e chamar executar, que é um espaço vazio. Cada subclasse, como Backup e Relatorio, preenche esse espaço com a sua versão</title>
+  <rect width="760" height="280" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker></defs>
+  <text x="40" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">abstract class Tarefa: o roteiro de rodar()</text>
+  <rect x="40" y="52" width="300" height="50" rx="6" fill="#1b1916" stroke="#43403a"/>
+  <text x="56" y="82" font-family="Cascadia Code, Consolas, monospace" font-size="13.5" fill="#f3eee7">1. print(nome + ": ")</text>
+  <text x="330" y="82" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#8a8277" text-anchor="end">pronto</text>
+  <rect x="40" y="114" width="300" height="50" rx="6" fill="#13110f" stroke="#ff7a1a" stroke-dasharray="6 4"/>
+  <text x="56" y="144" font-family="Cascadia Code, Consolas, monospace" font-size="13.5" fill="#ff7a1a">2. executar()</text>
+  <text x="330" y="144" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#ff7a1a" text-anchor="end">abstract</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <rect x="460" y="70" width="260" height="46" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="476" y="98" fill="#4fd68b">Backup.executar()</text>
+    <rect x="460" y="150" width="260" height="46" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="476" y="178" fill="#4fd68b">Relatorio.executar()</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.6" fill="none">
+    <path d="M456 93 L346 136" marker-end="url(#s)"/>
+    <path d="M456 173 L346 144" marker-end="url(#s)"/>
+  </g>
+  <text x="40" y="236" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">A classe abstrata fixa a ordem dos passos; cada subclasse concreta preenche o passo que falta.</text>
+  <text x="40" y="256" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Sem preencher, não compila: "is not abstract and does not override abstract method".</text>
+</svg>

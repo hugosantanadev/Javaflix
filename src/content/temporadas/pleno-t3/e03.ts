@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`Map.of` vai até 10 pares, rejeita `null` e lança `IllegalArgumentException` com chave repetida.',
     '`Map` não estende `Collection` e não tem `add`.',
   ],
+  ia: {
+    uso:
+      'Com mapas, a IA ajuda a escolher entre `HashMap`, `LinkedHashMap` e `TreeMap` e a reescrever contadores e agrupamentos com `merge` e `computeIfAbsent`. Ela erra nos detalhes de `null`: o que `putIfAbsent` faz com um valor nulo, o que acontece quando a função devolve `null` e a diferença entre `get` devolver `null` e a chave não existir.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código que usa o Map>\n- Diga o conteúdo do mapa depois de cada linha, inclusive as chaves removidas por funções que devolvem null.\n- Aponte onde get devolver null é ambíguo e mostre como resolver com containsKey ou getOrDefault.\n- Reescreva contadores com merge e agrupamentos com computeIfAbsent.\n- Não troque a implementação do mapa sem explicar o que muda na ordem de iteração.',
+    erros: [
+      'Usa `putIfAbsent(chave, 1)` como contador, que nunca passa de 1.',
+      'Diz que uma função de `merge` ou `compute` que devolve `null` guarda `null` no mapa, quando remove a chave.',
+      'Escreve `computeIfAbsent(chave, ArrayList::new)` com chave `String`, que não compila.',
+      'Copia um `LinkedHashMap` com ordem de acesso de um exemplo de cache e muda a ordem de um relatório.',
+    ],
+    conferir: [
+      'Imprima o mapa depois de cada operação e compare com a explicação da IA.',
+      'Teste o contador com uma chave repetida três vezes.',
+      'Rode com uma chave que guarda `null` e veja como `get`, `getOrDefault` e `putIfAbsent` se comportam.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Using Maps to Store Key Value Pairs',
@@ -168,6 +185,119 @@ public class Indice {
     comentarios:
       'Os dois métodos modernos eliminam o `if (!mapa.containsKey(...))` que dominava esse tipo de código antes do Java 8. Como o `TreeMap` percorre as chaves em ordem alfabética e só troca de campeão com uma contagem **maior**, o empate fica com a primeira palavra em ordem. E `ceilingKey` mostra a vantagem de um mapa ordenado: responder perguntas de faixa sem percorrer tudo.',
   },
+  bugs: [
+    {
+      id: 'pleno-t3-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O relatório de idades não compila: `for-each not applicable to expression type`, com `required: array or java.lang.Iterable` e `found: Map<String,Integer>` logo abaixo.',
+      codigo: `import java.util.Map;
+import java.util.TreeMap;
+
+public class Idades {
+    public static void main(String[] args) {
+        Map<String, Integer> idades = new TreeMap<>(Map.of("Ana", 30, "Bia", 25, "Caio", 41));
+        for (String nome : idades) {
+            System.out.println(nome + " tem " + idades.get(nome));
+        }
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.Map;
+import java.util.TreeMap;
+
+public class Idades {
+    public static void main(String[] args) {
+        Map<String, Integer> idades = new TreeMap<>(Map.of("Ana", 30, "Bia", 25, "Caio", 41));
+        for (String nome : idades.keySet()) {
+            System.out.println(nome + " tem " + idades.get(nome));
+        }
+    }
+}`,
+      saidaCorrigida: 'Ana tem 30\nBia tem 25\nCaio tem 41',
+      dica: '`Map` é uma `Collection`? O que dá para percorrer com o for-each num mapa?',
+      explicacao:
+        '`Map` não estende `Collection` nem `Iterable`, porque guarda pares, e o for-each não sabe percorrê-lo direto. Escolha uma das visões: `keySet()` para as chaves, `values()` para os valores ou `entrySet()` para os pares, que evita o `get` a cada volta.',
+    },
+    {
+      id: 'pleno-t3-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O painel de pedidos por cliente mostra 1 para todo mundo, embora a Ana tenha feito três pedidos: `{Ana=1, Bia=1, Caio=1}`.',
+      codigo: `import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+public class PedidosPorCliente {
+    public static void main(String[] args) {
+        List<String> pedidos = List.of("Ana", "Bia", "Ana", "Caio", "Ana", "Bia");
+        Map<String, Integer> porCliente = new TreeMap<>();
+        for (String cliente : pedidos) {
+            porCliente.putIfAbsent(cliente, 1);
+        }
+        System.out.println(porCliente);
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: '{Ana=1, Bia=1, Caio=1}' },
+      correcao: `import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+public class PedidosPorCliente {
+    public static void main(String[] args) {
+        List<String> pedidos = List.of("Ana", "Bia", "Ana", "Caio", "Ana", "Bia");
+        Map<String, Integer> porCliente = new TreeMap<>();
+        for (String cliente : pedidos) {
+            porCliente.merge(cliente, 1, Integer::sum);
+        }
+        System.out.println(porCliente);
+    }
+}`,
+      saidaCorrigida: '{Ana=3, Bia=2, Caio=1}',
+      dica: 'O que `putIfAbsent` faz quando a chave já existe?',
+      explicacao:
+        '`putIfAbsent` só insere quando a chave está ausente; nas vezes seguintes, não faz nada, e o contador nunca passa de 1. Para contar, use `merge(cliente, 1, Integer::sum)`: insere 1 na primeira vez e soma 1 ao valor existente nas outras.',
+    },
+    {
+      id: 'pleno-t3-e03-b03',
+      dificuldade: 3,
+      sintoma: 'A tela de últimos cadastros mostra a Bia como a mais recente, só porque alguém consultou o e-mail dela: `e-mail da Bia: bia@exemplo.com\nordem de cadastro: [Ana, Caio, Bia]`.',
+      codigo: `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Cadastros {
+    public static void main(String[] args) {
+        Map<String, String> recentes = new LinkedHashMap<>(16, 0.75f, true);
+        recentes.put("Ana", "ana@exemplo.com");
+        recentes.put("Bia", "bia@exemplo.com");
+        recentes.put("Caio", "caio@exemplo.com");
+        String email = recentes.get("Bia");
+        System.out.println("e-mail da Bia: " + email);
+        System.out.println("ordem de cadastro: " + recentes.keySet());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'e-mail da Bia: bia@exemplo.com\nordem de cadastro: [Ana, Caio, Bia]' },
+      correcao: `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Cadastros {
+    public static void main(String[] args) {
+        Map<String, String> recentes = new LinkedHashMap<>();
+        recentes.put("Ana", "ana@exemplo.com");
+        recentes.put("Bia", "bia@exemplo.com");
+        recentes.put("Caio", "caio@exemplo.com");
+        String email = recentes.get("Bia");
+        System.out.println("e-mail da Bia: " + email);
+        System.out.println("ordem de cadastro: " + recentes.keySet());
+    }
+}`,
+      saidaCorrigida: 'e-mail da Bia: bia@exemplo.com\nordem de cadastro: [Ana, Bia, Caio]',
+      dica: 'O terceiro argumento do construtor de `LinkedHashMap` muda o que a ordem de iteração representa. O que um `get` faz nesse modo?',
+      explicacao:
+        'Com `accessOrder` igual a `true`, o `LinkedHashMap` ordena pelo último **acesso**, e cada `get` move a chave para o fim: é o modo usado para caches LRU, provavelmente copiado de um. Para manter a ordem de cadastro, use o construtor comum, que segue a ordem de inserção e não muda com leituras.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t3-e03-q01',
@@ -188,6 +318,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`put` devolve o valor que estava associado à chave: nada na primeira vez, 1 na segunda. A chave continua uma só.',
+      dica: '`put` devolve o valor anterior, ou `null` se a chave era nova.',
     },
     {
       id: 'pleno-t3-e03-q02',
@@ -207,6 +338,7 @@ public class Teste {
 }`,
       resposta: '{a=3, b=1, n=2}',
       explicacao: '`merge` insere 1 na primeira ocorrência de cada letra e soma 1 nas seguintes. O `TreeMap` ordena as chaves.',
+      dica: '`merge` com `Integer::sum` conta; o `TreeMap` ordena as chaves.',
     },
     {
       id: 'pleno-t3-e03-q03',
@@ -226,6 +358,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`getOrDefault` só usa o padrão quando a chave não existe. "k" existe, associada a `null`, então o `null` é devolvido.',
+      dica: 'A chave existe, com valor `null`: o padrão só vale para chave ausente.',
     },
     {
       id: 'pleno-t3-e03-q04',
@@ -246,6 +379,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Para `putIfAbsent`, uma chave associada a `null` conta como ausente. O valor é gravado, e o retorno é o `null` que estava lá.',
+      dica: '`putIfAbsent` trata um valor `null` como ausência.',
     },
     {
       id: 'pleno-t3-e03-q05',
@@ -268,6 +402,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Quando a função de `merge`, `computeIfPresent` ou `compute` devolve `null`, a chave é removida. E `computeIfAbsent` com resultado `null` não insere nada.',
+      dica: 'Toda função que devolve `null` remove a chave, e `computeIfAbsent` com `null` não insere.',
     },
     {
       id: 'pleno-t3-e03-q06',
@@ -283,6 +418,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'O `TreeMap` é uma árvore rubro-negra ordenada pelas chaves, com operações O(log n). Comparar `null` com a ordem natural é impossível, daí a exceção.',
+      dica: 'O `TreeMap` compara as chaves.',
     },
     {
       id: 'pleno-t3-e03-q07',
@@ -307,6 +443,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'IllegalArgumentException', saida: 'início' },
       explicacao: 'Como `Set.of`, `Map.of` trata repetição como erro. Com `put` num `HashMap`, o segundo valor simplesmente substituiria o primeiro.',
+      dica: '`Map.of` recusa chaves repetidas.',
     },
     {
       id: 'pleno-t3-e03-q08',
@@ -327,6 +464,7 @@ public class Contador {
       respostas: ['merge'],
       saida: '{a=2, b=1}',
       explicacao: '`merge(chave, valor, função)` insere o valor se a chave é nova e, se não, guarda `função(antigo, valor)`.',
+      dica: 'É o método que recebe a chave, o valor e uma função de combinação.',
     },
     {
       id: 'pleno-t3-e03-q09',
@@ -346,6 +484,7 @@ public class Teste {
 }`,
       resposta: 8,
       explicacao: '`Map` não estende `Collection` e não tem `add`. Os pares entram com `put` e suas variações.',
+      dica: '`Map` não tem `add`.',
     },
     {
       id: 'pleno-t3-e03-q10',
@@ -369,6 +508,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`floorKey` dá a maior chave até 25; `ceilingEntry` devolve o par, impresso como `chave=valor`. `headMap(20)` exclui o 20, e `tailMap(20, false)` também.',
+      dica: '`floorKey` é a maior que não passa; `headMap` exclui o limite; `tailMap(k, false)` também.',
     },
     {
       id: 'pleno-t3-e03-q11',
@@ -398,6 +538,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com ordem de acesso, cada `get` leva a entrada para o fim. Depois de ler "a" e "b", a mais antiga é "c", descartada quando "d" faz o mapa passar de 3.',
+      dica: 'Com ordem de acesso, `get` leva a chave para o fim; o primeiro da fila é o mais antigo.',
     },
     {
       id: 'pleno-t3-e03-q12',
@@ -417,6 +558,7 @@ public class Teste {
 }`,
       resposta: '{3=[sol, lua, mar], 5=[terra]}',
       explicacao: '`computeIfAbsent` cria a lista só na primeira palavra de cada tamanho e devolve a lista existente nas seguintes.',
+      dica: '`computeIfAbsent` cria a lista na primeira vez e devolve a existente nas outras.',
     },
     {
       id: 'pleno-t3-e03-q13',
@@ -439,6 +581,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`values()` e `entrySet()` são visões do mapa: remover pela primeira remove os pares, e `setValue` pela segunda altera o valor guardado.',
+      dica: '`values()` é uma visão: remover dela remove os pares.',
     },
     {
       id: 'pleno-t3-e03-q14',
@@ -466,6 +609,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException', saida: '0' },
       explicacao: 'O `HashMap` aceita uma chave `null`, tratada à parte. O `TreeMap` precisa comparar a chave, e a ordem natural não compara `null`.',
+      dica: '`HashMap` aceita uma chave `null`; o `TreeMap` precisa compará-la.',
     },
     {
       id: 'pleno-t3-e03-q15',
@@ -480,6 +624,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O redimensionamento mantém as listas dos compartimentos curtas. Árvores só aparecem em compartimentos com muitas colisões, e descartar entradas é o comportamento opcional do `LinkedHashMap` com `removeEldestEntry`.',
+      dica: 'Passou de 75%: o array cresce.',
     },
   ],
 };

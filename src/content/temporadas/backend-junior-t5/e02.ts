@@ -206,6 +206,139 @@ public class Repositorios {
     comentarios:
       'Nenhuma classe implementa `ProdutoRepository`, e mesmo assim o objeto funciona: o `Proxy` cria, em tempo de execução, uma classe que implementa a interface e encaminha cada chamada ao mesmo `InvocationHandler`. A validação antes de criar o proxy é a mesma ideia que faz o Spring Data recusar `findByNomee` na inicialização: o erro aparece quando a aplicação sobe, e não quando um cliente chama a rota. O Spring Data faz isso com muito mais cuidado: analisa os nomes uma vez, guarda a consulta pronta de cada método, delega os métodos de `JpaRepository` à `SimpleJpaRepository` e trata os métodos de `Object`, como `toString` e `equals`, que este proxy simples não trata.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t5-e02-b01',
+      dificuldade: 1,
+      sintoma: 'A busca por "sem fio" não mostra o "Headset sem fio USB", que tem o termo no meio do nome: `findByNomeContainingIgnoreCase("sem fio"): [Mouse sem fio, Teclado sem fio]`.',
+      codigo: `import java.util.List;
+
+public class Contendo {
+    static boolean casa(String operador, String valor, String argumento) {
+        return switch (operador) {
+            case "Containing" -> valor.toLowerCase().endsWith(argumento.toLowerCase());
+            case "StartingWith" -> valor.toLowerCase().startsWith(argumento.toLowerCase());
+            default -> valor.equalsIgnoreCase(argumento);
+        };
+    }
+
+    public static void main(String[] args) {
+        List<String> nomes = List.of("Mouse sem fio", "Teclado sem fio", "Headset sem fio USB");
+        System.out.println("findByNomeContainingIgnoreCase(\\"sem fio\\"): " + nomes.stream().filter(n -> casa("Containing", n, "sem fio")).toList());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'findByNomeContainingIgnoreCase("sem fio"): [Mouse sem fio, Teclado sem fio]' },
+      correcao: `import java.util.List;
+
+public class Contendo {
+    static boolean casa(String operador, String valor, String argumento) {
+        return switch (operador) {
+            case "Containing" -> valor.toLowerCase().contains(argumento.toLowerCase());
+            case "StartingWith" -> valor.toLowerCase().startsWith(argumento.toLowerCase());
+            default -> valor.equalsIgnoreCase(argumento);
+        };
+    }
+
+    public static void main(String[] args) {
+        List<String> nomes = List.of("Mouse sem fio", "Teclado sem fio", "Headset sem fio USB");
+        System.out.println("findByNomeContainingIgnoreCase(\\"sem fio\\"): " + nomes.stream().filter(n -> casa("Containing", n, "sem fio")).toList());
+    }
+}`,
+      saidaCorrigida: 'findByNomeContainingIgnoreCase("sem fio"): [Mouse sem fio, Teclado sem fio, Headset sem fio USB]',
+      dica: '`Containing` quer dizer que o trecho aparece onde, no nome?',
+      explicacao:
+        '`Containing` vira `like \'%trecho%\'`: o trecho pode estar em qualquer posição. `endsWith` corresponde ao `EndingWith`, `like \'%trecho\'`, e só acha nomes que terminam com ele. Cada palavra-chave do nome do método tem um significado preciso.',
+    },
+    {
+      id: 'backend-junior-t5-e02-b02',
+      dificuldade: 2,
+      sintoma: 'Depois do reajuste geral de 10%, a tela de detalhe ainda mostra o preço antigo: `preço mostrado: 100.00, no banco: 110.00`.',
+      codigo: `import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+
+public class EmMassa {
+    record Produto(int id, BigDecimal preco) {}
+
+    static final Map<Integer, BigDecimal> TABELA = new HashMap<>(Map.of(1, new BigDecimal("50.00"), 2, new BigDecimal("100.00")));
+
+    static void reajustarTodos(BigDecimal fator) {
+        TABELA.replaceAll((id, preco) -> preco.multiply(fator).setScale(2));
+    }
+
+    public static void main(String[] args) {
+        Produto p = new Produto(2, TABELA.get(2));
+        reajustarTodos(new BigDecimal("1.10"));
+        System.out.println("preço mostrado: " + p.preco() + ", no banco: " + TABELA.get(2));
+    }
+}`,
+      linha: 17,
+      efeito: { tipo: 'saida', saida: 'preço mostrado: 100.00, no banco: 110.00' },
+      correcao: `import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+
+public class EmMassa {
+    record Produto(int id, BigDecimal preco) {}
+
+    static final Map<Integer, BigDecimal> TABELA = new HashMap<>(Map.of(1, new BigDecimal("50.00"), 2, new BigDecimal("100.00")));
+
+    static void reajustarTodos(BigDecimal fator) {
+        TABELA.replaceAll((id, preco) -> preco.multiply(fator).setScale(2));
+    }
+
+    public static void main(String[] args) {
+        Produto p = new Produto(2, TABELA.get(2));
+        reajustarTodos(new BigDecimal("1.10"));
+        System.out.println("preço mostrado: " + TABELA.get(p.id()) + ", no banco: " + TABELA.get(2));
+    }
+}`,
+      saidaCorrigida: 'preço mostrado: 110.00, no banco: 110.00',
+      dica: 'O objeto `p` foi lido antes ou depois do reajuste? O reajuste mexeu nele?',
+      explicacao:
+        'A atualização em massa, como um `@Modifying`, muda o banco direto e não passa pelos objetos já carregados: o `p` continua com o valor lido antes. Depois de uma atualização em massa, leia de novo o que vai mostrar, ou use `@Modifying(clearAutomatically = true)` para limpar o contexto.',
+    },
+    {
+      id: 'backend-junior-t5-e02-b03',
+      dificuldade: 3,
+      sintoma: 'A tela de resumo de produtos quebrou com `ClassCastException: class java.math.BigDecimal cannot be cast to class java.lang.String`.',
+      codigo: `import java.math.BigDecimal;
+import java.util.List;
+
+public class Projecao {
+    record ResumoProduto(String nome, BigDecimal preco) {}
+
+    public static void main(String[] args) {
+        List<Object[]> linhas = List.<Object[]>of(new Object[] {new BigDecimal("349.90"), "Teclado"}, new Object[] {new BigDecimal("129.90"), "Mouse"});
+        for (Object[] l : linhas) {
+            ResumoProduto r = new ResumoProduto((String) l[0], (BigDecimal) l[1]);
+            System.out.println(r);
+        }
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'excecao', nome: 'ClassCastException' },
+      correcao: `import java.math.BigDecimal;
+import java.util.List;
+
+public class Projecao {
+    record ResumoProduto(String nome, BigDecimal preco) {}
+
+    public static void main(String[] args) {
+        List<Object[]> linhas = List.<Object[]>of(new Object[] {new BigDecimal("349.90"), "Teclado"}, new Object[] {new BigDecimal("129.90"), "Mouse"});
+        for (Object[] l : linhas) {
+            ResumoProduto r = new ResumoProduto((String) l[1], (BigDecimal) l[0]);
+            System.out.println(r);
+        }
+    }
+}`,
+      saidaCorrigida: 'ResumoProduto[nome=Teclado, preco=349.90]\nResumoProduto[nome=Mouse, preco=129.90]',
+      dica: 'Em que ordem as colunas vêm em cada linha? E em que ordem o record pede os componentes?',
+      explicacao:
+        'A consulta devolve o preço na posição 0 e o nome na 1, e o código pegava as posições na ordem do record. Numa projeção com `select new ResumoProduto(...)`, o JPQL também precisa listar os campos na ordem do construtor; se não, a aplicação nem sobe. Projeções com nomes, ou records montados pelo próprio JPA, evitam contar posições.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t5-e02-q01',
@@ -220,6 +353,7 @@ public class Repositorios {
       ],
       resposta: 0,
       explicacao: 'Com eles, os métodos herdados ficam tipados: `findById(Long)` devolve `Optional<Pedido>`.',
+      dica: 'O primeiro é o que o repositório guarda; o segundo, o tipo da chave.',
     },
     {
       id: 'backend-junior-t5-e02-q02',
@@ -234,6 +368,7 @@ public class Repositorios {
       ],
       resposta: 0,
       explicacao: 'Na aula, o SQL foi `upper(p1_0.nome) like upper(?) escape \'\\\'`, com os caracteres especiais do valor escapados.',
+      dica: 'Containing vira um `like` com `%` dos dois lados, e IgnoreCase compara sem caixa.',
     },
     {
       id: 'backend-junior-t5-e02-q03',
@@ -248,6 +383,7 @@ public class Repositorios {
       ],
       resposta: 0,
       explicacao: 'O Spring Data analisa todos os métodos derivados ao criar o repositório, o que transforma o erro em falha de inicialização.',
+      dica: 'O Spring Data confere os nomes dos métodos na inicialização.',
     },
     {
       id: 'backend-junior-t5-e02-q04',
@@ -262,6 +398,7 @@ public class Repositorios {
       ],
       resposta: 0,
       explicacao: 'JPQL usa o nome da entidade e dos atributos Java. A segunda opção é SQL, que exigiria `nativeQuery = true`.',
+      dica: 'O JPQL fala de entidades e atributos, não de tabelas e colunas.',
     },
     {
       id: 'backend-junior-t5-e02-q05',
@@ -271,6 +408,7 @@ public class Repositorios {
       opcoes: ['`PageRequest.of(0, 20)`', '`PageRequest.of(1, 20)`', '`PageRequest.of(20, 1)`', '`PageRequest.of(20, 0)`'],
       resposta: 0,
       explicacao: 'O número da página começa em 0. A API, se quiser, pode mostrar páginas a partir de 1 e subtrair antes de chamar o repositório.',
+      dica: 'As páginas começam em 0.',
     },
     {
       id: 'backend-junior-t5-e02-q06',
@@ -285,6 +423,7 @@ public class Repositorios {
       ],
       resposta: 0,
       explicacao: 'Na aula, cada página gerou dois SQLs: a busca e o `count`. Contar milhões de linhas filtradas pode custar mais que buscar 20 delas.',
+      dica: 'Além da página, o `Page` faz mais uma consulta para o total.',
     },
     {
       id: 'backend-junior-t5-e02-q07',
@@ -299,6 +438,7 @@ public class Repositorios {
       ],
       resposta: 0,
       explicacao: 'O `save` decide pelo id: nulo é entidade nova. Com id preenchido, ele faz `merge`, com um `SELECT` antes.',
+      dica: 'Com o id nulo, o `save` sabe que a entidade é nova.',
     },
     {
       id: 'backend-junior-t5-e02-q08',
@@ -313,6 +453,7 @@ public class Repositorios {
       ],
       resposta: 0,
       explicacao: 'O contexto de persistência não sabe da atualização em massa. Recarregue a entidade, ou use `@Modifying(clearAutomatically = true)`, que limpa o contexto.',
+      dica: 'A atualização em massa não passa pelas entidades já carregadas.',
     },
     {
       id: 'backend-junior-t5-e02-q09',
@@ -328,6 +469,7 @@ public class Repositorios {
       ],
       respostas: [0, 1],
       explicacao: 'Não há atributo `categoria`, `Igual` não é uma palavra do Spring Data, e `Preco_Valor` procuraria um atributo `valor` dentro de `preco`.',
+      dica: 'Só valem atributos que a entidade tem, com as palavras-chave do Spring Data.',
     },
     {
       id: 'backend-junior-t5-e02-q10',
@@ -352,6 +494,7 @@ public class Repositorios {
 }`,
       resposta: 'status = ?1 and preco > ?2',
       explicacao: 'Cada trecho entre `And` vira uma condição, e os parâmetros do método são ligados na ordem: o primeiro ao status, o segundo ao preço.',
+      dica: 'Cada condição vira o atributo com inicial minúscula e um parâmetro numerado.',
     },
     {
       id: 'backend-junior-t5-e02-q11',
@@ -375,6 +518,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O proxy implementa a interface em tempo de execução, e toda chamada vai para o *handler*, que recebe o `Method` e os argumentos. É a base dos repositórios do Spring Data.',
+      dica: 'Siga a análise do nome feita pelo programa.',
     },
     {
       id: 'backend-junior-t5-e02-q12',
@@ -389,6 +533,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Menos dados trafegam, e o Hibernate não precisa guardar fotografias de 5.000 entidades para comparar no fim da transação.',
+      dica: 'Compare o que viaja do banco e o que entra no contexto de persistência.',
     },
     {
       id: 'backend-junior-t5-e02-q13',
@@ -403,6 +548,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Um `count(*) > 0` contaria todas as linhas que casam. O `exists` só precisa de uma.',
+      dica: 'Para saber se existe, basta achar uma linha.',
     },
     {
       id: 'backend-junior-t5-e02-q14',
@@ -417,6 +563,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A implementação padrão, `SimpleJpaRepository`, é anotada com `@Transactional(readOnly = true)`, e os métodos de escrita sobrescrevem isso.',
+      dica: 'As buscas herdadas rodam em transações próprias, de um tipo específico.',
     },
     {
       id: 'backend-junior-t5-e02-q15',
@@ -431,6 +578,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Consultas derivadas são ótimas para casos simples. Quando o nome vira uma frase, a consulta escrita fica mais legível e mais fácil de mudar.',
+      dica: 'Um nome desse tamanho pede outra forma de escrever a consulta.',
     },
   ],
 };

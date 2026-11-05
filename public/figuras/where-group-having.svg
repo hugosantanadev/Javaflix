@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">O caminho das linhas numa consulta com agrupamento: seis pedidos entram; o WHERE status diferente de CANCELADO descarta uma linha; o GROUP BY cliente forma três grupos, Ana com dois pedidos, Bruno com dois e Carla com um; o HAVING COUNT maior que 1 descarta o grupo da Carla; o SELECT devolve uma linha por grupo restante</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700" text-anchor="middle">
+    <text x="85" y="36" fill="#f3eee7">linhas</text>
+    <text x="250" y="36" fill="#ff7a1a">WHERE</text>
+    <text x="420" y="36" fill="#f2c75c">GROUP BY</text>
+    <text x="580" y="36" fill="#ff7a1a">HAVING</text>
+    <text x="705" y="36" fill="#4fd68b">SELECT</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="30" y="50" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="40" y="65" fill="#bdb5aa">Ana PAGO</text>
+    <rect x="30" y="76" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="40" y="91" fill="#bdb5aa">Ana ENTREGUE</text>
+    <rect x="30" y="102" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="40" y="117" fill="#bdb5aa">Bruno PAGO</text>
+    <rect x="30" y="128" width="110" height="22" rx="3" fill="#26170c" stroke="#ff7a1a"/><text x="40" y="143" fill="#ff7a1a">Bruno CANCEL.</text>
+    <rect x="30" y="154" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="40" y="169" fill="#bdb5aa">Bruno PAGO</text>
+    <rect x="30" y="180" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="40" y="195" fill="#bdb5aa">Carla PAGO</text>
+
+    <rect x="195" y="50" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="205" y="65" fill="#bdb5aa">Ana PAGO</text>
+    <rect x="195" y="76" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="205" y="91" fill="#bdb5aa">Ana ENTREGUE</text>
+    <rect x="195" y="102" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="205" y="117" fill="#bdb5aa">Bruno PAGO</text>
+    <rect x="195" y="128" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="205" y="143" fill="#bdb5aa">Bruno PAGO</text>
+    <rect x="195" y="154" width="110" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="205" y="169" fill="#bdb5aa">Carla PAGO</text>
+
+    <rect x="360" y="50" width="120" height="48" rx="4" fill="#2a2516" stroke="#f2c75c"/><text x="372" y="70" fill="#f2c75c">Ana</text><text x="372" y="88" fill="#bdb5aa">2 pedidos</text>
+    <rect x="360" y="104" width="120" height="48" rx="4" fill="#2a2516" stroke="#f2c75c"/><text x="372" y="124" fill="#f2c75c">Bruno</text><text x="372" y="142" fill="#bdb5aa">2 pedidos</text>
+    <rect x="360" y="158" width="120" height="48" rx="4" fill="#2a2516" stroke="#f2c75c"/><text x="372" y="178" fill="#f2c75c">Carla</text><text x="372" y="196" fill="#bdb5aa">1 pedido</text>
+
+    <rect x="525" y="50" width="110" height="48" rx="4" fill="#2a2516" stroke="#f2c75c"/><text x="537" y="70" fill="#f2c75c">Ana</text><text x="537" y="88" fill="#bdb5aa">2</text>
+    <rect x="525" y="104" width="110" height="48" rx="4" fill="#2a2516" stroke="#f2c75c"/><text x="537" y="124" fill="#f2c75c">Bruno</text><text x="537" y="142" fill="#bdb5aa">2</text>
+    <rect x="525" y="158" width="110" height="48" rx="4" fill="#13110f" stroke="#43403a" stroke-dasharray="3 3"/><text x="537" y="178" fill="#6b645b">Carla</text><text x="537" y="196" fill="#6b645b">1</text>
+
+    <rect x="665" y="64" width="80" height="22" rx="3" fill="#13221a" stroke="#4fd68b"/><text x="673" y="79" fill="#4fd68b">Ana 2</text>
+    <rect x="665" y="118" width="80" height="22" rx="3" fill="#13221a" stroke="#4fd68b"/><text x="673" y="133" fill="#4fd68b">Bruno 2</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.4" fill="none" marker-end="url(#a)">
+    <path d="M144 120 L190 120"/>
+    <path d="M309 120 L355 120"/>
+    <path d="M484 120 L520 120"/>
+    <path d="M638 100 L661 100"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <text x="30" y="240">WHERE status &lt;&gt; 'CANCELADO' tira linhas, antes de agrupar; HAVING COUNT(*) &gt; 1 tira grupos, depois.</text>
+    <text x="30" y="262">Por isso uma agregação, como COUNT(*), só pode aparecer no HAVING: no WHERE, os grupos ainda não existem.</text>
+  </g>
+</svg>

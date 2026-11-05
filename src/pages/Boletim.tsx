@@ -35,7 +35,7 @@ export function Boletim() {
     <div className="pagina boletim">
       <h1 className="titulo-pagina">Boletim</h1>
       <p className="subtitulo-pagina">
-        Média {MEDIA_APROVACAO} aprova a temporada: exercícios 30%, desafios 20% e prova 50%. Por enquanto vale para o cargo Estagiário.
+        Média {MEDIA_APROVACAO} aprova a temporada: exercícios 30%, desafios 20% e prova 50%. Por enquanto vale do Aprendiz ao Júnior.
       </p>
 
       <div className="numeros">

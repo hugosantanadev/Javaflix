@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Period e Duration lado a lado: Period, como P1Y2M3D, guarda três números independentes, 1 ano, 2 meses e 3 dias, conta como um calendário e combina com LocalDate e LocalDateTime; Duration, como PT8H35M, guarda um total de 30.900 segundos mais nanossegundos, conta como um cronômetro e combina com LocalTime, LocalDateTime e Instant; somar a combinação errada compila e lança UnsupportedTemporalTypeException na execução</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700">
+    <text x="20" y="32" fill="#ff7a1a">Period: um calendário</text>
+    <text x="400" y="32" fill="#4fd68b">Duration: um cronômetro</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <text x="20" y="62" fill="#f3eee7">P1Y2M3D</text>
+    <rect x="20" y="76" width="100" height="44" rx="6" fill="#26170c" stroke="#ff7a1a"/><text x="38" y="104" fill="#f3eee7">1 ano</text>
+    <rect x="130" y="76" width="110" height="44" rx="6" fill="#26170c" stroke="#ff7a1a"/><text x="146" y="104" fill="#f3eee7">2 meses</text>
+    <rect x="250" y="76" width="100" height="44" rx="6" fill="#26170c" stroke="#ff7a1a"/><text x="266" y="104" fill="#f3eee7">3 dias</text>
+
+    <text x="400" y="62" fill="#f3eee7">PT8H35M</text>
+    <rect x="400" y="76" width="200" height="44" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="416" y="104" fill="#f3eee7">30.900 segundos</text>
+    <rect x="610" y="76" width="130" height="44" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="624" y="104" fill="#f3eee7">+ 0 nanos</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">
+    <text x="20" y="146">três campos independentes</text>
+    <text x="20" y="164">um mês é um mês, com 28 ou 31 dias</text>
+    <text x="400" y="146">um total de segundos</text>
+    <text x="400" y="164">um dia é sempre 86.400 segundos</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <text x="20" y="206" fill="#4fd68b">LocalDate, LocalDateTime</text>
+    <text x="20" y="228" fill="#db5c5c">LocalTime: exceção na execução</text>
+    <text x="400" y="206" fill="#4fd68b">LocalTime, LocalDateTime, Instant</text>
+    <text x="400" y="228" fill="#db5c5c">LocalDate: exceção na execução</text>
+  </g>
+  <rect x="20" y="252" width="720" height="44" rx="8" fill="#1b1916" stroke="#2b2824"/>
+  <text x="34" y="279" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">O plus recebe a interface TemporalAmount: a combinação errada compila e lança UnsupportedTemporalTypeException.</text>
+</svg>

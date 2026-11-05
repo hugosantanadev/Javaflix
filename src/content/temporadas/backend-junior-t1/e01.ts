@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Um arquivo já commitado continua rastreado depois de entrar no `.gitignore`; é preciso `git rm --cached`.',
     'Uma senha que chegou a ser commitada deve ser trocada, mesmo que o commit seja apagado.',
   ],
+  ia: {
+    uso:
+      'Para Git, a IA é ótima em duas coisas: explicar o que um comando vai fazer antes de você rodá-lo e montar o comando certo para uma situação que você descreve ("tirei um arquivo da preparação por engano"). O risco está em comandos destrutivos sugeridos com naturalidade, como `git reset --hard` ou `git push --force`, que apagam trabalho.',
+    pedido:
+      'Sou iniciante em Git, no Windows com Git Bash, num repositório local que ainda não foi enviado para nenhum servidor.\n<cole aqui a saída do git status e do git log --oneline>\n- Explique o estado de cada arquivo.\n- Diga o comando para tirar o .env da área de preparação sem apagar o arquivo, e o que pôr no .gitignore.\n- Avise se algum comando sugerido apaga mudanças sem volta, e prefira os que não apagam.\n- Diga como confiro com git status que deu certo.',
+    erros: [
+      'Sugere `git reset --hard` para "desfazer", sem avisar que apaga as mudanças não commitadas.',
+      'Usa o antigo `git checkout -- arquivo` no lugar de `git restore`, e confunde os dois sentidos do `checkout`.',
+      'Propõe `git commit --amend` em commits que já foram enviados ao servidor.',
+      'Esquece que um arquivo já rastreado continua sendo versionado depois de entrar no `.gitignore`.',
+    ],
+    conferir: [
+      'Rode `git status` antes e depois de cada comando sugerido e compare.',
+      'Para comandos que apagam algo, faça um commit ou um `git stash` antes de testar.',
+      'Leia a ajuda do próprio Git: `git help restore` mostra cada opção.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Pro Git: Gravando Alterações no Repositório',
@@ -158,6 +175,133 @@ public class HashCommit {
     comentarios:
       'O hash do commit não é sorteado: é o SHA-1 do texto do próprio commit, que inclui o hash da árvore e o do commit pai. Trocar uma letra da mensagem dá um hash completamente diferente, e, como o próximo commit guarda este hash como `parent`, toda a cadeia seguinte mudaria também. É por isso que reescrever um commit antigo, assunto do episódio de rebase, sempre cria commits novos.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t1-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O verificador de integridade da equipe diz que o arquivo com "Promoção" foi alterado, mas o Git diz que não. O programa imprime `Promoção: e51590a`, e o `git hash-object` mostra `42ee765`.',
+      codigo: `import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
+
+public class Integridade {
+    static String hashDeBlob(String conteudo) throws Exception {
+        byte[] dados = conteudo.getBytes(StandardCharsets.UTF_8);
+        String cabecalho = "blob " + conteudo.length() + "\\0";
+        MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+        sha1.update(cabecalho.getBytes(StandardCharsets.UTF_8));
+        sha1.update(dados);
+        return HexFormat.of().formatHex(sha1.digest()).substring(0, 7);
+    }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println("Promoção: " + hashDeBlob("Promoção\\n"));
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'Promoção: e51590a' },
+      correcao: `import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
+
+public class Integridade {
+    static String hashDeBlob(String conteudo) throws Exception {
+        byte[] dados = conteudo.getBytes(StandardCharsets.UTF_8);
+        String cabecalho = "blob " + dados.length + "\\0";
+        MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+        sha1.update(cabecalho.getBytes(StandardCharsets.UTF_8));
+        sha1.update(dados);
+        return HexFormat.of().formatHex(sha1.digest()).substring(0, 7);
+    }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println("Promoção: " + hashDeBlob("Promoção\\n"));
+    }
+}`,
+      saidaCorrigida: 'Promoção: 42ee765',
+      dica: 'Com "Loja Javaflix" o hash batia. O que "Promoção" tem de diferente?',
+      explicacao:
+        'O cabeçalho do Git leva o tamanho em **bytes**. `ç` e `ã` ocupam 2 bytes cada em UTF-8, então "Promoção\\n" tem 9 caracteres e 11 bytes. Com texto só em ASCII as duas contas coincidem, e o erro passa despercebido nos testes.',
+    },
+    {
+      id: 'backend-junior-t1-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O script que lista o que falta preparar antes do commit mostra `não preparados: [App.java]`, mas o `App.java` já estava preparado, e o `README.md`, que não estava, ficou de fora.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Pendentes {
+    public static void main(String[] args) {
+        List<String> status = List.of(" M README.md", "M  App.java", "?? Pedido.java");
+        List<String> naoPreparados = new ArrayList<>();
+        for (String linha : status) {
+            if (linha.charAt(0) == 'M') {
+                naoPreparados.add(linha.substring(3));
+            }
+        }
+        System.out.println("não preparados: " + naoPreparados);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'não preparados: [App.java]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Pendentes {
+    public static void main(String[] args) {
+        List<String> status = List.of(" M README.md", "M  App.java", "?? Pedido.java");
+        List<String> naoPreparados = new ArrayList<>();
+        for (String linha : status) {
+            if (linha.charAt(1) == 'M') {
+                naoPreparados.add(linha.substring(3));
+            }
+        }
+        System.out.println("não preparados: " + naoPreparados);
+    }
+}`,
+      saidaCorrigida: 'não preparados: [README.md]',
+      dica: 'O `git status --short` tem duas colunas. Qual delas fala do diretório de trabalho?',
+      explicacao:
+        'A primeira coluna é a área de preparação; a segunda, o diretório de trabalho. Uma mudança ainda não preparada aparece na segunda: ` M`. O script lia a coluna errada e listava justamente o arquivo que já estava pronto.',
+    },
+    {
+      id: 'backend-junior-t1-e01-b03',
+      dificuldade: 3,
+      sintoma: 'O empacotador que respeita o `.gitignore` deixou de fora o `targets.md`, a documentação das metas do time. Ele imprime `ignorados: [target/App.class, targets.md]`.',
+      codigo: `import java.util.List;
+
+public class Ignorados {
+    static boolean ignorado(String caminho) {
+        if (caminho.endsWith(".class")) return true;
+        return caminho.startsWith("target");
+    }
+
+    public static void main(String[] args) {
+        List<String> arquivos = List.of("target/App.class", "targets.md", "src/App.java");
+        System.out.println("ignorados: " + arquivos.stream().filter(Ignorados::ignorado).toList());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'ignorados: [target/App.class, targets.md]' },
+      correcao: `import java.util.List;
+
+public class Ignorados {
+    static boolean ignorado(String caminho) {
+        if (caminho.endsWith(".class")) return true;
+        return caminho.startsWith("target/");
+    }
+
+    public static void main(String[] args) {
+        List<String> arquivos = List.of("target/App.class", "targets.md", "src/App.java");
+        System.out.println("ignorados: " + arquivos.stream().filter(Ignorados::ignorado).toList());
+    }
+}`,
+      saidaCorrigida: 'ignorados: [target/App.class]',
+      dica: 'No `.gitignore`, a regra é `target/`, com a barra. O que muda sem ela?',
+      explicacao:
+        'A barra final quer dizer "a pasta target", e o prefixo sem barra pega qualquer caminho que comece com essas letras. No próprio Git, `target/` só casa com pastas; um teste com um nome parecido, como `targets.md`, é o que pega esse erro.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t1-e01-q01',
@@ -172,6 +316,7 @@ public class HashCommit {
       ],
       resposta: 0,
       explicacao: 'O histórico só recebe a mudança no `git commit`, e o servidor, só no `git push`.',
+      dica: 'O `add` não grava o histórico: ele escolhe o que vai entrar no próximo commit.',
     },
     {
       id: 'backend-junior-t1-e01-q02',
@@ -186,6 +331,7 @@ public class HashCommit {
       ],
       resposta: 0,
       explicacao: '`??` indica um arquivo não rastreado. Depois de um `git add`, ele apareceria como `A `.',
+      dica: '`??` aparece para arquivos que o Git vê, mas nunca recebeu num `add`.',
     },
     {
       id: 'backend-junior-t1-e01-q03',
@@ -200,6 +346,7 @@ public class HashCommit {
       ],
       resposta: 0,
       explicacao: 'A primeira coluna é a área de preparação e a segunda, o diretório de trabalho. `MM` significaria as duas coisas.',
+      dica: 'A primeira coluna é a área de preparação; a segunda, o diretório de trabalho.',
     },
     {
       id: 'backend-junior-t1-e01-q04',
@@ -209,6 +356,7 @@ public class HashCommit {
       opcoes: ['`target/`', '`*.class`', '`.env`', '`src/`', '`pom.xml`'],
       respostas: [0, 1, 2],
       explicacao: 'Saídas do build e arquivos com segredos ficam de fora. O código-fonte e o `pom.xml` são justamente o que precisa ser versionado.',
+      dica: 'O que o build gera e o que tem segredo fica fora; o código-fonte e a configuração do build ficam.',
     },
     {
       id: 'backend-junior-t1-e01-q05',
@@ -223,6 +371,7 @@ public class HashCommit {
       ],
       resposta: 0,
       explicacao: '`git diff` compara o diretório de trabalho com a área de preparação. A primeira edição apareceria em `git diff --staged`.',
+      dica: 'Sem opções, o `git diff` compara o diretório de trabalho com a área de preparação.',
     },
     {
       id: 'backend-junior-t1-e01-q06',
@@ -232,6 +381,7 @@ public class HashCommit {
       opcoes: ['`git restore --staged .env`', '`git restore .env`', '`git rm .env`', '`git commit --amend`'],
       resposta: 0,
       explicacao: 'Sem `--staged`, o `restore` descartaria o conteúdo do arquivo; o `rm` o apagaria. Depois, acrescente o arquivo ao `.gitignore`.',
+      dica: 'Você quer tirar da preparação, mas manter o arquivo como está no disco.',
     },
     {
       id: 'backend-junior-t1-e01-q07',
@@ -259,6 +409,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O mesmo conteúdo sempre dá o mesmo hash; um byte a mais, um hash diferente. O SHA-1 tem 20 bytes, que viram 40 dígitos hexadecimais.',
+      dica: 'O hash depende só do conteúdo: textos iguais dão o mesmo hash, e o SHA-1 em hexadecimal tem 40 dígitos.',
     },
     {
       id: 'backend-junior-t1-e01-q08',
@@ -277,6 +428,7 @@ public class Algoritmo {
       respostas: ['SHA-1'],
       saida: '40',
       explicacao: 'O Git identifica objetos pelo SHA-1, de 160 bits. Versões recentes também aceitam repositórios com SHA-256, de 64 dígitos.',
+      dica: 'É o algoritmo de 160 bits que aparece na aula, escrito com hífen.',
     },
     {
       id: 'backend-junior-t1-e01-q09',
@@ -291,6 +443,7 @@ public class Algoritmo {
       ],
       resposta: 0,
       explicacao: 'Reescrever um commit compartilhado obriga um envio forçado e bagunça o trabalho dos colegas. Um commit novo de correção é o caminho seguro.',
+      dica: 'Mudar a mensagem muda o conteúdo do objeto commit. O que acontece com o hash dele?',
     },
     {
       id: 'backend-junior-t1-e01-q10',
@@ -305,6 +458,7 @@ public class Algoritmo {
       ],
       resposta: 0,
       explicacao: 'Os dois criam o arquivo se ele não existir. A diferença está no que acontece com o conteúdo anterior.',
+      dica: 'Um sinal de maior substitui; dois acrescentam.',
     },
     {
       id: 'backend-junior-t1-e01-q11',
@@ -314,6 +468,7 @@ public class Algoritmo {
       opcoes: ['Blob', 'Árvore (tree)', 'Commit', 'Diff', 'Pull request'],
       respostas: [0, 1, 2],
       explicacao: 'O Git guarda fotografias completas, não diferenças: o `diff` é calculado na hora. Pull requests existem no GitHub, fora do Git.',
+      dica: 'Os três tipos da seção "Por baixo dos panos": conteúdo, pastas e fotografias do projeto.',
     },
     {
       id: 'backend-junior-t1-e01-q12',
@@ -328,6 +483,7 @@ public class Algoritmo {
       ],
       resposta: 0,
       explicacao: 'Uma linha curta, no imperativo, dizendo o que muda, com o tipo da mudança no padrão Conventional Commits.',
+      dica: 'Resumo curto, no imperativo, com o tipo da mudança e o que ela faz.',
     },
     {
       id: 'backend-junior-t1-e01-q13',
@@ -342,6 +498,7 @@ public class Algoritmo {
       ],
       resposta: 0,
       explicacao: 'Commits antigos guardam o conteúdo para sempre, e qualquer clone tem uma cópia. A senha deve ser considerada vazada.',
+      dica: 'Apagar o arquivo num commit novo não apaga os commits anteriores.',
     },
     {
       id: 'backend-junior-t1-e01-q14',
@@ -356,6 +513,7 @@ public class Algoritmo {
       ],
       resposta: 0,
       explicacao: 'Cada commit aponta para árvores e blobs pelo hash. Conteúdo repetido aponta para o mesmo objeto.',
+      dica: 'O que identifica um blob: o nome do arquivo ou o conteúdo dele?',
     },
     {
       id: 'backend-junior-t1-e01-q15',
@@ -370,6 +528,7 @@ public class Algoritmo {
       ],
       resposta: 0,
       explicacao: 'O commit não guarda diferenças nem o nome da branch: aponta para uma árvore completa e para o pai, e as branches apontam para ele.',
+      dica: 'Lembre da saída do `git cat-file -p HEAD` na aula: tree, parent, author, committer e a mensagem.',
     },
   ],
 };

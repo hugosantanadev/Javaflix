@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Acessores sobrescritos precisam ser `public`, com o mesmo retorno e sem `throws`.',
     '`equals`, `hashCode` e `toString` gerados leem os campos, não os acessores sobrescritos.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a escrever a validação de um record e a decidir o que vai no construtor compacto. Confira sempre que ele só reatribui parâmetros e que as cópias defensivas não se perdem.',
+    pedido:
+      'Escreva o construtor compacto deste record Java 21.\n<cole o record aqui>\n- Valide cada componente e lance IllegalArgumentException com uma mensagem que diga o valor recebido.\n- Normalize textos (trim, maiúsculas) reatribuindo o parâmetro, sem this.campo.\n- Faça cópia imutável de listas com List.copyOf.\n- Diga se o toString padrão expõe algum dado sensível.',
+    erros: [
+      'Escreve `this.campo = ...` dentro do construtor compacto.',
+      'Faz a cópia defensiva numa variável nova e não reatribui o parâmetro.',
+      'Normaliza o valor antes de conferir se ele é `null`.',
+    ],
+    conferir: [
+      'Crie o record com dados inválidos e confira a exceção e a mensagem.',
+      'Altere a lista original depois de criar o record e veja se ele muda.',
+      'Imprima o record e confira que nenhum dado sensível aparece.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Records, Using the Compact Constructor',
@@ -146,6 +162,128 @@ public class Loja {
     comentarios:
       'Todos os caminhos de criação, inclusive o construtor sem tags e o `comDesconto`, passam pelo construtor compacto: não existe produto inválido nem com nome sujo. A lista de tags é copiada e imutável, então o record fica realmente imutável. 3490 com 10% de desconto dá 3141 centavos, com a divisão inteira descartando a fração.',
   },
+  bugs: [
+    {
+      id: 'junior-t5-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: cannot assign a value to final variable min`.',
+      codigo: `record Faixa(int min, int max) {
+    Faixa {
+        if (min > max) throw new IllegalArgumentException("faixa invertida");
+        this.min = Math.max(min, 0);
+    }
+}
+
+public class Filtro {
+    public static void main(String[] args) {
+        System.out.println(new Faixa(-5, 10));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `record Faixa(int min, int max) {
+    Faixa {
+        if (min > max) throw new IllegalArgumentException("faixa invertida");
+        min = Math.max(min, 0);
+    }
+}
+
+public class Filtro {
+    public static void main(String[] args) {
+        System.out.println(new Faixa(-5, 10));
+    }
+}`,
+      saidaCorrigida: 'Faixa[min=0, max=10]',
+      dica: 'No construtor compacto, quem atribui os campos, e quando?',
+      explicacao: 'O compacto atribui os campos sozinho, no fim, com os valores dos parâmetros. Atribuir `this.min` antes faria o campo `final` receber valor duas vezes. Para mudar o que será guardado, reatribua o parâmetro: `min = ...`.',
+    },
+    {
+      id: 'junior-t5-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O pedido foi criado com 2 itens, mas depois aparece com 3, sem ninguém chamar método nenhum do record.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+record Pedido(List<String> itens) {
+    Pedido {
+        var copia = List.copyOf(itens);
+    }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        List<String> carrinho = new ArrayList<>(List.of("pão", "leite"));
+        Pedido p = new Pedido(carrinho);
+        carrinho.add("café");
+        System.out.println(p.itens().size());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: '3' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+record Pedido(List<String> itens) {
+    Pedido {
+        itens = List.copyOf(itens);
+    }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        List<String> carrinho = new ArrayList<>(List.of("pão", "leite"));
+        Pedido p = new Pedido(carrinho);
+        carrinho.add("café");
+        System.out.println(p.itens().size());
+    }
+}`,
+      saidaCorrigida: '2',
+      dica: 'A cópia foi feita. Mas qual valor o compilador usa na atribuição automática do campo `itens`?',
+      explicacao: 'A atribuição automática usa o parâmetro `itens`, e a cópia ficou numa variável local que ninguém lê. O campo guardou a lista original, que o `main` continuou alterando. Reatribua o próprio parâmetro: `itens = List.copyOf(itens);`.',
+    },
+    {
+      id: 'junior-t5-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O cadastro esperava `IllegalArgumentException` para e-mail vazio, mas recebe `NullPointerException` de dentro do construtor do record.',
+      codigo: `record Email(String endereco) {
+    Email {
+        endereco = endereco.trim().toLowerCase();
+        if (endereco == null || !endereco.contains("@")) throw new IllegalArgumentException("e-mail obrigatório");
+    }
+}
+
+public class Cadastro {
+    public static void main(String[] args) {
+        try {
+            new Email(null);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `record Email(String endereco) {
+    Email {
+        if (endereco == null || !endereco.contains("@")) throw new IllegalArgumentException("e-mail obrigatório");
+        endereco = endereco.trim().toLowerCase();
+    }
+}
+
+public class Cadastro {
+    public static void main(String[] args) {
+        try {
+            new Email(null);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}`,
+      saidaCorrigida: 'e-mail obrigatório',
+      dica: 'Qual linha do compacto roda primeiro? Ela funciona com `null`?',
+      explicacao: 'A normalização chama `trim()` num valor que ainda não foi validado, e com `null` isso lança `NullPointerException` antes do `if`. No construtor compacto, valide primeiro e normalize depois.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t5-e02-q01',
@@ -160,6 +298,7 @@ public class Loja {
       ],
       resposta: 0,
       explicacao: 'O compacto não repete a lista de parâmetros: ela já está no cabeçalho do record. `Ponto() { }` seria um construtor sem parâmetros, não canônico.',
+      dica: 'O compacto não repete a lista de parâmetros.',
     },
     {
       id: 'junior-t5-e02-q02',
@@ -176,6 +315,7 @@ Nome n = new Nome("  ana ");
 System.out.println("[" + n.valor() + "] " + n);`,
       resposta: '[ANA] Nome[valor=ANA]',
       explicacao: 'O compacto reatribui o parâmetro, e é esse valor normalizado que vai para o campo no fim. O `toString` mostra o campo.',
+      dica: 'O parâmetro é normalizado antes da atribuição automática.',
     },
     {
       id: 'junior-t5-e02-q03',
@@ -196,6 +336,7 @@ System.out.println("[" + n.valor() + "] " + n);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 3 },
       explicacao: 'No compacto, o certo é reatribuir o parâmetro: `if (x < 0) x = 0;`. O campo é `final` e será atribuído automaticamente depois.',
+      dica: 'No compacto, o campo é atribuído sozinho no fim. Pode ser atribuído antes?',
     },
     {
       id: 'junior-t5-e02-q04',
@@ -212,6 +353,7 @@ System.out.println("[" + n.valor() + "] " + n);`,
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Compacto com validação, canônico por extenso e construtor alternativo que delega são válidos. O canônico precisa usar os nomes dos componentes (`D` usou `y`), e acessores precisam ser `public`.',
+      dica: 'Outros construtores começam com `this(...)`; o canônico por extenso atribui todos os campos.',
     },
     {
       id: 'junior-t5-e02-q05',
@@ -233,6 +375,7 @@ System.out.println(a.anos() + b.anos());`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'IllegalArgumentException' },
       explicacao: 'O construtor compacto roda em todo `new`. Com 200, ele lança a exceção, e o record inválido nunca chega a existir.',
+      dica: 'A segunda idade passa da faixa permitida.',
     },
     {
       id: 'junior-t5-e02-q06',
@@ -259,6 +402,7 @@ public class Compras {
       respostas: ['Lista'],
       saida: '[arroz]',
       explicacao: 'O compacto usa só o nome do record. A cópia feita nele isola o record das mudanças na lista original.',
+      dica: 'O construtor compacto tem o nome do record.',
     },
     {
       id: 'junior-t5-e02-q07',
@@ -277,6 +421,7 @@ public class Compras {
 }`,
       resposta: 2,
       explicacao: 'Um construtor que não é o canônico precisa delegar com `this(...)` antes de qualquer coisa. O certo seria `Retangulo(double lado) { this(lado, lado); }`.',
+      dica: 'Um construtor que não é o canônico precisa delegar com `this(...)`.',
     },
     {
       id: 'junior-t5-e02-q08',
@@ -302,6 +447,7 @@ System.out.println(new Fracao(3, -4) + " " + new Fracao(-1, 2).equals(new Fracao
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O compacto normaliza o sinal para o numerador. Depois disso, (1, -2) vira (-1, 2), e os dois records têm os mesmos campos.',
+      dica: 'O sinal passa para o numerador; o `equals` compara os campos já normalizados.',
     },
     {
       id: 'junior-t5-e02-q09',
@@ -317,6 +463,7 @@ System.out.println(new Fracao(3, -4) + " " + new Fracao(-1, 2).equals(new Fracao
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: 'Um acessor declarado explicitamente substitui o gerado, que é `public`, e precisa manter esse acesso.',
+      dica: 'O acessor gerado é `public`. A sobrescrita pode fechar o acesso?',
     },
     {
       id: 'junior-t5-e02-q10',
@@ -332,6 +479,7 @@ System.out.println(new Fracao(3, -4) + " " + new Fracao(-1, 2).equals(new Fracao
 System.out.println(new Pixel(1, 2) + " " + new Pixel(3, 4, "azul").cor());`,
       resposta: 'Pixel[x=1, y=2, cor=preto] azul',
       explicacao: 'O construtor de dois parâmetros delega para o canônico, completando a cor com um valor padrão.',
+      dica: 'O construtor de dois parâmetros delega com a cor padrão.',
     },
     {
       id: 'junior-t5-e02-q11',
@@ -346,6 +494,7 @@ System.out.println(new Pixel(1, 2) + " " + new Pixel(3, 4, "azul").cor());`,
       ],
       resposta: 0,
       explicacao: 'O compilador acrescenta uma atribuição por componente depois do corpo. Por isso o corpo pode validar e normalizar os parâmetros antes.',
+      dica: 'As atribuições geradas vêm depois do seu código.',
     },
     {
       id: 'junior-t5-e02-q12',
@@ -371,6 +520,7 @@ System.out.println(a.valor() + " " + a.equals(b) + " " + a);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O acessor sobrescrito muda só o que ele devolve. O `equals` e o `toString` gerados leem os campos, que guardam "java" e "JAVA".',
+      dica: '`equals` e `toString` gerados leem o campo, não o acessor sobrescrito.',
     },
     {
       id: 'junior-t5-e02-q13',
@@ -386,6 +536,7 @@ System.out.println(a.valor() + " " + a.equals(b) + " " + a);`,
       ],
       respostas: [0, 1],
       explicacao: 'O compacto é o próprio construtor canônico, com os parâmetros implícitos. Construtores canônicos não podem ter `throws`.',
+      dica: 'Sem parênteses, e o parâmetro pode ser reatribuído.',
     },
     {
       id: 'junior-t5-e02-q14',
@@ -410,6 +561,7 @@ System.out.println(c + " " + c.senha().length());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `toString` sobrescrito esconde a senha nos logs, mas o acessor continua devolvendo o valor real, de 7 caracteres.',
+      dica: 'O `toString` esconde a senha, mas o acessor devolve o valor real.',
     },
     {
       id: 'junior-t5-e02-q15',
@@ -424,6 +576,7 @@ System.out.println(c + " " + c.senha().length());`,
       ],
       resposta: 0,
       explicacao: 'O compacto é uma forma curta de escrever o canônico. As atribuições geradas no fim usam os valores finais dos parâmetros.',
+      dica: 'O compacto vira um construtor comum com atribuições no fim.',
     },
   ],
 };

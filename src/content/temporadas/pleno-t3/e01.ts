@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`subList` é uma visão: alterá-la altera a lista original.',
     'Remover dentro de um for-each lança `ConcurrentModificationException`; use `Iterator.remove` ou `removeIf`.',
   ],
+  ia: {
+    uso:
+      'Com listas, a IA ajuda a escolher entre `ArrayList` e `LinkedList`, a explicar uma `ConcurrentModificationException` e a reescrever laços com `removeIf` e `replaceAll`. Ela erra nos detalhes que a prova cobra: a sobrecarga de `remove` em `List<Integer>`, o que `set` devolve e as diferenças entre `List.of` e `Arrays.asList`.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o trecho que manipula a lista>\n- Diga a saída exata e, para cada remove, se ele usa o índice ou o valor.\n- Aponte qualquer chamada que lance UnsupportedOperationException, NullPointerException ou ConcurrentModificationException, e em que linha.\n- Reescreva os laços que removem elementos usando removeIf.\n- Não troque as fábricas da lista nem mude o resultado esperado.',
+    erros: [
+      'Diz que `remove(1)` numa `List<Integer>` remove o valor 1, quando remove o índice 1.',
+      'Afirma que `set` devolve `void` ou `boolean`, quando devolve o elemento substituído.',
+      'Trata `Arrays.asList` como uma cópia independente do array, ou diz que `List.of` aceita `null`.',
+      'Remove elementos dentro de um for-each e garante que sempre sai `ConcurrentModificationException`.',
+    ],
+    conferir: [
+      'Rode o trecho e compare a saída com a resposta da IA.',
+      'Use `Ctrl+B` no `remove` para ver qual sobrecarga o compilador escolheu.',
+      'Teste o laço de remoção com dois elementos seguidos e com o penúltimo para remover.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Getting to Know the Collection Hierarchy',
@@ -179,6 +196,105 @@ public class Leituras {
     comentarios:
       'A cópia protege quem chamou o método e, de quebra, permite receber um `List.of`, que não aceitaria `removeIf`. A comparação com `equals` evita a armadilha de `==` entre `Integer`, que só funciona por acaso para valores pequenos, guardados em cache. No fim, as duas formas de `remove` mostram a diferença entre valor e posição.',
   },
+  bugs: [
+    {
+      id: 'pleno-t3-e01-b01',
+      dificuldade: 1,
+      sintoma: 'A lista de chamada da turma não compila: `cannot find symbol`, apontando o `length` no `for`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Chamada {
+    public static void main(String[] args) {
+        List<String> alunos = new ArrayList<>(List.of("Ana", "Bia", "Caio"));
+        for (int i = 0; i < alunos.length; i++) {
+            System.out.println((i + 1) + ". " + alunos.get(i));
+        }
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Chamada {
+    public static void main(String[] args) {
+        List<String> alunos = new ArrayList<>(List.of("Ana", "Bia", "Caio"));
+        for (int i = 0; i < alunos.size(); i++) {
+            System.out.println((i + 1) + ". " + alunos.get(i));
+        }
+    }
+}`,
+      saidaCorrigida: '1. Ana\n2. Bia\n3. Caio',
+      dica: '`length` é de array. Como uma `List` informa quantos elementos tem?',
+      explicacao:
+        'Arrays têm o campo `length`; listas têm o método `size()`. Quem converte um código de array para `List` costuma esquecer essa troca, e o compilador avisa que o símbolo `length` não existe. Melhor ainda, percorra com o for-each e deixe o índice de lado quando ele não for necessário.',
+    },
+    {
+      id: 'pleno-t3-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O cliente devolveu o produto de código 2, mas quem saiu do carrinho foi o de código 8: `itens no carrinho: [5, 2, 2]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Carrinho {
+    public static void main(String[] args) {
+        List<Integer> codigos = new ArrayList<>(List.of(5, 2, 8, 2));
+        int devolvido = 2;
+        codigos.remove(devolvido);
+        System.out.println("itens no carrinho: " + codigos);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'itens no carrinho: [5, 2, 2]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Carrinho {
+    public static void main(String[] args) {
+        List<Integer> codigos = new ArrayList<>(List.of(5, 2, 8, 2));
+        int devolvido = 2;
+        codigos.remove(Integer.valueOf(devolvido));
+        System.out.println("itens no carrinho: " + codigos);
+    }
+}`,
+      saidaCorrigida: 'itens no carrinho: [5, 8, 2]',
+      dica: '`devolvido` é um `int`. Qual sobrecarga de `remove` o compilador escolhe para um `int`?',
+      explicacao:
+        '`List` tem `remove(int indice)` e `remove(Object valor)`. Com um `int`, o compilador prefere a sobrecarga exata, sem autoboxing, e remove o elemento da **posição** 2, o 8. Para remover pelo valor, passe um objeto: `remove(Integer.valueOf(devolvido))`, que tira a primeira ocorrência do 2.',
+    },
+    {
+      id: 'pleno-t3-e01-b03',
+      dificuldade: 3,
+      sintoma: 'A rotina que tira os vencidos da prateleira deixou o pão vencido para trás, sem nenhuma exceção no log: `na prateleira: [arroz, pão vencido]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Prateleira {
+    public static void main(String[] args) {
+        List<String> estoque = new ArrayList<>(List.of("arroz", "leite vencido", "pão vencido"));
+        for (String item : estoque) if (item.contains("vencido")) estoque.remove(item);
+        System.out.println("na prateleira: " + estoque);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'na prateleira: [arroz, pão vencido]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Prateleira {
+    public static void main(String[] args) {
+        List<String> estoque = new ArrayList<>(List.of("arroz", "leite vencido", "pão vencido"));
+        estoque.removeIf(item -> item.contains("vencido"));
+        System.out.println("na prateleira: " + estoque);
+    }
+}`,
+      saidaCorrigida: 'na prateleira: [arroz]',
+      dica: 'Depois de remover o penúltimo elemento, o que `hasNext()` responde? O último chegou a ser visitado?',
+      explicacao:
+        'Remover dentro do for-each costuma lançar `ConcurrentModificationException`, mas não sempre. Ao remover o penúltimo, o tamanho cai para 2, o cursor do iterador já está em 2, e `hasNext()` devolve `false`: o laço termina sem visitar o último e sem conferir o contador de alterações. O *fail-fast* é só uma ajuda. Use `removeIf`, que remove com segurança todos os que passam no filtro.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t3-e01-q01',
@@ -199,6 +315,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`remove(1)` usa a sobrecarga do índice e tira o 1, que está na posição 1. Depois, `remove(Integer.valueOf(3))` tira o valor 3.',
+      dica: '`remove(1)` com `int` usa o índice; com `Integer.valueOf`, o valor.',
     },
     {
       id: 'pleno-t3-e01-q02',
@@ -218,6 +335,7 @@ public class Teste {
 }`,
       resposta: 'x[z, x, y, w]',
       explicacao: '`set` devolve o antigo, "x". Ele é inserido na posição 1, e `add(l.size(), ...)` equivale a acrescentar no fim.',
+      dica: '`set` devolve o elemento antigo, e `add(i, e)` empurra os seguintes.',
     },
     {
       id: 'pleno-t3-e01-q03',
@@ -243,6 +361,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedOperationException', saida: 'antes' },
       explicacao: 'O tipo é `List<String>`, que tem `add`, então compila. A lista de `List.of` recusa a alteração na execução.',
+      dica: '`List.of` cria uma lista que não muda, e o erro só aparece na execução.',
     },
     {
       id: 'pleno-t3-e01-q04',
@@ -258,6 +377,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'A lista é uma visão do array, com tamanho fixo: `set` escreve no array, e `add` lança `UnsupportedOperationException`. Quem rejeita `null` é `List.of`.',
+      dica: '`Arrays.asList` é uma visão de tamanho fixo do array.',
     },
     {
       id: 'pleno-t3-e01-q05',
@@ -279,6 +399,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Lista e array compartilham os mesmos elementos: a mudança no array aparece na lista, e a da lista aparece no array.',
+      dica: 'Lista e array compartilham os mesmos elementos.',
     },
     {
       id: 'pleno-t3-e01-q06',
@@ -307,6 +428,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ConcurrentModificationException', saida: 'a' },
       explicacao: 'A remoção muda o contador de modificações da lista, e o próximo `next()` do iterador do for-each percebe e lança a exceção.',
+      dica: 'Depois do `remove`, o próximo `next()` confere o contador de alterações.',
     },
     {
       id: 'pleno-t3-e01-q07',
@@ -336,6 +458,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Ao remover o penúltimo, o tamanho cai para 2, e o cursor do iterador já está em 2. `hasNext()` devolve `false`, o laço acaba sem chamar `next()` e a exceção não acontece. O "c" nem é visitado.',
+      dica: 'Remover o penúltimo faz o `hasNext()` devolver `false` antes do próximo `next()`.',
     },
     {
       id: 'pleno-t3-e01-q08',
@@ -354,6 +477,7 @@ public class Filtro {
       respostas: ['removeIf'],
       saida: '[Ana, Bia]',
       explicacao: '`removeIf` vem de `Collection` e recebe um `Predicate`. Ele remove com segurança, sem `ConcurrentModificationException`.',
+      dica: 'É o método de `Collection` que recebe um `Predicate`.',
     },
     {
       id: 'pleno-t3-e01-q09',
@@ -374,6 +498,7 @@ public class Teste {
 }`,
       resposta: 9,
       explicacao: '`set` devolve o elemento substituído, do tipo `String`, não um `boolean`. Quem devolve `boolean` é o `add(E)`.',
+      dica: 'O que `set` devolve?',
     },
     {
       id: 'pleno-t3-e01-q10',
@@ -394,6 +519,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O argumento do construtor é a capacidade inicial do array interno, não o tamanho. A lista nasce vazia.',
+      dica: 'O argumento do construtor é a capacidade, não o tamanho.',
     },
     {
       id: 'pleno-t3-e01-q11',
@@ -419,6 +545,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException', saida: 'true' },
       explicacao: '`Arrays.asList` aceita `null`. As coleções de `List.of` rejeitam `null` até em consultas, como `contains` e `indexOf`.',
+      dica: '`List.of` recusa `null` até em `contains`.',
     },
     {
       id: 'pleno-t3-e01-q12',
@@ -434,6 +561,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'O `ArrayList` calcula o endereço da posição no array; a `LinkedList` precisa percorrer os nós. As duas aceitam `null`, e a capacidade inicial não cria elementos.',
+      dica: 'Um array acessa qualquer posição direto; nós ligados precisam ser percorridos.',
     },
     {
       id: 'pleno-t3-e01-q13',
@@ -460,6 +588,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`subList(1, 4)` é uma visão das posições 1 a 3 da lista original. Trocar e remover pela visão muda a original.',
+      dica: 'A sublista é uma janela sobre a original.',
     },
     {
       id: 'pleno-t3-e01-q14',
@@ -476,6 +605,7 @@ public class Teste {
 }`,
       resposta: '02-1true',
       explicacao: 'A primeira ocorrência de "a" está em 0, a última em 2, e um valor ausente devolve `-1`. O `""` transforma o resto em concatenação.',
+      dica: '`indexOf` devolve `-1` quando o valor não existe.',
     },
     {
       id: 'pleno-t3-e01-q15',
@@ -500,6 +630,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: '`List` define o contrato; para criar o objeto é preciso uma classe concreta, como `ArrayList` ou `LinkedList`.',
+      dica: '`List` é uma interface.',
     },
   ],
 };

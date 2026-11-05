@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">As quatro formas de referência a método e a lambda que cada uma representa: Integer::parseInt é s -> Integer.parseInt(s); texto::length, com objeto específico, é () -> texto.length(), com texto avaliado na criação; String::startsWith, com um objeto qualquer do tipo, é (a, b) -> a.startsWith(b), em que o primeiro parâmetro vira o objeto; e ArrayList::new é () -> new ArrayList(); embaixo, a regra: em Tipo::metodoDeInstancia, o primeiro parâmetro da interface é quem recebe a chamada</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">
+    <text x="20" y="28">Referência</text>
+    <text x="280" y="28">Lambda equivalente</text>
+    <text x="560" y="28">Forma</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <rect x="20" y="40" width="720" height="44" rx="6" fill="#1b1916" stroke="#2b2824"/>
+    <text x="32" y="67" fill="#ff7a1a">Integer::parseInt</text>
+    <text x="280" y="67" fill="#f3eee7">s -&gt; Integer.parseInt(s)</text>
+
+    <rect x="20" y="94" width="720" height="44" rx="6" fill="#1b1916" stroke="#2b2824"/>
+    <text x="32" y="121" fill="#ff7a1a">texto::length</text>
+    <text x="280" y="121" fill="#f3eee7">() -&gt; texto.length()</text>
+
+    <rect x="20" y="148" width="720" height="44" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="32" y="175" fill="#ff7a1a">String::startsWith</text>
+    <text x="280" y="175"><tspan fill="#f2c75c">(a, b)</tspan><tspan fill="#f3eee7"> -&gt; </tspan><tspan fill="#f2c75c">a</tspan><tspan fill="#f3eee7">.startsWith(b)</tspan></text>
+
+    <rect x="20" y="202" width="720" height="44" rx="6" fill="#1b1916" stroke="#2b2824"/>
+    <text x="32" y="229" fill="#ff7a1a">ArrayList::new</text>
+    <text x="280" y="229" fill="#f3eee7">() -&gt; new ArrayList&lt;&gt;()</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">
+    <text x="560" y="67">método estático</text>
+    <text x="560" y="121">objeto específico</text>
+    <text x="560" y="175">objeto qualquer do tipo</text>
+    <text x="560" y="229">construtor</text>
+  </g>
+  <text x="20" y="276" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#f2c75c">Em Tipo::metodoDeInstancia, o primeiro parâmetro da interface é o objeto que recebe a chamada.</text>
+  <text x="20" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Em objeto::metodo, o objeto é avaliado uma vez, na criação: null lança exceção na hora.</text>
+</svg>

@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Na criação, os construtores rodam de cima para baixo: `Object`, depois a superclasse, depois a subclasse.',
     'Classes `final`, como `String`, não podem ser estendidas.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a desenhar uma hierarquia pequena e a explicar a ordem em que os construtores rodam. Use-a para revisar se uma relação é mesmo "é um", e não "tem um", antes de escrever o `extends`.',
+    pedido:
+      'Revise esta hierarquia de classes Java 21.\n<cole o código aqui>\n- Para cada extends, diga se a subclasse é mesmo um caso particular da superclasse, ou se composição serviria melhor.\n- Liste os campos protected e diga se poderiam ser private com um método de acesso.\n- Mostre a ordem exata de execução de construtores e inicializadores num new da classe mais baixa.',
+    erros: [
+      'Deixa todos os campos `protected` para as subclasses, quebrando o encapsulamento.',
+      'Gera o construtor da subclasse sem `super(...)` quando a superclasse exige argumentos.',
+      'Usa herança onde a relação é "tem um", como `Carro extends Motor`.',
+    ],
+    conferir: [
+      'Compile: o `super()` que falta aparece como "constructor ... cannot be applied to given types".',
+      'Imprima uma linha em cada construtor e inicializador para ver a ordem real.',
+      'Leia cada `extends` em voz alta como "todo X é um Y" e veja se a frase faz sentido.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Inheritance',
@@ -163,6 +179,168 @@ public class Empresa {
     comentarios:
       'A regra do salário vive num lugar só, e nenhum gerente escapa dela, porque o `super(...)` é obrigatório. Os campos `final` da superclasse são atribuídos no construtor dela, e a subclasse não consegue alterá-los, só lê-los, por serem `protected`. `super.descrever()` evita duplicar o formato da descrição: se ele mudar em `Funcionario`, muda para os gerentes também.',
   },
+  bugs: [
+    {
+      id: 'junior-t3-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: constructor Veiculo in class Veiculo cannot be applied to given types;`.',
+      codigo: `class Veiculo {
+    String placa;
+
+    Veiculo(String placa) {
+        this.placa = placa;
+    }
+}
+
+class Moto extends Veiculo {
+    Moto(String placa) { this.placa = placa; }
+}
+
+public class Garagem {
+    public static void main(String[] args) {
+        System.out.println(new Moto("ABC1D23").placa);
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `class Veiculo {
+    String placa;
+
+    Veiculo(String placa) {
+        this.placa = placa;
+    }
+}
+
+class Moto extends Veiculo {
+    Moto(String placa) { super(placa); }
+}
+
+public class Garagem {
+    public static void main(String[] args) {
+        System.out.println(new Moto("ABC1D23").placa);
+    }
+}`,
+      saidaCorrigida: 'ABC1D23',
+      dica: 'Que chamada o compilador coloca sozinho no início de todo construtor? Ela combina com algum construtor de `Veiculo`?',
+      explicacao: 'Sem `super(...)` explícito, o construtor de `Moto` começa com `super()`, e `Veiculo` só tem o construtor que recebe a placa. Repassar a placa com `super(placa)` resolve e ainda deixa `Veiculo` cuidar do próprio campo.',
+    },
+    {
+      id: 'junior-t3-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O gato foi criado com o nome "Mia", mas a apresentação imprime `Sou null`.',
+      codigo: `class Animal {
+    String nome;
+
+    String apresentar() {
+        return "Sou " + nome;
+    }
+}
+
+class Gato extends Animal {
+    String nome;
+
+    Gato(String nome) {
+        this.nome = nome;
+    }
+}
+
+public class Abrigo {
+    public static void main(String[] args) {
+        System.out.println(new Gato("Mia").apresentar());
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: 'Sou null' },
+      correcao: `class Animal {
+    String nome;
+
+    String apresentar() {
+        return "Sou " + nome;
+    }
+}
+
+class Gato extends Animal {
+    // o campo nome vem de Animal
+
+    Gato(String nome) {
+        this.nome = nome;
+    }
+}
+
+public class Abrigo {
+    public static void main(String[] args) {
+        System.out.println(new Gato("Mia").apresentar());
+    }
+}`,
+      saidaCorrigida: 'Sou Mia',
+      dica: 'Quantos campos chamados `nome` existem dentro de um objeto `Gato`? Qual deles `apresentar` lê?',
+      explicacao: 'Declarar `nome` de novo em `Gato` cria um segundo campo, que esconde o de `Animal` dentro de `Gato`. O construtor preenche o de `Gato`, e `apresentar`, escrito em `Animal`, lê o de `Animal`, que ficou `null`. Campos não se sobrescrevem: basta usar o herdado.',
+    },
+    {
+      id: 'junior-t3-e01-b03',
+      dificuldade: 3,
+      sintoma: 'Criar um `Cadastro` lança `NullPointerException` dentro de `preparar`, embora `campos` seja inicializado na declaração.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+class Formulario {
+    Formulario() {
+        preparar();
+    }
+
+    void preparar() { }
+}
+
+class Cadastro extends Formulario {
+    private List<String> campos = new ArrayList<>();
+
+    Cadastro() {
+        super();
+    }
+
+    void preparar() {
+        campos.add("nome");
+    }
+
+    public static void main(String[] args) {
+        Cadastro c = new Cadastro();
+        System.out.println(c.campos);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+class Formulario {
+    Formulario() {
+        // não chama métodos que a subclasse sobrescreve
+    }
+
+    void preparar() { }
+}
+
+class Cadastro extends Formulario {
+    private List<String> campos = new ArrayList<>();
+
+    Cadastro() {
+        preparar();
+    }
+
+    void preparar() {
+        campos.add("nome");
+    }
+
+    public static void main(String[] args) {
+        Cadastro c = new Cadastro();
+        System.out.println(c.campos);
+    }
+}`,
+      saidaCorrigida: '[nome]',
+      dica: 'Na criação de um `Cadastro`, o que roda primeiro: o construtor de `Formulario` ou o inicializador de `campos`?',
+      explicacao: 'O construtor da superclasse roda antes dos inicializadores da subclasse. Quando `Formulario()` chama `preparar()`, a versão de `Cadastro` executa com `campos` ainda `null`. Construtores não devem chamar métodos que uma subclasse pode sobrescrever; a subclasse chama depois de pronta.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t3-e01-q01',
@@ -172,6 +350,7 @@ public class Empresa {
       opcoes: ['Exatamente uma', 'Quantas quiser', 'Duas', 'Nenhuma, se não declarar `extends`'],
       resposta: 0,
       explicacao: 'Java tem herança simples de classes. Sem `extends`, a classe estende `Object`, que é a única sem superclasse.',
+      dica: 'Java tem herança simples ou múltipla de classes?',
     },
     {
       id: 'junior-t3-e01-q02',
@@ -194,6 +373,7 @@ new C();
 System.out.println();`,
       resposta: 'ABC',
       explicacao: 'Cada construtor chama o da superclasse antes de executar o próprio corpo. A chamada sobe até `Object`, e os corpos rodam na descida: `A`, `B`, `C`.',
+      dica: 'Cada construtor chama o da superclasse antes de executar o próprio corpo.',
     },
     {
       id: 'junior-t3-e01-q03',
@@ -220,6 +400,7 @@ class Aluno extends Pessoa {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Sem construtor declarado, `Aluno` ganha o padrão, que chama `super()`. Como `Pessoa` só tem o construtor com `String`, a chamada não encontra destino.',
+      dica: '`Aluno` não declara construtor. O que o construtor padrão chama?',
     },
     {
       id: 'junior-t3-e01-q04',
@@ -249,6 +430,7 @@ System.out.println(new Filho().log);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O nível `Pai` termina inteiro antes: inicializador do campo e construtor ("pP"). Depois, o nível `Filho`: o bloco de instância e, por fim, o corpo do construtor ("fF").',
+      dica: 'Por nível: primeiro os inicializadores de campo e de instância, depois o corpo do construtor.',
     },
     {
       id: 'junior-t3-e01-q05',
@@ -264,6 +446,7 @@ System.out.println(new Filho().log);`,
       ],
       respostas: [0, 1],
       explicacao: 'A subclasse herda o que pode acessar. Fora do pacote, membros de pacote não são visíveis; `private` nunca é; e construtores não são herdados em caso nenhum.',
+      dica: 'Em outro pacote, só passa o que o acesso permite: veja `public`, `protected` e o acesso de pacote.',
     },
     {
       id: 'junior-t3-e01-q06',
@@ -296,6 +479,7 @@ public class Loja {
       respostas: ['super'],
       saida: 'Dom Casmurro - Machado',
       explicacao: '`super(nome)` chama o construtor de `Produto`. Sem ele, o compilador inseriria `super()`, que não existe nessa superclasse.',
+      dica: 'Qual palavra chama o construtor da superclasse?',
     },
     {
       id: 'junior-t3-e01-q07',
@@ -314,6 +498,7 @@ class Poupanca extends Conta {
 }`,
       resposta: 8,
       explicacao: '`titular` é `protected` e pode ser usado. `saldo` é `private`: existe no objeto `Poupanca`, mas só o código de `Conta` o enxerga. Um getter em `Conta` resolveria.',
+      dica: 'Qual dos dois campos de `Conta` a subclasse pode usar pelo nome?',
     },
     {
       id: 'junior-t3-e01-q08',
@@ -346,6 +531,7 @@ System.out.println(new SaudacaoFormal().duas());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`ola()` sozinho chama a versão da própria classe, que já usa a da superclasse. `super.ola()` pula direto para a versão de `Saudacao`.',
+      dica: '`ola()` sem prefixo chama a versão da própria classe; `super.ola()`, a de cima.',
     },
     {
       id: 'junior-t3-e01-q09',
@@ -362,6 +548,7 @@ class MoedaDigital extends Moeda {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: '`final` numa classe proíbe subclasses. É o que impede, por exemplo, que alguém estenda `String` e quebre a imutabilidade dela.',
+      dica: 'O que `final` numa classe impede?',
     },
     {
       id: 'junior-t3-e01-q10',
@@ -396,6 +583,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'As classes são inicializadas uma vez, da superclasse para a subclasse. Cada objeto passa por `Base` inteira (bloco e construtor) antes de `Sub`.',
+      dica: 'Os blocos `static` rodam uma vez só, na primeira carga, de cima para baixo.',
     },
     {
       id: 'junior-t3-e01-q11',
@@ -405,6 +593,7 @@ public class Teste {
       opcoes: ['`Object`', 'Nenhuma', 'A classe do `main`', '`Class`'],
       resposta: 0,
       explicacao: 'Toda classe, exceto `Object`, tem exatamente uma superclasse. Por isso todo objeto tem `toString`, `equals` e `hashCode`.',
+      dica: 'Existe uma classe na raiz de toda a hierarquia.',
     },
     {
       id: 'junior-t3-e01-q12',
@@ -439,6 +628,7 @@ new Quadrado();
 System.out.println();`,
       resposta: '[Forma quadrado][lado 1][padrão]',
       explicacao: 'O construtor sem parâmetros delega para `Quadrado(int)`, que chama `super`. A superclasse termina primeiro, depois o construtor de um parâmetro, e por último o que delegou.',
+      dica: '`this(1)` leva ao outro construtor, que chama `super` antes de imprimir.',
     },
     {
       id: 'junior-t3-e01-q13',
@@ -455,6 +645,7 @@ System.out.println();`,
       respostas: [0, 1, 4],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Quando `A` só tem `A(int)`, todo construtor de `B` precisa chamar `super` com um argumento. Se `A` também tiver o construtor sem parâmetros, o `super()` automático funciona.',
+      dica: 'Uma subclasse sem chamada explícita recebe `super()`. Ele existe em cada `A`?',
     },
     {
       id: 'junior-t3-e01-q14',
@@ -469,6 +660,7 @@ System.out.println();`,
       ],
       resposta: 0,
       explicacao: 'Se o construtor delega com `this(...)`, o construtor chamado é que fará o `super(...)`. Ter os dois faria a superclasse ser construída duas vezes.',
+      dica: 'As duas chamadas precisam ser o primeiro comando do construtor.',
     },
     {
       id: 'junior-t3-e01-q15',
@@ -483,6 +675,7 @@ System.out.println();`,
       ],
       resposta: 0,
       explicacao: 'Um `new Cachorro()` cria um único objeto com os campos de toda a hierarquia. Com herança simples, os campos herdados têm sempre o mesmo deslocamento, e o código de `Animal` funciona em qualquer subclasse.',
+      dica: 'Um `new` cria quantos objetos no heap?',
     },
   ],
 };

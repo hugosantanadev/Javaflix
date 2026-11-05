@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`floor` e `ceiling` incluem o próprio valor; `lower` e `higher` não. `headSet(x)` exclui `x` e `tailSet(x)` inclui.',
     '`Set.of` com elementos repetidos lança `IllegalArgumentException`; `Set.copyOf` descarta os repetidos.',
   ],
+  ia: {
+    uso:
+      'Com conjuntos, a IA ajuda a escolher a implementação pela ordem que você precisa e a gerar `equals` e `hashCode`. Os erros dela são justamente os que fazem um `Set` falhar em silêncio: métodos que olham campos diferentes, campos mutáveis no hash e comparadores que empatam elementos diferentes num `TreeSet`.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui a classe e o código que a coloca num Set>\n- Diga quantos elementos o conjunto terá e por quê, citando equals, hashCode ou a comparação.\n- Aponte campos mutáveis usados no hash e comparadores que devolvem 0 para elementos diferentes.\n- Se a classe for só dados, reescreva-a como record.\n- Mostre um teste curto que confira o tamanho do conjunto com dois objetos iguais.',
+    erros: [
+      'Gera `equals` e `hashCode` com campos diferentes, e o `HashSet` guarda repetidos.',
+      'Inclui no `hashCode` um campo que muda depois da inserção, e o elemento se perde.',
+      'Ordena um `TreeSet` por um único campo com empates, e elementos diferentes somem.',
+      'Afirma que o `HashSet` mantém a ordem de inserção, que é do `LinkedHashSet`.',
+    ],
+    conferir: [
+      'Teste com dois objetos iguais e confira `size()` igual a 1.',
+      'Gere `equals` e `hashCode` pelo IntelliJ e compare os campos com os da IA.',
+      'Num `TreeSet`, adicione dois elementos que empatam no comparador e confira se os dois entraram.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Extending Collection with Set, SortedSet and NavigableSet',
@@ -191,6 +208,161 @@ public class Turmas {
     comentarios:
       'O `HashSet` usa o `equals` e o `hashCode` gerados pelo record, e o `TreeSet` usa o `compareTo`. Se a comparação olhasse só o nome, dois alunos diferentes chamados "Ana" virariam um só no `TreeSet`, embora o `HashSet` os mantivesse separados. O desempate pela matrícula deixa as duas noções de igualdade de acordo, como a documentação do `TreeSet` recomenda.',
   },
+  bugs: [
+    {
+      id: 'pleno-t3-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O sorteio que pega o primeiro inscrito em ordem alfabética não compila: `cannot find symbol`, apontando o `get(0)`.',
+      codigo: `import java.util.List;
+import java.util.TreeSet;
+
+public class Sorteio {
+    public static void main(String[] args) {
+        TreeSet<String> inscritos = new TreeSet<>(List.of("Caio", "Ana", "Bia"));
+        String primeiro = inscritos.get(0);
+        System.out.println("primeiro da lista: " + primeiro);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.List;
+import java.util.TreeSet;
+
+public class Sorteio {
+    public static void main(String[] args) {
+        TreeSet<String> inscritos = new TreeSet<>(List.of("Caio", "Ana", "Bia"));
+        String primeiro = inscritos.first();
+        System.out.println("primeiro da lista: " + primeiro);
+    }
+}`,
+      saidaCorrigida: 'primeiro da lista: Ana',
+      dica: 'Conjuntos têm posições numeradas? Que método de `TreeSet` devolve o menor elemento?',
+      explicacao:
+        '`Set` não tem índice, e por isso não existem `get(i)` nem `set(i, e)`. O `TreeSet` mantém a ordem e oferece `first()` e `last()`, além das buscas de `NavigableSet`, como `ceiling` e `floor`. Se o código precisa de posições, o tipo certo é uma `List`.',
+    },
+    {
+      id: 'pleno-t3-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O mesmo CPF aparece duas vezes no relatório de clientes únicos, uma com o nome em maiúsculas: `clientes únicos: 2`.',
+      codigo: `import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+public class Clientes {
+    static class Cliente {
+        final String cpf;
+        final String nome;
+
+        Cliente(String cpf, String nome) {
+            this.cpf = cpf;
+            this.nome = nome;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Cliente c && c.cpf.equals(cpf);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(cpf, nome);
+        }
+    }
+
+    public static void main(String[] args) {
+        Set<Cliente> unicos = new HashSet<>();
+        unicos.add(new Cliente("123.456.789-00", "Ana Lima"));
+        unicos.add(new Cliente("123.456.789-00", "ANA LIMA"));
+        System.out.println("clientes únicos: " + unicos.size());
+    }
+}`,
+      linha: 22,
+      efeito: { tipo: 'saida', saida: 'clientes únicos: 2' },
+      correcao: `import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+public class Clientes {
+    static class Cliente {
+        final String cpf;
+        final String nome;
+
+        Cliente(String cpf, String nome) {
+            this.cpf = cpf;
+            this.nome = nome;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Cliente c && c.cpf.equals(cpf);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(cpf);
+        }
+    }
+
+    public static void main(String[] args) {
+        Set<Cliente> unicos = new HashSet<>();
+        unicos.add(new Cliente("123.456.789-00", "Ana Lima"));
+        unicos.add(new Cliente("123.456.789-00", "ANA LIMA"));
+        System.out.println("clientes únicos: " + unicos.size());
+    }
+}`,
+      saidaCorrigida: 'clientes únicos: 1',
+      dica: '`equals` e `hashCode` olham os mesmos campos? Dois clientes iguais para o `equals` caem no mesmo compartimento?',
+      explicacao:
+        'O contrato exige que objetos iguais por `equals` tenham o mesmo `hashCode`. Aqui, `equals` compara só o CPF, mas `hashCode` mistura o nome: as duas grafias geram hashes diferentes, caem em compartimentos diferentes, e o `HashSet` nem chega a chamar `equals`. Use exatamente os mesmos campos nos dois métodos, de preferência gerados juntos pela IDE ou por um record.',
+    },
+    {
+      id: 'pleno-t3-e02-b03',
+      dificuldade: 3,
+      sintoma: 'Três jogadores pontuaram, mas o ranking mostra só dois, e Caio sumiu sem nenhum erro: `2 no ranking: [Bia=90, Ana=80]`.',
+      codigo: `import java.util.Comparator;
+import java.util.List;
+import java.util.TreeSet;
+
+public class Ranking {
+    record Jogador(String nome, int pontos) {
+        @Override
+        public String toString() {
+            return nome + "=" + pontos;
+        }
+    }
+
+    public static void main(String[] args) {
+        TreeSet<Jogador> ranking = new TreeSet<>(Comparator.comparingInt(Jogador::pontos).reversed());
+        ranking.addAll(List.of(new Jogador("Ana", 80), new Jogador("Bia", 90), new Jogador("Caio", 80)));
+        System.out.println(ranking.size() + " no ranking: " + ranking);
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'saida', saida: '2 no ranking: [Bia=90, Ana=80]' },
+      correcao: `import java.util.Comparator;
+import java.util.List;
+import java.util.TreeSet;
+
+public class Ranking {
+    record Jogador(String nome, int pontos) {
+        @Override
+        public String toString() {
+            return nome + "=" + pontos;
+        }
+    }
+
+    public static void main(String[] args) {
+        TreeSet<Jogador> ranking = new TreeSet<>(Comparator.comparingInt(Jogador::pontos).reversed().thenComparing(Jogador::nome));
+        ranking.addAll(List.of(new Jogador("Ana", 80), new Jogador("Bia", 90), new Jogador("Caio", 80)));
+        System.out.println(ranking.size() + " no ranking: " + ranking);
+    }
+}`,
+      saidaCorrigida: '3 no ranking: [Bia=90, Ana=80, Caio=80]',
+      dica: 'Para o `TreeSet`, quando dois jogadores são o mesmo elemento? O que o comparador responde para Ana e Caio?',
+      explicacao:
+        'O `TreeSet` decide igualdade pela comparação, e não por `equals`: se o `Comparator` devolve 0, o segundo elemento é tratado como repetido e o `add` devolve `false`. Comparando só pelos pontos, Ana e Caio empatam. Desempate com um campo que diferencie os elementos, como `thenComparing(Jogador::nome)`, para que a ordem seja consistente com `equals`.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t3-e02-q01',
@@ -212,6 +384,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Um `add` repetido devolve `false`, sem exceção. "x" e "X" são strings diferentes.',
+      dica: '`add` repetido devolve `false`; maiúscula e minúscula são textos diferentes.',
     },
     {
       id: 'pleno-t3-e02-q02',
@@ -230,6 +403,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `LinkedHashSet` mantém a ordem da primeira inserção de cada elemento e descarta os repetidos.',
+      dica: '`LinkedHashSet` guarda a ordem da primeira inserção.',
     },
     {
       id: 'pleno-t3-e02-q03',
@@ -246,6 +420,7 @@ public class Teste {
 }`,
       resposta: '4 null 4 null',
       explicacao: '`floor(5)` é o maior até 5; nada é maior que 8; `ceiling(4)` inclui o próprio 4; nada é menor que 2.',
+      dica: '`floor` e `ceiling` incluem o valor; `higher` e `lower` são estritos.',
     },
     {
       id: 'pleno-t3-e02-q04',
@@ -269,6 +444,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`headSet` exclui o limite, `tailSet` o inclui, e `subSet` inclui o início e exclui o fim. Os limites não precisam existir no conjunto.',
+      dica: '`headSet` exclui o limite; `tailSet` inclui; `subSet` vai do primeiro, inclusive, ao segundo, exclusive.',
     },
     {
       id: 'pleno-t3-e02-q05',
@@ -293,6 +469,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'IllegalArgumentException', saida: 'criando' },
       explicacao: '`Set.of` trata repetidos como erro de programação. `new HashSet<>(List.of(...))` ou `Set.copyOf` descartariam o repetido em silêncio.',
+      dica: '`Set.of` recusa repetidos.',
     },
     {
       id: 'pleno-t3-e02-q06',
@@ -320,6 +497,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException', saida: '1' },
       explicacao: 'O `HashSet` aceita um `null`. O `TreeSet` precisa comparar o elemento, e `null` não pode ser comparado pela ordem natural.',
+      dica: 'O `TreeSet` precisa comparar o `null` com algo.',
     },
     {
       id: 'pleno-t3-e02-q07',
@@ -353,6 +531,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem `hashCode` sobrescrito, cada objeto tem um hash diferente e cai em outro compartimento, onde o `equals` nem é chamado.',
+      dica: 'Sem `hashCode`, cada objeto cai num compartimento diferente.',
     },
     {
       id: 'pleno-t3-e02-q08',
@@ -377,6 +556,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O record é imutável só na superfície: a lista dentro dele mudou, e com ela o `hashCode`. O item continua no conjunto, mas no compartimento do hash antigo.',
+      dica: 'O `hashCode` do record usa a lista, que mudou depois da inserção.',
     },
     {
       id: 'pleno-t3-e02-q09',
@@ -394,6 +574,7 @@ public class Busca {
       respostas: ['higher'],
       saida: '30',
       explicacao: '`higher` exclui o próprio valor. `ceiling(20)` devolveria 20, porque inclui o valor quando ele existe.',
+      dica: 'É o vizinho estritamente maior.',
     },
     {
       id: 'pleno-t3-e02-q10',
@@ -416,6 +597,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `TreeSet` considera iguais os elementos que o comparador diz serem iguais. As variações de "Java" são recusadas, e fica a primeira inserida.',
+      dica: 'O comparador sem caixa considera iguais as três grafias de Java; fica a primeira.',
     },
     {
       id: 'pleno-t3-e02-q11',
@@ -445,6 +627,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ClassCastException', saida: 'antes' },
       explicacao: 'O tipo `TreeSet<Caixa>` compila, porque o comparador poderia vir no construtor. Sem ele, o `TreeSet` tenta usar `Caixa` como `Comparable` e falha já no primeiro elemento.',
+      dica: 'O `TreeSet` precisa comparar já no primeiro `add`.',
     },
     {
       id: 'pleno-t3-e02-q12',
@@ -460,6 +643,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'A ordem do `HashSet` depende dos códigos hash e não é garantida. O `TreeSet` rejeita `null`, e nenhum `Set` tem acesso por índice.',
+      dica: 'Uma afirmação fala da ordem de inserção; outra, de como a árvore decide igualdade.',
     },
     {
       id: 'pleno-t3-e02-q13',
@@ -479,6 +663,7 @@ public class Teste {
 }`,
       resposta: 8,
       explicacao: '`Set` não tem índices. Para o primeiro ou o último, `TreeSet` oferece `first()` e `last()`.',
+      dica: '`Set` não tem índice.',
     },
     {
       id: 'pleno-t3-e02-q14',
@@ -497,6 +682,7 @@ public class Teste {
 }`,
       resposta: '[2, 3] true false',
       explicacao: '`retainAll` mantém só a interseção e devolve `true` se o conjunto mudou. Na segunda chamada, nada sai.',
+      dica: '`retainAll` devolve se o conjunto mudou.',
     },
     {
       id: 'pleno-t3-e02-q15',
@@ -518,6 +704,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`headSet` devolve uma visão da faixa abaixo de 25. O 5 entra no conjunto original por ela, e o 22 inserido no original aparece na visão.',
+      dica: 'O `headSet` é uma visão: o que entra na faixa aparece nos dois.',
     },
   ],
 };

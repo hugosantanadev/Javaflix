@@ -292,7 +292,7 @@ public class Agenda {
       id: 'estagiario-t1-e02-q05',
       tipo: 'escolha',
       dificuldade: 2,
-      enunciado: 'Qual é o resultado?',
+      enunciado: 'Os dois pacotes têm uma classe `Date`. Este código compila? Se compilar, o que ele imprime?',
       codigo: `import java.util.Date;
 import java.sql.*;
 

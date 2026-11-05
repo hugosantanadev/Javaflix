@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Os três caminhos de um try com catch e finally: sem exceção, o try roda inteiro, o catch é pulado, o finally roda e a execução segue; com uma exceção que algum catch trata, o try para no ponto do erro, o catch roda, depois o finally, e a execução segue; com uma exceção que nenhum catch trata, o try para, o finally roda e a exceção continua subindo para quem chamou</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">
+    <text x="20" y="30">Caminho</text>
+    <text x="200" y="30">try</text>
+    <text x="330" y="30">catch</text>
+    <text x="460" y="30">finally</text>
+    <text x="590" y="30">depois</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#f3eee7">
+    <text x="20" y="74">sem exceção</text>
+    <text x="20" y="154">exceção tratada</text>
+    <text x="20" y="234">exceção sem catch</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="190" y="52" width="110" height="36" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="202" y="75" fill="#4fd68b">roda inteiro</text>
+    <rect x="320" y="52" width="110" height="36" rx="6" fill="#1b1916" stroke="#43403a" stroke-dasharray="4 3"/>
+    <text x="332" y="75" fill="#6b645b">pulado</text>
+    <rect x="450" y="52" width="110" height="36" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="462" y="75" fill="#ff7a1a">roda</text>
+    <rect x="580" y="52" width="160" height="36" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="592" y="75" fill="#f3eee7">segue o método</text>
+
+    <rect x="190" y="132" width="110" height="36" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="202" y="155" fill="#bdb5aa">para no erro</text>
+    <rect x="320" y="132" width="110" height="36" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="332" y="155" fill="#4fd68b">o primeiro</text>
+    <rect x="450" y="132" width="110" height="36" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="462" y="155" fill="#ff7a1a">roda</text>
+    <rect x="580" y="132" width="160" height="36" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="592" y="155" fill="#f3eee7">segue o método</text>
+
+    <rect x="190" y="212" width="110" height="36" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="202" y="235" fill="#bdb5aa">para no erro</text>
+    <rect x="320" y="212" width="110" height="36" rx="6" fill="#1b1916" stroke="#43403a" stroke-dasharray="4 3"/>
+    <text x="332" y="235" fill="#6b645b">nenhum serve</text>
+    <rect x="450" y="212" width="110" height="36" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="462" y="235" fill="#ff7a1a">roda</text>
+    <rect x="580" y="212" width="160" height="36" rx="6" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="592" y="235" fill="#db5c5c">exceção sobe</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M300 70 L447 70"/>
+    <path d="M560 70 L577 70"/>
+    <path d="M300 150 L317 150"/>
+    <path d="M430 150 L447 150"/>
+    <path d="M560 150 L577 150"/>
+    <path d="M300 230 L447 230"/>
+    <path d="M560 230 L577 230"/>
+  </g>
+  <text x="20" y="286" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Nos três caminhos o finally roda. A única saída comum que o impede é System.exit.</text>
+  <text x="20" y="304" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Um return no try guarda o valor antes do finally; um return no finally vence todos.</text>
+</svg>

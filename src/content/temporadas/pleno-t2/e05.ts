@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`Comparator`, `Consumer` e `Predicate` consomem, por isso aparecem como `Comparator<? super T>`.',
     'O apagamento usa o primeiro limite: `<T extends Object & Comparable<? super T>>` vira `Object`.',
   ],
+  ia: {
+    uso:
+      'Para limites e PECS, a IA ajuda a ler assinaturas complicadas do JDK, como a de `Collections.max`, e a dizer quem produz e quem consome em cada parâmetro. Ela costuma escrever `<T extends Comparable<T>>`, que recusa subclasses, e errar a ordem dos limites com `&`.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui a assinatura genérica e um exemplo de uso>\n- Para cada parâmetro, diga se ele produz ou consome valores, e qual coringa o PECS indica.\n- Explique os limites do parâmetro de tipo e como fica o apagamento.\n- Mostre uma chamada com uma subclasse que herda compareTo e outra com um Comparator<Object>, e diga se compilam.\n- Não troque os coringas por List<T> nem use raw types.',
+    erros: [
+      'Declara `<T extends Comparable<T>>`, e a chamada com uma subclasse que herda o `compareTo` não compila.',
+      'Escreve os limites fora de ordem, como `<T extends Comparable<T> & Number>`, que não compila.',
+      'Usa `<T super Integer>` num parâmetro de tipo, onde `super` não existe.',
+      'Inverte o PECS e declara o destino de uma cópia como `? extends T`.',
+    ],
+    conferir: [
+      'Compile chamadas com uma subclasse e com um `Comparator<Object>` contra a assinatura sugerida.',
+      'Imprima `toGenericString()` do método, por reflexão, para ver os limites declarados.',
+      'Compare a assinatura com a de um método parecido do JDK, como `Collections.copy` ou `Collections.max`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Bounded Type Parameters',
@@ -196,6 +213,129 @@ public class Ranking {
     comentarios:
       'Com `<T extends Comparable<T>>`, a chamada `topN(goleiros, 2)` não compilaria, porque `Goleiro` herdou um `compareTo(Jogador)`. Em `transferir`, cada parâmetro tem o wildcard do seu papel, e o compilador acha um `T` que satisfaz os três: na primeira chamada, qualquer tipo entre `Goleiro` e `Jogador` serve. Sem os wildcards, seria preciso que origem, destino e filtro tivessem exatamente o mesmo tipo.',
   },
+  bugs: [
+    {
+      id: 'pleno-t2-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O utilitário que acha o menor preço não compila: `interface expected here`.',
+      codigo: `import java.util.List;
+
+public class Precos {
+    static <T extends Comparable<T> & Number> T menor(List<T> valores) {
+        T m = valores.get(0);
+        for (T v : valores) if (v.compareTo(m) < 0) m = v;
+        return m;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(menor(List.of(19, 7, 12)) + " " + menor(List.of(2.5, 1.5)));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.List;
+
+public class Precos {
+    static <T extends Number & Comparable<T>> T menor(List<T> valores) {
+        T m = valores.get(0);
+        for (T v : valores) if (v.compareTo(m) < 0) m = v;
+        return m;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(menor(List.of(19, 7, 12)) + " " + menor(List.of(2.5, 1.5)));
+    }
+}`,
+      saidaCorrigida: '7 1.5',
+      dica: 'Num limite com `&`, onde a classe precisa ficar?',
+      explicacao:
+        'Com vários limites, no máximo um é classe, e ela vem **primeiro**; depois do `&`, o compilador só aceita interfaces. Escreva `<T extends Number & Comparable<T>>`. A ordem também decide o apagamento: o método compilado usa o primeiro limite, aqui `Number`.',
+    },
+    {
+      id: 'pleno-t2-e05-b02',
+      dificuldade: 2,
+      sintoma: 'A fila de atendimento lista o pedido 100 antes do 25 e o 9 por último: `[Ana, Bia, Caio] [10, 100, 25, 9]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class Fila {
+    static final Comparator<Object> POR_TEXTO = Comparator.comparing(Object::toString);
+
+    public static void main(String[] args) {
+        List<String> clientes = new ArrayList<>(List.of("Caio", "Ana", "Bia"));
+        clientes.sort(POR_TEXTO);
+        List<Integer> pedidos = new ArrayList<>(List.of(10, 9, 100, 25));
+        pedidos.sort(POR_TEXTO);
+        System.out.println(clientes + " " + pedidos);
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'saida', saida: '[Ana, Bia, Caio] [10, 100, 25, 9]' },
+      correcao: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class Fila {
+    static final Comparator<Object> POR_TEXTO = Comparator.comparing(Object::toString);
+
+    public static void main(String[] args) {
+        List<String> clientes = new ArrayList<>(List.of("Caio", "Ana", "Bia"));
+        clientes.sort(POR_TEXTO);
+        List<Integer> pedidos = new ArrayList<>(List.of(10, 9, 100, 25));
+        pedidos.sort(Comparator.naturalOrder());
+        System.out.println(clientes + " " + pedidos);
+    }
+}`,
+      saidaCorrigida: '[Ana, Bia, Caio] [9, 10, 25, 100]',
+      dica: 'O comparador reaproveitado compara os pedidos como números ou como texto?',
+      explicacao:
+        '`List.sort` pede um `Comparator<? super E>`, e por isso um `Comparator<Object>` é aceito para qualquer lista: é o PECS a favor da reutilização. Mas `POR_TEXTO` compara o `toString`, e como texto `"10"` vem antes de `"100"`, que vem antes de `"25"` e de `"9"`. Para números, use a ordem natural, `Comparator.naturalOrder()`, ou `Comparator.comparingInt`.',
+    },
+    {
+      id: 'pleno-t2-e05-b03',
+      dificuldade: 3,
+      sintoma: 'Depois que a prioridade MEDIA foi criada, o sistema passou a mandar atender primeiro os chamados médios, e não os de prioridade alta: `atender primeiro: MEDIA`.',
+      codigo: `import java.util.List;
+
+public class Chamados {
+    enum Prioridade { BAIXA, ALTA, MEDIA }
+
+    static <T extends Comparable<? super T>> T maior(List<? extends T> itens) {
+        T m = itens.get(0);
+        for (T item : itens) if (item.compareTo(m) > 0) m = item;
+        return m;
+    }
+
+    public static void main(String[] args) {
+        List<Prioridade> abertos = List.of(Prioridade.BAIXA, Prioridade.ALTA, Prioridade.MEDIA);
+        System.out.println("atender primeiro: " + maior(abertos));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'atender primeiro: MEDIA' },
+      correcao: `import java.util.List;
+
+public class Chamados {
+    enum Prioridade { BAIXA, MEDIA, ALTA }
+
+    static <T extends Comparable<? super T>> T maior(List<? extends T> itens) {
+        T m = itens.get(0);
+        for (T item : itens) if (item.compareTo(m) > 0) m = item;
+        return m;
+    }
+
+    public static void main(String[] args) {
+        List<Prioridade> abertos = List.of(Prioridade.BAIXA, Prioridade.ALTA, Prioridade.MEDIA);
+        System.out.println("atender primeiro: " + maior(abertos));
+    }
+}`,
+      saidaCorrigida: 'atender primeiro: ALTA',
+      dica: 'Como um `enum` implementa `Comparable`? O que define qual constante é maior?',
+      explicacao:
+        'Todo `enum` é `Comparable` de si mesmo, pelo limite recursivo `Enum<E extends Enum<E>>`, e o `compareTo` usa o `ordinal`: a ordem da declaração. A constante `MEDIA` foi acrescentada no fim e virou a maior. Declare as constantes na ordem que tem significado, ou compare por um campo explícito, como um `int peso`, para não depender da posição.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t2-e05-q01',
@@ -226,6 +366,7 @@ public class Ranking {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 12 },
       explicacao: '`N extends Number` só aceita `Number` e subtipos. `Integer` serve; `String`, não.',
+      dica: '`String` está dentro do limite de `N`?',
     },
     {
       id: 'pleno-t2-e05-q02',
@@ -245,6 +386,7 @@ public class Ranking {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Letras minúsculas vêm depois das maiúsculas na tabela de caracteres, então "pera" é maior. Os `char` viram `Character`, que é `Comparable<Character>`.',
+      dica: 'Na comparação de `String`, maiúsculas vêm antes de minúsculas; `Character` também é `Comparable`.',
     },
     {
       id: 'pleno-t2-e05-q03',
@@ -262,6 +404,7 @@ public class Ranking {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Nos limites, `extends` serve para classe e interface. Pode haver várias interfaces, mas só uma classe, e ela vem primeiro. `super` não existe em parâmetros de tipo.',
+      dica: 'Com vários limites, só uma classe e sempre a primeira; `super` não existe em declaração.',
     },
     {
       id: 'pleno-t2-e05-q04',
@@ -281,6 +424,7 @@ public class Ranking {
 }`,
       resposta: 9,
       explicacao: 'Com `1` e `2.5`, `T` precisaria ser `Integer` e `Double` ao mesmo tempo. Um tipo comum como `Number` não serve, porque não é `Comparable<Number>`.',
+      dica: '`T` precisaria ser `Integer` e `Double` ao mesmo tempo.',
     },
     {
       id: 'pleno-t2-e05-q05',
@@ -306,6 +450,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`List.sort` recebe `Comparator<? super E>`, então um comparador de `Object` é aceito. Como texto, "10" < "100" < "9".',
+      dica: 'Comparados como texto, os números seguem a ordem dos caracteres.',
     },
     {
       id: 'pleno-t2-e05-q06',
@@ -345,6 +490,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 22 },
       explicacao: '`Maca` herdou `Comparable<Fruta>`. Com `List<Fruta>`, `T` é `Fruta` e o limite é satisfeito; com `List<Maca>`, não. `<T extends Comparable<? super T>>` aceitaria as duas.',
+      dica: '`Maca` herda o `compareTo` de `Fruta`: ela é `Comparable` de quê?',
     },
     {
       id: 'pleno-t2-e05-q07',
@@ -392,6 +538,7 @@ public class Teste {
 }`,
       resposta: 'Bidu Thor',
       explicacao: 'O limite `Comparable<? super T>` aceita `Cachorro`, que herdou `Comparable<Animal>`. `Collections.max` tem o mesmo limite e devolve o mais velho.',
+      dica: 'Com `? super T`, a subclasse usa o `compareTo` do pai, pela idade.',
     },
     {
       id: 'pleno-t2-e05-q08',
@@ -417,6 +564,7 @@ public class Copia {
       respostas: ['? super T'],
       saida: '[início, 1, 2]',
       explicacao: 'O destino consome valores de `T`, então recebe `? super T` e aceita uma `List<Object>` para elementos `Integer`.',
+      dica: 'O destino consome valores: qual coringa o PECS indica?',
     },
     {
       id: 'pleno-t2-e05-q09',
@@ -432,6 +580,7 @@ public class Copia {
       ],
       respostas: [0, 1],
       explicacao: 'É o PECS: quem produz usa `extends`, quem consome usa `super`. Com `List<T>` nos dois, copiar uma `List<Integer>` para uma `List<Number>` deixaria de compilar.',
+      dica: 'PECS: `src` produz, `dest` consome.',
     },
     {
       id: 'pleno-t2-e05-q10',
@@ -463,6 +612,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Em cada chamada, o compilador infere um `T` diferente: `Integer` e depois `Boolean`. Em ambos os casos, `List<Object>` é uma lista de algum supertipo de `T`.',
+      dica: '`List<Object>` é supertipo de qualquer argumento de `T`.',
     },
     {
       id: 'pleno-t2-e05-q11',
@@ -477,6 +627,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O apagamento usa o primeiro limite. Com `Object` na frente, o método compilado continua devolvendo `Object`, e os programas antigos que o chamavam seguem funcionando.',
+      dica: 'O apagamento usa o primeiro limite.',
     },
     {
       id: 'pleno-t2-e05-q12',
@@ -497,6 +648,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: 'Limites inferiores só existem em wildcards, como `List<? super Integer>`. Em declarações de parâmetro de tipo, só `extends`.',
+      dica: '`super` só existe em wildcards.',
     },
     {
       id: 'pleno-t2-e05-q13',
@@ -525,6 +677,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`map` recebe `Function<? super T, ? extends R>` e `forEach` recebe `Consumer<? super T>`. Funções e consumidores de `Object` servem a qualquer stream ou lista.',
+      dica: '`map` e `forEach` aceitam funções que consomem um supertipo.',
     },
     {
       id: 'pleno-t2-e05-q14',
@@ -541,6 +694,7 @@ public class Teste {
 }`,
       resposta: 5,
       explicacao: '`T` só tem os métodos do seu limite. `Number` não implementa `Comparable`; seria preciso `<T extends Number & Comparable<T>>`.',
+      dica: '`Number` não tem `compareTo`.',
     },
     {
       id: 'pleno-t2-e05-q15',
@@ -555,6 +709,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Se `T` não relaciona nada a nada, o nome não ajuda, e `List<?>` comunica o mesmo de forma mais simples. `List<Object>` restringiria as chamadas, e o raw type desligaria a verificação.',
+      dica: 'Um parâmetro de tipo que aparece uma vez só pode virar coringa.',
     },
   ],
 };

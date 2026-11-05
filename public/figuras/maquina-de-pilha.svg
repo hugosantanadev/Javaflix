@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="290" viewBox="0 0 760 290" role="img" aria-labelledby="t">
+  <title id="t">A pilha de operandos depois de cada instrução de a * b + c, com a igual a 2, b igual a 3 e c igual a 4. iload_0 empilha 2; iload_1 empilha 3; imul troca os dois por 6; iload_2 empilha 4; iadd troca 6 e 4 por 10</title>
+  <rect width="760" height="290" fill="#13110f"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#ff7a1a" text-anchor="middle">
+    <text x="90" y="40">iload_0</text><text x="230" y="40">iload_1</text><text x="370" y="40">imul</text><text x="510" y="40">iload_2</text><text x="650" y="40">iadd</text>
+  </g>
+  <g fill="none" stroke="#43403a" stroke-width="1.5">
+    <path d="M45 70 L45 210 L135 210 L135 70"/><path d="M185 70 L185 210 L275 210 L275 70"/><path d="M325 70 L325 210 L415 210 L415 70"/><path d="M465 70 L465 210 L555 210 L555 70"/><path d="M605 70 L605 210 L695 210 L695 70"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="18" font-weight="700" text-anchor="middle">
+    <rect x="52" y="164" width="76" height="40" rx="4" fill="#1b1916" stroke="#bdb5aa"/><text x="90" y="191" fill="#f3eee7">2</text>
+    <rect x="192" y="164" width="76" height="40" rx="4" fill="#1b1916" stroke="#bdb5aa"/><text x="230" y="191" fill="#f3eee7">2</text>
+    <rect x="192" y="120" width="76" height="40" rx="4" fill="#1b1916" stroke="#bdb5aa"/><text x="230" y="147" fill="#f3eee7">3</text>
+    <rect x="332" y="164" width="76" height="40" rx="4" fill="#1b1916" stroke="#4fd68b"/><text x="370" y="191" fill="#4fd68b">6</text>
+    <rect x="472" y="164" width="76" height="40" rx="4" fill="#1b1916" stroke="#bdb5aa"/><text x="510" y="191" fill="#f3eee7">6</text>
+    <rect x="472" y="120" width="76" height="40" rx="4" fill="#1b1916" stroke="#bdb5aa"/><text x="510" y="147" fill="#f3eee7">4</text>
+    <rect x="612" y="164" width="76" height="40" rx="4" fill="#1b1916" stroke="#4fd68b"/><text x="650" y="191" fill="#4fd68b">10</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#8a8277" text-anchor="middle">
+    <text x="90" y="232">empilha a</text><text x="230" y="232">empilha b</text><text x="370" y="232">tira 2, põe 6</text><text x="510" y="232">empilha c</text><text x="650" y="232">tira 2, põe 10</text>
+  </g>
+  <text x="40" y="274" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Nenhum registrador aparece: cada operação tira os operandos do topo e devolve o resultado ao topo.</text>
+</svg>

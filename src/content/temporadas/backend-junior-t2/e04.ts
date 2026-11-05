@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Repetir um `POST` sem `Idempotency-Key` pode criar o recurso duas vezes.',
     'Novas tentativas sem espera e sem limite transformam uma falha passageira numa sobrecarga.',
   ],
+  ia: {
+    uso:
+      'A IA escreve rápido o código de chamada a uma API externa, com o `HttpClient` ou o `RestClient`, e converte um `curl` da documentação em Java. O que ela esquece com frequência é o que só aparece quando o outro lado falha: tempo limite, status de erro e novas tentativas com critério.',
+    pedido:
+      'Escreva, em Java 25 com o java.net.http.HttpClient, um cliente para GET https://api.parceiro.exemplo/produtos/{id}, que devolve JSON.\n- Um HttpClient compartilhado, connectTimeout de 2 s e timeout de 3 s por requisição.\n- 2xx converte o corpo com o ObjectMapper; 404 devolve Optional.empty(); 429 e 5xx tentam de novo até 3 vezes, com recuo exponencial, jitter e respeitando o Retry-After.\n- Nunca repita POST; não registre no log o cabeçalho Authorization.\n- Escreva um teste com um HttpServer local que demora 5 s, para provar o tempo limite.',
+    erros: [
+      'Cria um `HttpClient` novo dentro do método, a cada chamada.',
+      'Esquece o `.timeout(...)` e deixa a espera infinita.',
+      'Trata só o status `200` como sucesso, ou não confere o status antes de ler o JSON.',
+      'Repete qualquer falha, inclusive `POST` e erros `4xx`, sem limite de tentativas.',
+    ],
+    conferir: [
+      'Procure `timeout` em toda requisição gerada.',
+      'Teste contra um servidor que responde `500`, `404` e que não responde, e veja o que o código faz em cada caso.',
+      'Conte quantas vezes o servidor de teste recebeu um `POST` depois de uma falha: tem de ser uma.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Introduction to the Java HTTP Client',
@@ -212,6 +229,107 @@ public class Retentativas {
     comentarios:
       'O `BodyHandlers.discarding()` ignora o corpo, porque a decisão depende só do status. A ordem das verificações faz cada mensagem explicar a razão certa: o `POST` com `503` seria repetível pelo status, mas não pelo método. Para produção faltam três peças: *jitter*, somando uma espera aleatória para que muitos clientes não repitam juntos; um tempo total máximo, além do número de tentativas; e o tratamento de exceções de rede, como `HttpTimeoutException` e `ConnectException`, que também merecem nova tentativa num método idempotente. E um `Retry-After` pode vir como data, não só como segundos.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t2-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O cliente da API de pedidos registra como falha todo pedido criado com sucesso, e o painel acusa erro em 100% das criações. O log diz `201 -> falhou` e `204 -> falhou`.',
+      codigo: `public class Sucesso {
+    static boolean deuCerto(int status) {
+        return status == 200;
+    }
+
+    public static void main(String[] args) {
+        for (int status : new int[] {200, 201, 204, 404}) {
+            System.out.println(status + " -> " + (deuCerto(status) ? "ok" : "falhou"));
+        }
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '200 -> ok\n201 -> falhou\n204 -> falhou\n404 -> falhou' },
+      correcao: `public class Sucesso {
+    static boolean deuCerto(int status) {
+        return status / 100 == 2;
+    }
+
+    public static void main(String[] args) {
+        for (int status : new int[] {200, 201, 204, 404}) {
+            System.out.println(status + " -> " + (deuCerto(status) ? "ok" : "falhou"));
+        }
+    }
+}`,
+      saidaCorrigida: '200 -> ok\n201 -> ok\n204 -> ok\n404 -> falhou',
+      dica: 'Quais status significam sucesso?',
+      explicacao:
+        'Toda a classe `2xx` é sucesso: `201 Created` na criação, `204 No Content` numa remoção. Comparar com `200` exato trata os outros como erro. A primeira casa do status é o que importa: `status / 100 == 2`.',
+    },
+    {
+      id: 'backend-junior-t2-e04-b02',
+      dificuldade: 2,
+      sintoma: 'Clientes reclamam de cobrança em dobro. Os pagamentos duplicados coincidem com respostas 503 do gateway, e o log do cliente HTTP mostra `POST 503 -> repete`.',
+      codigo: `public class Repetir {
+    static boolean deveRepetir(String metodo, int status) {
+        return status >= 500;
+    }
+
+    public static void main(String[] args) {
+        System.out.println("GET 503 -> " + (deveRepetir("GET", 503) ? "repete" : "não repete"));
+        System.out.println("POST 503 -> " + (deveRepetir("POST", 503) ? "repete" : "não repete"));
+        System.out.println("GET 404 -> " + (deveRepetir("GET", 404) ? "repete" : "não repete"));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: 'GET 503 -> repete\nPOST 503 -> repete\nGET 404 -> não repete' },
+      correcao: `public class Repetir {
+    static boolean deveRepetir(String metodo, int status) {
+        return status >= 500 && !metodo.equals("POST");
+    }
+
+    public static void main(String[] args) {
+        System.out.println("GET 503 -> " + (deveRepetir("GET", 503) ? "repete" : "não repete"));
+        System.out.println("POST 503 -> " + (deveRepetir("POST", 503) ? "repete" : "não repete"));
+        System.out.println("GET 404 -> " + (deveRepetir("GET", 404) ? "repete" : "não repete"));
+    }
+}`,
+      saidaCorrigida: 'GET 503 -> repete\nPOST 503 -> não repete\nGET 404 -> não repete',
+      dica: 'Repetir um `POST` de pagamento é seguro?',
+      explicacao:
+        'O `503` pode chegar depois de o gateway ter processado o pagamento, e repetir um `POST` sem chave de idempotência cobra de novo. Só métodos idempotentes, ou `POST`s com `Idempotency-Key`, podem ser repetidos automaticamente.',
+    },
+    {
+      id: 'backend-junior-t2-e04-b03',
+      dificuldade: 3,
+      sintoma: 'Durante uma queda longa do serviço de estoque, o cliente passou a repetir as chamadas sem esperar nada e derrubou o serviço de vez. O log de esperas mostra `tentativa 25: -939524096 ms` e `tentativa 31: 0 ms`.',
+      codigo: `public class Recuo {
+    static long espera(int tentativa) {
+        return Math.min(100 * (1 << tentativa), 30_000);
+    }
+
+    public static void main(String[] args) {
+        for (int t : new int[] {1, 5, 10, 25, 31}) {
+            System.out.println("tentativa " + t + ": " + espera(t) + " ms");
+        }
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: 'tentativa 1: 200 ms\ntentativa 5: 3200 ms\ntentativa 10: 30000 ms\ntentativa 25: -939524096 ms\ntentativa 31: 0 ms' },
+      correcao: `public class Recuo {
+    static long espera(int tentativa) {
+        return Math.min(100L * (1L << Math.min(tentativa, 20)), 30_000);
+    }
+
+    public static void main(String[] args) {
+        for (int t : new int[] {1, 5, 10, 25, 31}) {
+            System.out.println("tentativa " + t + ": " + espera(t) + " ms");
+        }
+    }
+}`,
+      saidaCorrigida: 'tentativa 1: 200 ms\ntentativa 5: 3200 ms\ntentativa 10: 30000 ms\ntentativa 25: 30000 ms\ntentativa 31: 30000 ms',
+      dica: 'Quanto vale `1 << 31` num `int`? E `100` vezes um número perto de 2³¹?',
+      explicacao:
+        '`100 * (1 << tentativa)` é feito em `int` e estoura muito antes do teto ser aplicado: o `Math.min` recebe um número negativo ou zero, e ele vence. Fazer a conta em `long` e limitar o expoente mantém a espera no teto de 30 segundos para sempre.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t2-e04-q01',
@@ -226,6 +344,7 @@ public class Retentativas {
       ],
       resposta: 0,
       explicacao: 'Um `500` é uma resposta HTTP válida. Exceções só aparecem quando não há resposta, como num tempo esgotado ou numa conexão recusada.',
+      dica: 'Para o `HttpClient`, um `500` é uma resposta HTTP perfeitamente válida.',
     },
     {
       id: 'backend-junior-t2-e04-q02',
@@ -235,6 +354,7 @@ public class Retentativas {
       opcoes: ['`Redirect.NEVER`: não segue', '`Redirect.ALWAYS`: segue sempre', '`Redirect.NORMAL`: segue, menos de `https` para `http`', 'Segue até cinco vezes'],
       resposta: 0,
       explicacao: 'Para seguir, configure `.followRedirects(HttpClient.Redirect.NORMAL)` no *builder*.',
+      dica: 'O padrão do cliente é não seguir redirecionamentos.',
     },
     {
       id: 'backend-junior-t2-e04-q03',
@@ -244,6 +364,7 @@ public class Retentativas {
       opcoes: ['Para sempre', '30 segundos', '60 segundos', 'O mesmo tempo do `connectTimeout`'],
       resposta: 0,
       explicacao: 'Não há tempo limite padrão para a resposta. O `connectTimeout` só vale para estabelecer a conexão, que, nesse caso, já foi feita.',
+      dica: 'Sem `timeout`, não há limite.',
     },
     {
       id: 'backend-junior-t2-e04-q04',
@@ -258,6 +379,7 @@ public class Retentativas {
       ],
       resposta: 0,
       explicacao: 'Uma conexão pode abrir em milissegundos e a resposta demorar minutos. Os dois limites protegem situações diferentes.',
+      dica: 'Um limita o estabelecimento da conexão; o outro, a espera pela resposta.',
     },
     {
       id: 'backend-junior-t2-e04-q05',
@@ -272,6 +394,7 @@ public class Retentativas {
       ],
       resposta: 0,
       explicacao: 'O cliente é imutável, seguro entre threads e feito para ser compartilhado. Crie um e reaproveite.',
+      dica: 'O que o cliente guarda entre uma chamada e outra, e quanto custa abrir uma conexão `https`?',
     },
     {
       id: 'backend-junior-t2-e04-q06',
@@ -287,6 +410,7 @@ public class Retentativas {
       ],
       respostas: [0, 1],
       explicacao: '`GET` e `PUT` são idempotentes, e os erros são passageiros. O `POST` sem chave pode duplicar a cobrança, e `404` e `400` vão falhar igual.',
+      dica: 'Repita só o que pode melhorar com o tempo, e só o que é seguro repetir.',
     },
     {
       id: 'backend-junior-t2-e04-q07',
@@ -306,6 +430,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem método explícito, a requisição é um `GET`. E o `timeout()` é um `Optional` vazio: nenhum limite foi definido.',
+      dica: 'Lembre do comportamento padrão de status, redirecionamento e tempo limite.',
     },
     {
       id: 'backend-junior-t2-e04-q08',
@@ -329,6 +454,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `Content-Length` é calculado pelo cliente a partir do corpo. Deixá-lo à mão permitiria mensagens com tamanho errado.',
+      dica: 'Siga o programa linha a linha e veja o que cada chamada imprime.',
     },
     {
       id: 'backend-junior-t2-e04-q09',
@@ -338,6 +464,7 @@ public class Teste {
       opcoes: ['100, 200, 400 e 800 ms', '100, 100, 100 e 100 ms', '100, 200, 300 e 400 ms', '100, 1.000, 10.000 e 100.000 ms'],
       resposta: 0,
       explicacao: 'A espera dobra a cada falha, dando ao serviço cada vez mais tempo para se recuperar. Na prática, define-se também um teto.',
+      dica: 'Comece em 100 e dobre a cada tentativa.',
     },
     {
       id: 'backend-junior-t2-e04-q10',
@@ -359,6 +486,7 @@ public class Teste {
 }`,
       resposta: '100 200 400 800 1000 1000',
       explicacao: 'Sem o teto, a sexta espera seria de 3,2 segundos, e a décima, de quase um minuto.',
+      dica: 'Dobre a partir de 100, mas nunca passe do teto de 1.000.',
     },
     {
       id: 'backend-junior-t2-e04-q11',
@@ -373,6 +501,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Quando um serviço cai, milhares de clientes falham ao mesmo tempo. Sem *jitter*, todos voltam juntos, em ondas, e derrubam o serviço de novo.',
+      dica: 'Pense em mil clientes que falharam no mesmo instante.',
     },
     {
       id: 'backend-junior-t2-e04-q12',
@@ -387,6 +516,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O servidor disse exatamente quando voltar. Ignorar o aviso costuma levar a um bloqueio mais longo.',
+      dica: 'O próprio servidor disse quanto esperar.',
     },
     {
       id: 'backend-junior-t2-e04-q13',
@@ -401,6 +531,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A chamada não bloqueia. O `join()` ou o `get()` no futuro esperam o resultado, e o `thenApply` transforma a resposta quando ela chegar.',
+      dica: 'O `sendAsync` não bloqueia: devolve na hora algo que se completa depois.',
     },
     {
       id: 'backend-junior-t2-e04-q14',
@@ -415,6 +546,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `RestClient` trata `4xx` e `5xx` como erro por padrão, o que pode ser mudado com `onStatus(...)`. É uma diferença que pega quem troca um pelo outro.',
+      dica: 'Um deles lança exceção para `4xx` e `5xx`; o outro não.',
     },
     {
       id: 'backend-junior-t2-e04-q15',
@@ -429,6 +561,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O tempo total é o da mais lenta, não a soma de todas, mas a leitura segue a ordem da lista. Para tratar na ordem de chegada, há o `CompletableFuture` com `thenAccept`, ou o `ExecutorCompletionService`.',
+      dica: 'O `get()` de cada `Future` espera o seu resultado, na ordem da lista.',
     },
   ],
 };

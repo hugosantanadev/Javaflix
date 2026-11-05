@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     'Uma BST simples recebendo dados ordenados vira uma lista: altura n e busca O(n).',
     'O(1) do `HashMap` é em média. Um `hashCode` ruim joga tudo no mesmo balde.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a implementar árvores e tabelas hash para estudo e a escolher entre `HashMap`, `TreeMap` e `LinkedHashMap`. Confira as classes de chave que ela gerar: `equals`, `hashCode` e imutabilidade.',
+    pedido:
+      'Implemente em Java uma árvore binária de busca de inteiros com inserir, contém e percurso em ordem.\n- Explique a altura da árvore para inserções em ordem aleatória e em ordem crescente.\n- Escreva testes que comparam o percurso em ordem com um TreeSet para 1.000 valores aleatórios.\n- Diga quando usar TreeMap no lugar de HashMap, com um exemplo real.',
+    erros: [
+      'Gera classes de chave com `equals` sem `hashCode`.',
+      'Diz que `HashMap` mantém a ordem de inserção.',
+      'Põe objetos sem `Comparable` num `TreeSet` sem `Comparator`.',
+    ],
+    conferir: [
+      'Compare o resultado com `TreeSet` e `HashSet` do JDK.',
+      'Teste a busca depois de inserir chaves iguais criadas separadamente.',
+      'Meça a altura da árvore com dados ordenados.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de Object.hashCode',
@@ -223,6 +239,158 @@ public class MiniHash {
     comentarios:
       'A tabela começou com 4 baldes, dobrou para 8 ao receber a 4ª palavra distinta e para 16 na 7ª. Cada redimensionamento custa O(n), mas, como no `ArrayList`, a soma dos redimensionamentos é uma série geométrica e o custo médio por inserção continua O(1). O `HashMap` do JDK faz o mesmo, com três refinamentos: capacidades potência de 2 (índice com `&` em vez de `floorMod`), mistura dos bits altos do hash e baldes que viram árvores quando ficam grandes.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t4-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O percurso em ordem da árvore deveria listar os valores em ordem crescente, mas imprime `80 70 60 50 40 30 20`.',
+      codigo: `public class Arvore {
+    static class No {
+        int valor; No esq, dir;
+        No(int v) { valor = v; }
+    }
+
+    static No inserir(No raiz, int v) {
+        if (raiz == null) return new No(v);
+        if (v > raiz.valor) raiz.esq = inserir(raiz.esq, v);
+        else raiz.dir = inserir(raiz.dir, v);
+        return raiz;
+    }
+
+    static void emOrdem(No n, StringBuilder sb) {
+        if (n == null) return;
+        emOrdem(n.esq, sb);
+        sb.append(n.valor).append(' ');
+        emOrdem(n.dir, sb);
+    }
+
+    public static void main(String[] args) {
+        No raiz = null;
+        for (int v : new int[] {50, 30, 70, 20, 40, 60, 80}) raiz = inserir(raiz, v);
+        StringBuilder sb = new StringBuilder();
+        emOrdem(raiz, sb);
+        System.out.println(sb.toString().trim());
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: '80 70 60 50 40 30 20' },
+      correcao: `public class Arvore {
+    static class No {
+        int valor; No esq, dir;
+        No(int v) { valor = v; }
+    }
+
+    static No inserir(No raiz, int v) {
+        if (raiz == null) return new No(v);
+        if (v < raiz.valor) raiz.esq = inserir(raiz.esq, v);
+        else raiz.dir = inserir(raiz.dir, v);
+        return raiz;
+    }
+
+    static void emOrdem(No n, StringBuilder sb) {
+        if (n == null) return;
+        emOrdem(n.esq, sb);
+        sb.append(n.valor).append(' ');
+        emOrdem(n.dir, sb);
+    }
+
+    public static void main(String[] args) {
+        No raiz = null;
+        for (int v : new int[] {50, 30, 70, 20, 40, 60, 80}) raiz = inserir(raiz, v);
+        StringBuilder sb = new StringBuilder();
+        emOrdem(raiz, sb);
+        System.out.println(sb.toString().trim());
+    }
+}`,
+      saidaCorrigida: '20 30 40 50 60 70 80',
+      dica: 'Pela regra da árvore binária de busca, para que lado vão os valores menores que o nó?',
+      explicacao: 'A inserção manda os maiores para a esquerda, invertendo a regra. A árvore continua consistente, só que espelhada, e o percurso esquerda, nó, direita sai em ordem decrescente. Menores vão para a esquerda.',
+    },
+    {
+      id: 'aprendiz-t4-e05-b02',
+      dificuldade: 2,
+      sintoma: 'Depois de acrescentar um item ao carrinho guardado num `HashSet`, o conjunto diz que não contém o carrinho: `false 1`.',
+      codigo: `import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class Carrinhos {
+    public static void main(String[] args) {
+        Set<List<String>> abertos = new HashSet<>();
+        List<String> carrinho = new ArrayList<>(List.of("caneta"));
+        abertos.add(carrinho);
+        carrinho.add("caderno");
+        System.out.println(abertos.contains(carrinho) + " " + abertos.size());
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: 'false 1' },
+      correcao: `import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class Carrinhos {
+    public static void main(String[] args) {
+        Set<List<String>> abertos = new HashSet<>();
+        List<String> carrinho = new ArrayList<>(List.of("caneta"));
+        carrinho.add("caderno");
+        abertos.add(carrinho);
+        System.out.println(abertos.contains(carrinho) + " " + abertos.size());
+    }
+}`,
+      saidaCorrigida: 'true 1',
+      dica: 'O balde de um elemento é escolhido pelo `hashCode` dele. O `hashCode` de uma lista muda quando ela muda?',
+      explicacao: 'A lista foi guardada no balde do hash de `[caneta]`; ao ganhar um item, o hash mudou, e o `contains` procura no balde novo. O elemento continua lá, inalcançável. Objetos que são elementos de `HashSet` ou chaves de `HashMap` não podem mudar enquanto estão lá.',
+    },
+    {
+      id: 'aprendiz-t4-e05-b03',
+      dificuldade: 3,
+      sintoma: 'Montar o ranking de pedidos num `TreeSet` lança `ClassCastException: class Pedido cannot be cast to class java.lang.Comparable`.',
+      codigo: `import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
+
+public class Ranking {
+    static class Pedido {
+        final String cliente; final int valor;
+        Pedido(String cliente, int valor) { this.cliente = cliente; this.valor = valor; }
+        public String toString() { return cliente + "=" + valor; }
+    }
+
+    public static void main(String[] args) {
+        Set<Pedido> ranking = new TreeSet<>();
+        ranking.add(new Pedido("Ana", 50));
+        ranking.add(new Pedido("Bia", 30));
+        System.out.println(ranking);
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'excecao', nome: 'ClassCastException' },
+      correcao: `import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
+
+public class Ranking {
+    static class Pedido {
+        final String cliente; final int valor;
+        Pedido(String cliente, int valor) { this.cliente = cliente; this.valor = valor; }
+        public String toString() { return cliente + "=" + valor; }
+    }
+
+    public static void main(String[] args) {
+        Set<Pedido> ranking = new TreeSet<>(Comparator.comparingInt((Pedido p) -> p.valor));
+        ranking.add(new Pedido("Ana", 50));
+        ranking.add(new Pedido("Bia", 30));
+        System.out.println(ranking);
+    }
+}`,
+      saidaCorrigida: '[Bia=30, Ana=50]',
+      dica: 'Uma árvore binária de busca precisa decidir se cada elemento vai para a esquerda ou para a direita. Como o `TreeSet` compara dois `Pedido`?',
+      explicacao: 'Sem `Comparator`, o `TreeSet` supõe que os elementos são `Comparable` e faz o cast na hora de comparar. `Pedido` não é, e o erro só aparece na execução. Passe um `Comparator` no construtor, ou implemente `Comparable` na classe.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t4-e05-q01',
@@ -237,6 +405,7 @@ public class MiniHash {
       ],
       resposta: 0,
       explicacao: 'É essa regra, valendo em todos os nós, que permite buscar descendo por um único caminho. Nós podem ter zero, um ou dois filhos. Raiz sempre maior (ou menor) é a regra do heap, outra árvore.',
+      dica: 'Menores de um lado, maiores do outro, em toda subárvore.',
     },
     {
       id: 'aprendiz-t4-e05-q02',
@@ -276,6 +445,7 @@ public class PreOrdem {
 }`,
       resposta: '8 3 1 6 10 14',
       explicacao: 'A árvore fica com 8 na raiz, 3 e 10 como filhos, 1 e 6 abaixo do 3, e 14 à direita do 10. A pré-ordem visita o nó antes dos filhos: 8, depois toda a subárvore esquerda (3, 1, 6), depois a direita (10, 14). O percurso em ordem daria os valores ordenados.',
+      dica: 'Pré-ordem visita o nó antes dos filhos.',
     },
     {
       id: 'aprendiz-t4-e05-q03',
@@ -285,6 +455,7 @@ public class PreOrdem {
       opcoes: ['n', 'log₂ n', 'n/2', '√n', '2'],
       resposta: 0,
       explicacao: 'Cada novo valor é maior que todos os anteriores e vai sempre para a direita do último: a árvore vira uma corrente, uma lista ligada disfarçada. Por isso existem as árvores balanceadas, como a rubro-negra do `TreeMap`.',
+      dica: 'Cada valor novo é maior que todos os anteriores.',
     },
     {
       id: 'aprendiz-t4-e05-q04',
@@ -296,6 +467,7 @@ public class PreOrdem {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '65 · 31 + 97 = 2112 e 66 · 31 + 66 = 2112: as duas strings colidem. Hash igual não significa objetos iguais, e o contrato não exige isso. A tabela hash resolve a colisão comparando com `equals`.',
+      dica: 'Siga a busca na árvore a partir da raiz.',
     },
     {
       id: 'aprendiz-t4-e05-q05',
@@ -311,6 +483,7 @@ public class PreOrdem {
       ],
       respostas: [0, 1],
       explicacao: 'A primeira é a regra do contrato; a segunda é a contrapositiva dela, e por isso também vale (e é o que deixa a tabela pular candidatos sem chamar `equals`). A terceira é a recíproca, que não vale: colisões existem. O hash precisa ser estável enquanto o objeto não muda.',
+      dica: '`equals` igual exige `hashCode` igual; o contrário não.',
     },
     {
       id: 'aprendiz-t4-e05-q06',
@@ -341,6 +514,7 @@ public class Produto {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem sobrescrever `hashCode`, cada `Produto` usa o hash de identidade herdado de `Object`. O segundo objeto cai em outro balde (ou tem outro hash) e o `equals` nem é chamado. O compilador não exige `hashCode`; só o contrato.',
+      dica: 'Pense no balde em que cada objeto foi guardado.',
     },
     {
       id: 'aprendiz-t4-e05-q07',
@@ -355,6 +529,7 @@ public class Produto {
       ],
       resposta: 0,
       explicacao: 'A árvore mantém as chaves ordenadas a cada inserção. Isso permite iterar em ordem e perguntar pela maior chave menor que um valor, pela faixa entre duas chaves, pela primeira e pela última. Nenhum mapa do Java aceita chaves duplicadas.',
+      dica: 'A árvore mantém as chaves em ordem.',
     },
     {
       id: 'aprendiz-t4-e05-q08',
@@ -367,6 +542,7 @@ System.out.println(faixas.floorEntry(60).getValue());
 System.out.println(faixas.ceilingKey(19));`,
       resposta: 'juvenil\nsênior\n60',
       explicacao: '`floorEntry(15)` é o par com a maior chave ≤ 15, a do 13. `floorEntry(60)` inclui a igualdade e devolve o próprio 60. `ceilingKey(19)` é a menor chave ≥ 19, o 60. Faixas de idade, de preço ou de horário viram uma linha com `TreeMap`.',
+      dica: '`floorKey` dá a maior chave menor ou igual.',
     },
     {
       id: 'aprendiz-t4-e05-q09',
@@ -395,6 +571,7 @@ System.out.println(faixas.ceilingKey(19));`,
       respostas: ['esq'],
       saida: 'true false',
       explicacao: 'Valores menores que o nó estão na subárvore esquerda. A busca por 40 desce 50 → 30 → 40. A busca por 45 desce 50 → 30 → 40 → direita do 40, que é `null`: não está. Cada passo descarta um lado inteiro.',
+      dica: 'Os menores ficam na subárvore da esquerda.',
     },
     {
       id: 'aprendiz-t4-e05-q10',
@@ -404,6 +581,7 @@ System.out.println(faixas.ceilingKey(19));`,
       opcoes: ['O 13º', 'O 16º', 'O 17º', 'O 12º', 'O 9º'],
       resposta: 0,
       explicacao: '16 × 0,75 = 12 é o limite. Quando o tamanho passa de 12, ou seja, ao inserir o 13º elemento, a tabela vai para 32 baldes. Quem já sabe quantos elementos terá pode passar a capacidade no construtor e evitar redimensionamentos.',
+      dica: '16 × 0,75 = 12: o redimensionamento vem no elemento seguinte.',
     },
     {
       id: 'aprendiz-t4-e05-q11',
@@ -419,6 +597,7 @@ System.out.println(conjunto.contains(chave) + " " + conjunto.size());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A lista entrou no balde calculado pelo hash de `[1]`. Ao virar `[1, 2]`, o hash mudou, e `contains` procura em outro balde. O objeto continua dentro do conjunto (tamanho 1), mas não é mais encontrado. Chaves devem ser imutáveis.',
+      dica: 'Confira o `hashCode` e o `equals` da classe usada como chave.',
     },
     {
       id: 'aprendiz-t4-e05-q12',
@@ -428,6 +607,7 @@ System.out.println(conjunto.contains(chave) + " " + conjunto.size());`,
       opcoes: ['`TreeMap`', '`TreeSet`', '`HashMap`', '`HashSet`', '`LinkedHashMap`'],
       respostas: [0, 1],
       explicacao: 'As estruturas de árvore mantêm as chaves ordenadas. O `HashMap` e o `HashSet` não garantem ordem nenhuma, e o `LinkedHashMap` mantém a ordem de **inserção**, não a ordem das chaves.',
+      dica: 'Quais estruturas são árvores?',
     },
     {
       id: 'aprendiz-t4-e05-q13',
@@ -447,6 +627,7 @@ public class Mapas {
 }`,
       resposta: 8,
       explicacao: '`Map` tem dois parâmetros de tipo, a chave e o valor. `Map<String>` é um número errado de argumentos de tipo. Um conjunto de chaves seria `Set<String>`, como na linha 7.',
+      dica: 'Confira os tipos genéricos e os argumentos.',
     },
     {
       id: 'aprendiz-t4-e05-q14',
@@ -467,6 +648,7 @@ System.out.println(pontos);`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ClassCastException' },
       explicacao: 'O `TreeSet` precisa comparar elementos para posicioná-los na árvore. Sem `Comparator`, ele tenta converter para `Comparable`, e o record não implementa essa interface. O compilador não percebe, porque `TreeSet<Ponto>` aceita qualquer tipo; o erro só aparece ao inserir. A solução é `new TreeSet<>(Comparator.comparingInt(Ponto::x).thenComparingInt(Ponto::y))`.',
+      dica: 'Pense no que o `TreeSet` precisa fazer com cada elemento.',
     },
     {
       id: 'aprendiz-t4-e05-q15',
@@ -481,6 +663,7 @@ System.out.println(pontos);`,
       ],
       resposta: 0,
       explicacao: 'O contrato é cumprido (iguais têm o mesmo hash), então o mapa continua correto: o `equals` diferencia as chaves. Mas todas colidem no mesmo balde, e cada busca compara com todas. Desde o Java 8, o balde vira uma árvore e o pior caso é O(log n), em vez de O(n), se as chaves forem `Comparable`.',
+      dica: 'Todas as chaves no mesmo balde.',
     },
   ],
 };

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">A ordem de andThen e compose com dobro, que multiplica por 2, e mais3, que soma 3, aplicadas a 5: dobro.andThen(mais3) passa 5 por dobro, que dá 10, e depois por mais3, que dá 13; dobro.compose(mais3) passa 5 por mais3, que dá 8, e depois por dobro, que dá 16</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <text x="20" y="30" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#4fd68b">dobro.andThen(mais3).apply(5): primeiro dobro, depois mais3</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14">
+    <rect x="20" y="46" width="70" height="48" rx="24" fill="#1b1916" stroke="#8a8277"/><text x="48" y="75" fill="#f3eee7">5</text>
+    <rect x="140" y="46" width="130" height="48" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="160" y="75" fill="#f3eee7">dobro</text>
+    <rect x="320" y="46" width="70" height="48" rx="24" fill="#1b1916" stroke="#8a8277"/><text x="343" y="75" fill="#f3eee7">10</text>
+    <rect x="440" y="46" width="130" height="48" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="460" y="75" fill="#f3eee7">mais3</text>
+    <rect x="620" y="46" width="70" height="48" rx="24" fill="#13221a" stroke="#4fd68b"/><text x="643" y="75" fill="#4fd68b">13</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M90 70 L137 70"/><path d="M270 70 L317 70"/><path d="M390 70 L437 70"/><path d="M570 70 L617 70"/>
+  </g>
+  <text x="20" y="150" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#ff7a1a">dobro.compose(mais3).apply(5): primeiro mais3, depois dobro</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14">
+    <rect x="20" y="166" width="70" height="48" rx="24" fill="#1b1916" stroke="#8a8277"/><text x="48" y="195" fill="#f3eee7">5</text>
+    <rect x="140" y="166" width="130" height="48" rx="6" fill="#26170c" stroke="#ff7a1a"/><text x="160" y="195" fill="#f3eee7">mais3</text>
+    <rect x="320" y="166" width="70" height="48" rx="24" fill="#1b1916" stroke="#8a8277"/><text x="348" y="195" fill="#f3eee7">8</text>
+    <rect x="440" y="166" width="130" height="48" rx="6" fill="#26170c" stroke="#ff7a1a"/><text x="460" y="195" fill="#f3eee7">dobro</text>
+    <rect x="620" y="166" width="70" height="48" rx="24" fill="#26170c" stroke="#ff7a1a"/><text x="643" y="195" fill="#ff7a1a">16</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M90 190 L137 190"/><path d="M270 190 L317 190"/><path d="M390 190 L437 190"/><path d="M570 190 L617 190"/>
+  </g>
+  <text x="20" y="256" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">andThen: "e depois". compose: "depois de". Em matemática, f.compose(g) é f(g(x)).</text>
+  <text x="20" y="280" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Compor não executa nada: só cria uma função nova, que roda no apply.</text>
+</svg>

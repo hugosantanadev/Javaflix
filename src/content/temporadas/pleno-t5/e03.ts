@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Com objeto `null`, a referência lança `NullPointerException` já na criação; a lambda equivalente só ao ser chamada.',
     '`super::metodo` chama a versão da superclasse, ignorando a sobrescrita.',
   ],
+  ia: {
+    uso:
+      'Com referências a métodos, a IA ajuda a traduzir entre referência e lambda e a explicar um `invalid method reference`. Ela costuma tratar as duas formas como idênticas, sem lembrar que o objeto de `objeto::metodo` é lido na criação, e sugere referências ambíguas ou com parênteses.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui as referências a métodos e o tipo de cada alvo>\n- Para cada uma, diga a forma (estático, objeto específico, objeto qualquer do tipo ou construtor) e escreva a lambda equivalente.\n- Diga, para as referências com objeto, quando o objeto é avaliado e o que acontece se ele for null.\n- Aponte referências ambíguas ou que não encaixam no alvo, com a mensagem do javac.\n- Não troque lambdas por referências quando o objeto puder mudar.',
+    erros: [
+      'Escreve `String::length()`, com parênteses, que não compila.',
+      'Usa `Integer::toString` numa `Function<Integer, String>`, que é ambígua.',
+      'Troca `x -> servico.processar(x)` por `servico::processar` quando o campo `servico` pode ser trocado depois.',
+      'Diz que a referência com objeto `null` só falha quando é chamada, como a lambda.',
+    ],
+    conferir: [
+      'Compile cada referência: os erros de forma e de ambiguidade aparecem na hora.',
+      'Teste com o objeto `null` e veja em que linha a exceção aparece.',
+      'Troque o objeto depois de criar a referência e veja qual deles é usado.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Writing Lambda Expressions as Method References',
@@ -157,6 +174,131 @@ public class Palavras {
     comentarios:
       'Cada referência substitui uma lambda que só repassava argumentos: `String::strip` no lugar de `s -> s.strip()`, `Palavra::new` no lugar de `(t, n) -> new Palavra(t, n)`. `String::compareToIgnoreCase` vira o `compare` do comparador porque recebe dois textos, o primeiro como objeto. O `Supplier` ainda usa uma lambda, porque `new TreeMap<>(...)` precisa de argumento, e uma referência a construtor não fixa argumentos.',
   },
+  bugs: [
+    {
+      id: 'pleno-t5-e03-b01',
+      dificuldade: 1,
+      sintoma: 'A configuração das larguras das colunas não compila: `\';\' expected`, com o cursor depois de `length()`.',
+      codigo: `import java.util.List;
+import java.util.function.Function;
+
+public class Colunas {
+    public static void main(String[] args) {
+        Function<String, Integer> largura = String::length();
+        for (String coluna : List.of("data", "cliente", "total")) {
+            System.out.println(coluna + ": " + largura.apply(coluna));
+        }
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.List;
+import java.util.function.Function;
+
+public class Colunas {
+    public static void main(String[] args) {
+        Function<String, Integer> largura = String::length;
+        for (String coluna : List.of("data", "cliente", "total")) {
+            System.out.println(coluna + ": " + largura.apply(coluna));
+        }
+    }
+}`,
+      saidaCorrigida: 'data: 4\ncliente: 7\ntotal: 5',
+      dica: 'Uma referência a método chama o método ou só aponta para ele? O que os parênteses estão fazendo ali?',
+      explicacao:
+        'Uma referência a método só nomeia o método, e quem passa os argumentos é a interface funcional, na hora da chamada. Por isso nunca há parênteses depois do nome: `String::length`. Com eles, o compilador lê `String::length` e encontra um `(` que não esperava, e a mensagem `\';\' expected` engana à primeira vista.',
+    },
+    {
+      id: 'pleno-t5-e03-b02',
+      dificuldade: 2,
+      sintoma: 'A conversão dos códigos para texto não compila: `incompatible types: invalid method reference`, com a observação `reference to toString is ambiguous`.',
+      codigo: `import java.util.List;
+import java.util.function.Function;
+
+public class Codigos {
+    public static void main(String[] args) {
+        Function<Integer, String> paraTexto = Integer::toString;
+        StringBuilder linha = new StringBuilder();
+        for (int codigo : List.of(101, 205, 330)) linha.append(paraTexto.apply(codigo)).append(';');
+        System.out.println(linha);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.List;
+import java.util.function.Function;
+
+public class Codigos {
+    public static void main(String[] args) {
+        Function<Integer, String> paraTexto = String::valueOf;
+        StringBuilder linha = new StringBuilder();
+        for (int codigo : List.of(101, 205, 330)) linha.append(paraTexto.apply(codigo)).append(';');
+        System.out.println(linha);
+    }
+}`,
+      saidaCorrigida: '101;205;330;',
+      dica: 'Quantos métodos `toString` de `Integer` servem a uma `Function<Integer, String>`? Um estático, que recebe o número, e um...?',
+      explicacao:
+        '`Integer::toString` serve de duas formas: como o estático `Integer.toString(int)`, com o `Integer` como argumento, e como o `toString()` de instância, com o `Integer` como o objeto. As duas leituras se encaixam na `Function`, e o compilador recusa. Use `String::valueOf`, que não tem essa ambiguidade aqui, ou a lambda `n -> n.toString()`.',
+    },
+    {
+      id: 'pleno-t5-e03-b03',
+      dificuldade: 3,
+      sintoma: 'Depois da troca de servidor de e-mail, as confirmações continuaram saindo pelo servidor antigo: `via smtp-antigo: pedido 42 confirmado`.',
+      codigo: `import java.util.function.Consumer;
+
+public class Avisos {
+    static class Notificador {
+        final String servidor;
+
+        Notificador(String servidor) {
+            this.servidor = servidor;
+        }
+
+        void enviar(String mensagem) {
+            System.out.println("via " + servidor + ": " + mensagem);
+        }
+    }
+
+    static Notificador atual = new Notificador("smtp-antigo");
+
+    public static void main(String[] args) {
+        Consumer<String> enviar = atual::enviar;
+        atual = new Notificador("smtp-novo");
+        enviar.accept("pedido 42 confirmado");
+    }
+}`,
+      linha: 19,
+      efeito: { tipo: 'saida', saida: 'via smtp-antigo: pedido 42 confirmado' },
+      correcao: `import java.util.function.Consumer;
+
+public class Avisos {
+    static class Notificador {
+        final String servidor;
+
+        Notificador(String servidor) {
+            this.servidor = servidor;
+        }
+
+        void enviar(String mensagem) {
+            System.out.println("via " + servidor + ": " + mensagem);
+        }
+    }
+
+    static Notificador atual = new Notificador("smtp-antigo");
+
+    public static void main(String[] args) {
+        Consumer<String> enviar = mensagem -> atual.enviar(mensagem);
+        atual = new Notificador("smtp-novo");
+        enviar.accept("pedido 42 confirmado");
+    }
+}`,
+      saidaCorrigida: 'via smtp-novo: pedido 42 confirmado',
+      dica: 'Numa referência como `atual::enviar`, quando o objeto à esquerda do `::` é lido: na criação da referência ou na chamada?',
+      explicacao:
+        'O objeto de uma referência com objeto específico é avaliado **uma vez, na criação**: `atual::enviar` guardou o notificador antigo, e a troca do campo depois não muda a referência. Uma lambda lê o campo a cada chamada, e por isso enxerga o servidor novo. Use a referência quando o objeto é fixo, e a lambda quando ele pode ser trocado.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t5-e03-q01',
@@ -176,6 +318,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Integer::valueOf` converte o texto em 12, e `String::length` mede o texto: 2. Os dois `Integer` são somados.',
+      dica: '`valueOf` converte o texto em número; `length` conta os caracteres.',
     },
     {
       id: 'pleno-t5-e03-q02',
@@ -193,6 +336,7 @@ public class Teste {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: '`String::length` precisa de um objeto, que o `Supplier` não fornece. `Integer::toString` tem duas leituras possíveis. E referências não levam parênteses.',
+      dica: 'Em `Tipo::metodoDeInstancia`, o primeiro parâmetro é o objeto; `Integer::toString` é ambígua.',
     },
     {
       id: 'pleno-t5-e03-q03',
@@ -213,6 +357,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O objeto à esquerda de `::` é avaliado quando a referência é criada. Ela guardou "Ana", e a reatribuição posterior não a afeta. Com uma lambda `() -> nome.length()`, o código não compilaria.',
+      dica: 'O objeto de `nome::length` foi avaliado na criação.',
     },
     {
       id: 'pleno-t5-e03-q04',
@@ -239,6 +384,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException', saida: 'antes' },
       explicacao: 'A referência confere o objeto ao ser criada e lança a exceção ali mesmo. A lambda `() -> texto.length()` só falharia no `get()`.',
+      dica: 'Com objeto `null`, a referência falha já ao ser criada.',
     },
     {
       id: 'pleno-t5-e03-q05',
@@ -256,6 +402,7 @@ public class Construtor {
       respostas: ['StringBuilder'],
       saida: 'olá!',
       explicacao: 'Com uma `Function<String, ...>`, `StringBuilder::new` chama o construtor que recebe um texto.',
+      dica: 'É a classe do construtor que recebe um `String` e tem `append`.',
     },
     {
       id: 'pleno-t5-e03-q06',
@@ -275,6 +422,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`String::compareToIgnoreCase` vira um `Comparator<String>`: `compare(a, b)` chama `a.compareToIgnoreCase(b)`.',
+      dica: '`compareToIgnoreCase` ignora maiúsculas e minúsculas.',
     },
     {
       id: 'pleno-t5-e03-q07',
@@ -298,6 +446,7 @@ public class Teste {
 }`,
       resposta: 12,
       explicacao: '`Teste::saudar` precisa de um `Teste` para ser chamado. A `Function<Teste, String>` da linha 11 o recebe como parâmetro; o `Supplier` da linha 12 não tem de onde tirá-lo.',
+      dica: 'Um método de instância sem objeto não serve a um `Supplier`.',
     },
     {
       id: 'pleno-t5-e03-q08',
@@ -330,6 +479,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`super::som` aponta para a versão da superclasse, sem despacho polimórfico. `this::som` usa a versão sobrescrita.',
+      dica: '`super::som` chama a versão da superclasse.',
     },
     {
       id: 'pleno-t5-e03-q09',
@@ -347,6 +497,7 @@ public class Teste {
 }`,
       resposta: 'JAVA',
       explicacao: 'Em `String::concat`, o primeiro parâmetro é o objeto e o segundo, o argumento: `"ja".concat("va")`.',
+      dica: '`concat` junta; `toUpperCase` passa para maiúsculas.',
     },
     {
       id: 'pleno-t5-e03-q10',
@@ -371,6 +522,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'O `Integer` pode ser o objeto de `toString()` ou o argumento de `Integer.toString(int)`. Em `String::valueOf`, só a versão estática existe, e a escolha entre as sobrecargas é única.',
+      dica: 'Uma das duas referências tem duas leituras possíveis.',
     },
     {
       id: 'pleno-t5-e03-q11',
@@ -386,6 +538,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: '`Math::max` recebe os dois números como parâmetros, `ArrayList::new` também serve a uma `Function<Integer, ...>`, e o objeto da referência é avaliado na criação, sem exigência de efetivamente final.',
+      dica: 'Conte os parâmetros: quem é o objeto e quem é argumento.',
     },
     {
       id: 'pleno-t5-e03-q12',
@@ -405,6 +558,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`String[]::new` equivale a `n -> new String[n]`. O array nasce com as posições em `null`.',
+      dica: '`String[]::new` cria um array do tamanho pedido, cheio de `null`.',
     },
     {
       id: 'pleno-t5-e03-q13',
@@ -432,6 +586,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A referência guardou o primeiro objeto, cujo campo foi alterado para "# ". A variável `t` passou a apontar para um objeto novo, com o prefixo original, mas isso não afeta a referência.',
+      dica: 'A referência guardou o primeiro objeto, e o campo dele mudou depois.',
     },
     {
       id: 'pleno-t5-e03-q14',
@@ -449,6 +604,7 @@ public class Teste {
 }`,
       resposta: 'f3.5',
       explicacao: '`String::charAt` recebe o texto como objeto e o índice como argumento. Um `Character` mais uma `String` resulta em concatenação.',
+      dica: '`charAt(4)` de `javaflix` é a quinta letra.',
     },
     {
       id: 'pleno-t5-e03-q15',
@@ -463,6 +619,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O método já existe, então não há corpo a extrair. Na execução, a JVM cria o objeto que implementa a interface e chama o método referenciado.',
+      dica: 'Referências não geram um método `lambda$`.',
     },
   ],
 };

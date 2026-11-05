@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`values()` devolve uma cópia nova do array a cada chamada.',
     'Enums estendem `java.lang.Enum` e não podem estender outra classe, mas podem implementar interfaces.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a trocar constantes `int` por um enum e a completar `switch` com todas as constantes. Confira com atenção o que ela faz com `ordinal()` e `valueOf`, dois pontos em que costuma errar.',
+    pedido:
+      'Revise o uso de enums neste código Java 21.\n<cole o código aqui>\n- Aponte constantes int ou String que deveriam ser um enum.\n- Aponte usos de ordinal() como dado persistido e proponha name() ou um código próprio.\n- Mostre onde valueOf recebe texto de fora sem normalização nem tratamento de IllegalArgumentException.',
+    erros: [
+      'Salva `ordinal()` no banco e lê de volta com `values()[n]`.',
+      'Chama `valueOf` com o texto do usuário sem normalizar maiúsculas.',
+      'Compara enums com `equals` numa variável que pode ser `null`.',
+    ],
+    conferir: [
+      'Teste `valueOf` com minúsculas e com um nome inexistente.',
+      'Acrescente uma constante no meio do enum e veja se algo depende da posição.',
+      'Compile o `switch` expressão sem `default`: o compilador aponta constantes não cobertas.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Enums',
@@ -156,6 +172,114 @@ public class Agenda {
     comentarios:
       'O `%` faz a aritmética circular, como num relógio, que você viu no episódio de aritmética modular. O `ordinal()` aqui é usado só em memória, para calcular posições, e nunca guardado: se a semana fosse redefinida, o código continuaria correto. A biblioteca padrão tem o seu próprio `java.time.DayOfWeek`, com `plus(dias)` pronto.',
   },
+  bugs: [
+    {
+      id: 'junior-t4-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: enum classes may not be instantiated`.',
+      codigo: `enum Plano { BASICO, PREMIUM }
+
+public class Assinatura {
+    public static void main(String[] args) {
+        Plano escolhido = new Plano();
+        System.out.println(escolhido);
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `enum Plano { BASICO, PREMIUM }
+
+public class Assinatura {
+    public static void main(String[] args) {
+        Plano escolhido = Plano.PREMIUM;
+        System.out.println(escolhido);
+    }
+}`,
+      saidaCorrigida: 'PREMIUM',
+      dica: 'Quais valores um `Plano` pode ter? Algum deles nasce com `new`?',
+      explicacao: 'Os únicos objetos de um enum são as constantes declaradas, criadas na carga da classe. O construtor é sempre privado, e `new` não compila. Use a constante: `Plano.PREMIUM`.',
+    },
+    {
+      id: 'junior-t4-e04-b02',
+      dificuldade: 2,
+      sintoma: 'Pedidos em `SEPARANDO` aparecem com dois textos de status: `separando no galpão saiu para entrega`.',
+      codigo: `enum Status { NOVO, SEPARANDO, ENVIADO }
+
+public class Rastreio {
+    public static void main(String[] args) {
+        Status s = Status.SEPARANDO;
+        String texto = "";
+        switch (s) {
+            case NOVO:
+                texto += "aguardando ";
+                break;
+            case SEPARANDO:
+                texto += "separando no galpão ";
+            case ENVIADO:
+                texto += "saiu para entrega";
+        }
+        System.out.println(texto.trim());
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'saida', saida: 'separando no galpão saiu para entrega' },
+      correcao: `enum Status { NOVO, SEPARANDO, ENVIADO }
+
+public class Rastreio {
+    public static void main(String[] args) {
+        Status s = Status.SEPARANDO;
+        String texto = "";
+        switch (s) {
+            case NOVO:
+                texto += "aguardando ";
+                break;
+            case SEPARANDO:
+                texto += "separando no galpão "; break;
+            case ENVIADO:
+                texto += "saiu para entrega";
+        }
+        System.out.println(texto.trim());
+    }
+}`,
+      saidaCorrigida: 'separando no galpão',
+      dica: 'Depois que um `case` com dois pontos executa, o que impede o próximo de executar também?',
+      explicacao: 'No `switch` com dois pontos, a execução continua no `case` seguinte até um `break` (o *fall-through*). O `switch` com setas, `case SEPARANDO -> ...`, não tem esse comportamento e evita o bug por construção.',
+    },
+    {
+      id: 'junior-t4-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O filtro de pedidos lança `IllegalArgumentException: No enum constant Status.enviado` quando o usuário digita o status em minúsculas.',
+      codigo: `enum Status { NOVO, SEPARANDO, ENVIADO }
+
+public class Filtro {
+    static Status ler(String entrada) {
+        return Status.valueOf(entrada.trim());
+    }
+
+    public static void main(String[] args) {
+        String digitado = " enviado ";
+        System.out.println(ler(digitado));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'excecao', nome: 'IllegalArgumentException' },
+      correcao: `enum Status { NOVO, SEPARANDO, ENVIADO }
+
+public class Filtro {
+    static Status ler(String entrada) {
+        return Status.valueOf(entrada.trim().toUpperCase());
+    }
+
+    public static void main(String[] args) {
+        String digitado = " enviado ";
+        System.out.println(ler(digitado));
+    }
+}`,
+      saidaCorrigida: 'ENVIADO',
+      dica: 'O `valueOf` compara o texto com o nome da constante de que jeito: ignorando maiúsculas ou não?',
+      explicacao: '`valueOf` procura o nome exato, com as mesmas maiúsculas da declaração, e lança `IllegalArgumentException` se não achar. Texto vindo de fora precisa ser normalizado antes; e, para entradas realmente livres, trate a exceção com uma mensagem própria.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t4-e04-q01',
@@ -165,6 +289,7 @@ public class Agenda {
       opcoes: ['0', '1', '-1', 'Depende do nome da constante'],
       resposta: 0,
       explicacao: 'Os ordinais seguem a ordem de declaração e começam em 0, como os índices de um array.',
+      dica: 'Como os índices de array.',
     },
     {
       id: 'junior-t4-e04-q02',
@@ -177,6 +302,7 @@ Tamanho t = Tamanho.G;
 System.out.println(t.ordinal() + " " + t.name().length() + " " + Tamanho.values()[1]);`,
       resposta: '2 1 M',
       explicacao: '`G` é a terceira constante, de ordinal 2, e o nome dela tem uma letra. A posição 1 do array de `values()` é `M`.',
+      dica: 'G é a terceira constante; o nome tem uma letra; `values()[1]` é a segunda.',
     },
     {
       id: 'junior-t4-e04-q03',
@@ -191,6 +317,7 @@ System.out.println(m);`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'IllegalArgumentException' },
       explicacao: '`valueOf` procura o nome exato, diferenciando maiúsculas. "Real" não é "REAL". O compilador não confere o texto, então o erro só aparece na execução.',
+      dica: '`valueOf` compara o nome exato, com maiúsculas.',
     },
     {
       id: 'junior-t4-e04-q04',
@@ -215,6 +342,7 @@ switch (f) {
       provas: ['829'],
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Até o Java 17, o `case` de um enum precisa do nome da constante sem o tipo: `case INICIO:`. O nome qualificado passou a ser aceito no Java 21.',
+      dica: 'No Java 17, o `case` de enum aceita só o nome simples da constante.',
     },
     {
       id: 'junior-t4-e04-q05',
@@ -239,6 +367,7 @@ switch (f) {
       provas: ['830', '831'],
       verificar: { tipo: 'saida' },
       explicacao: 'Desde o Java 21 (JEP 441), o `case` aceita a constante qualificada pelo tipo do enum. O comportamento é o mesmo da forma curta.',
+      dica: 'O Java 21 passou a aceitar o nome qualificado no `case`.',
     },
     {
       id: 'junior-t4-e04-q06',
@@ -259,6 +388,7 @@ public class Paleta {
       respostas: ['values'],
       saida: 'VVA',
       explicacao: '`values()` devolve um array com as constantes na ordem de declaração, pronto para o for-each.',
+      dica: 'Que método estático devolve o array de constantes?',
     },
     {
       id: 'junior-t4-e04-q07',
@@ -277,6 +407,7 @@ public class Assinatura {
 }`,
       resposta: 7,
       explicacao: 'As constantes são os únicos objetos que um enum pode ter. Os outros dois jeitos de obter uma constante são válidos.',
+      dica: 'Constantes de enum nascem com `new`?',
     },
     {
       id: 'junior-t4-e04-q08',
@@ -296,6 +427,7 @@ System.out.println(pontos + n.ordinal());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `switch` expressão cobre todas as constantes, então não precisa de `default`. 50 + 2 é soma, porque os dois são números.',
+      dica: '50 somado ao `ordinal()` de DIFICIL, que é 2.',
     },
     {
       id: 'junior-t4-e04-q09',
@@ -311,6 +443,7 @@ System.out.println(pontos + n.ordinal());`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'Cada constante existe uma vez só, por isso o `==` funciona. Enums já estendem `java.lang.Enum`, então não estendem mais nada, mas implementam interfaces normalmente.',
+      dica: 'Enums já estendem `java.lang.Enum`.',
     },
     {
       id: 'junior-t4-e04-q10',
@@ -326,6 +459,7 @@ System.out.println(a.compareTo(b) + " " + b.compareTo(a) + " " + (a.compareTo(Pr
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `compareTo` de enum devolve a diferença entre os ordinais: 1 - 3 = -2, e o contrário, 2. Uma constante comparada a si mesma dá 0.',
+      dica: '`compareTo` devolve a diferença entre os `ordinal()`.',
     },
     {
       id: 'junior-t4-e04-q11',
@@ -349,6 +483,7 @@ System.out.println(saudacao);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Um `switch` expressão precisa produzir um valor para toda entrada possível. Sem `NOITE` e sem `default`, o compilador recusa.',
+      dica: 'Um `switch` expressão precisa produzir valor para toda constante.',
     },
     {
       id: 'junior-t4-e04-q12',
@@ -364,6 +499,7 @@ System.out.println(v[0] + " " + Cor.values()[0] + " " + Cor.values().length);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`values()` devolve uma cópia nova a cada chamada. Alterar a cópia não muda a lista de constantes do enum.',
+      dica: '`values()` devolve uma cópia nova a cada chamada.',
     },
     {
       id: 'junior-t4-e04-q13',
@@ -378,6 +514,7 @@ System.out.println(v[0] + " " + Cor.values()[0] + " " + Cor.values().length);`,
       ],
       resposta: 0,
       explicacao: 'A busca é pelo nome exato. Para aceitar minúsculas, converta antes: `Naipe.valueOf(texto.toUpperCase())`.',
+      dica: 'Maiúsculas importam no `valueOf`.',
     },
     {
       id: 'junior-t4-e04-q14',
@@ -402,6 +539,7 @@ System.out.println(dias);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `switch` clássico com dois-pontos tem queda (*fall-through*): sem `break` em `JAN`, a execução continua em `FEV` até o `break`.',
+      dica: 'Sem `break` depois de JAN, a execução cai em FEV.',
     },
     {
       id: 'junior-t4-e04-q15',
@@ -416,6 +554,7 @@ System.out.println(dias);`,
       ],
       resposta: 0,
       explicacao: 'O bloco `static` gerado cria um objeto por constante, passando o nome e o ordinal ao construtor de `Enum`. Por isso enums não podem estender outra classe.',
+      dica: 'Enum é açúcar para uma classe que estende `java.lang.Enum`.',
     },
   ],
 };

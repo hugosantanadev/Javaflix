@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Criar um `ObjectMapper` por requisição desperdiça tempo: ele é seguro entre threads e deve ser reaproveitado.',
     'Converter o JSON da requisição direto na entidade deixa o cliente preencher campos que não devia, como `administrador`.',
   ],
+  ia: {
+    uso:
+      'Para JSON, a IA é ótima em gerar `record`s a partir de um exemplo, escrever o JSON de teste de um DTO e explicar uma mensagem de erro do Jackson. Os erros típicos são de geração: misturar Jackson 2 e 3 e escolher tipos numéricos ruins, como `double` para dinheiro.',
+    pedido:
+      'Projeto Spring Boot 4.1 (Jackson 3, pacote tools.jackson) com Java 25.\n<cole aqui um JSON de exemplo da API do parceiro>\n- Escreva os records que leem esse JSON, com BigDecimal para valores e String para ids maiores que 2^53.\n- Use as anotações de com.fasterxml.jackson.annotation só onde o nome do campo não for um identificador Java válido.\n- Escreva um teste com o ObjectMapper que leia o exemplo e confira três campos.\n- Não acrescente o módulo jsr310: no Jackson 3 ele já vem embutido.',
+    erros: [
+      'Usa imports de `com.fasterxml.jackson.databind` num projeto com Jackson 3.',
+      'Declara valores em dinheiro como `double` ou `float`.',
+      'Monta JSON concatenando texto, com aspas simples ou sem escapar as aspas.',
+      'Cria um `ObjectMapper` novo a cada requisição.',
+    ],
+    conferir: [
+      'Compile: imports da geração errada não existem no classpath.',
+      'Leia o JSON de exemplo num teste e compare os valores, inclusive os decimais.',
+      'Cole o JSON gerado num validador ou leia-o de volta com o próprio Jackson.',
+    ],
+  },
   recursos: [
     {
       titulo: 'RFC 8259: The JavaScript Object Notation (JSON) Data Interchange Format',
@@ -276,6 +293,95 @@ public class LeitorJson {
     comentarios:
       'A descida recursiva segue a gramática ao pé da letra: um objeto contém valores, que podem ser objetos, e a pilha de chamadas do Java faz o papel da pilha de aninhamento. Ler números como `BigDecimal` preserva o `150.00` exatamente, o que um `double` não faria. Faltam a um analisador de produção a validação estrita dos números (zeros à esquerda, um ponto sem dígitos), o tratamento de pares substitutos no `\\u`, limites de profundidade e de tamanho, que impedem que um JSON com milhões de `[` aninhados estoure a pilha, e desempenho: o Jackson lê direto dos bytes, sem montar a `String` inteira antes.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t2-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O aplicativo do parceiro recusa toda resposta da nova rota de estoque com "Unexpected character (\'\'\')". A rota devolve `{\'sku\':\'TEC-1\',\'quantidade\':2}`.',
+      codigo: `public class Resposta {
+    static String json(String sku, int quantidade) {
+        return "{'sku':'" + sku + "','quantidade':" + quantidade + "}";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(json("TEC-1", 2));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '{\'sku\':\'TEC-1\',\'quantidade\':2}' },
+      correcao: `public class Resposta {
+    static String json(String sku, int quantidade) {
+        return "{\\"sku\\":\\"" + sku + "\\",\\"quantidade\\":" + quantidade + "}";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(json("TEC-1", 2));
+    }
+}`,
+      saidaCorrigida: '{"sku":"TEC-1","quantidade":2}',
+      dica: 'Que tipo de aspas o JSON aceita em nomes e textos?',
+      explicacao:
+        'JSON só aceita aspas duplas, em nomes e em textos. Aspas simples são válidas em JavaScript e em Python, e por isso o erro passa despercebido em quem testa no navegador. Montar JSON concatenando texto é frágil; na aplicação, deixe o Jackson gerar.',
+    },
+    {
+      id: 'backend-junior-t2-e03-b02',
+      dificuldade: 2,
+      sintoma: 'Observações com aspas quebram o JSON gerado pelo serviço de pedidos: o texto `disse "oi"` sai como `{"obs":"disse \\\\"oi\\\\""}`, e o parser do cliente falha.',
+      codigo: `public class Escapar {
+    static String texto(String s) {
+        return "\\"" + s.replace("\\"", "\\\\\\"").replace("\\\\", "\\\\\\\\") + "\\"";
+    }
+
+    public static void main(String[] args) {
+        System.out.println("{\\"obs\\":" + texto("disse \\"oi\\"") + "}");
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '{"obs":"disse \\\\"oi\\\\""}' },
+      correcao: `public class Escapar {
+    static String texto(String s) {
+        return "\\"" + s.replace("\\\\", "\\\\\\\\").replace("\\"", "\\\\\\"") + "\\"";
+    }
+
+    public static void main(String[] args) {
+        System.out.println("{\\"obs\\":" + texto("disse \\"oi\\"") + "}");
+    }
+}`,
+      saidaCorrigida: '{"obs":"disse \\"oi\\""}',
+      dica: 'Acompanhe as barras: o que a segunda troca faz com as barras que a primeira acabou de colocar?',
+      explicacao:
+        'A primeira troca põe uma barra antes de cada aspa; a segunda dobra **todas** as barras, inclusive essas, e o escape vira `\\\\"`, que fecha o texto antes da hora. A barra precisa ser escapada primeiro, e as aspas depois.',
+    },
+    {
+      id: 'backend-junior-t2-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O carrinho de três itens de R$ 150,10 aparece no resumo como `total: 450.29999999999995`, e o arredondamento da tela mostra R$ 450,29.',
+      codigo: `import java.util.List;
+
+public class TotalDoCarrinho {
+    public static void main(String[] args) {
+        List<String> precosNoJson = List.of("150.10", "150.10", "150.10");
+        double total = precosNoJson.stream().mapToDouble(Double::parseDouble).sum();
+        System.out.println("total: " + total);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'total: 450.29999999999995' },
+      correcao: `import java.util.List;
+
+public class TotalDoCarrinho {
+    public static void main(String[] args) {
+        List<String> precosNoJson = List.of("150.10", "150.10", "150.10");
+        java.math.BigDecimal total = precosNoJson.stream().map(java.math.BigDecimal::new).reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        System.out.println("total: " + total);
+    }
+}`,
+      saidaCorrigida: 'total: 450.30',
+      dica: 'Em que tipo os preços vindos do JSON foram somados?',
+      explicacao:
+        '`150.10` não tem representação exata em `double`, e a soma acumula o erro. Lido como texto e convertido em `BigDecimal`, cada preço é exato, e a soma também. É o mesmo motivo de o Jackson oferecer `USE_BIG_DECIMAL_FOR_FLOATS` ao ler números para `Map`.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t2-e03-q01',
@@ -290,6 +396,7 @@ public class LeitorJson {
       ],
       resposta: 0,
       explicacao: 'JSON só aceita aspas duplas, não tem vírgula sobrando e não tem comentários.',
+      dica: 'Confira as aspas, a vírgula final e os comentários de cada opção.',
     },
     {
       id: 'backend-junior-t2-e03-q02',
@@ -299,6 +406,7 @@ public class LeitorJson {
       opcoes: ['`[1, 2,]`', '`{"preco": 007}`', '`{"a": null}`', '`[]`', '`"só um texto"`'],
       respostas: [0, 1],
       explicacao: 'Vírgula sobrando e zero à esquerda são proibidos. Um texto sozinho, sem objeto em volta, é JSON válido desde a RFC 7159.',
+      dica: 'As regras: aspas duplas, nada de vírgula sobrando, nada de comentários.',
     },
     {
       id: 'backend-junior-t2-e03-q03',
@@ -313,6 +421,7 @@ public class LeitorJson {
       ],
       resposta: 0,
       explicacao: 'O JavaScript guarda números como `double`, exatos só até 2⁵³. Como texto, o id chega intacto; ids não são usados em contas mesmo.',
+      dica: 'O JavaScript lê todo número como `double`. Como mandar um id grande sem que ele vire número?',
     },
     {
       id: 'backend-junior-t2-e03-q04',
@@ -332,6 +441,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '0,1 e 0,2 não têm representação exata em binário, e a soma em `double` dá 0.30000000000000004. Com `BigDecimal`, a conta é exata, e o `compareTo` devolve 0 para valores iguais.',
+      dica: 'Converter um `long` maior que 2⁵³ para `double` perde os bits finais.',
     },
     {
       id: 'backend-junior-t2-e03-q05',
@@ -341,6 +451,7 @@ public class Teste {
       opcoes: ['`LinkedHashMap`', 'O `record Item` do projeto', '`String`', '`JsonNode`'],
       resposta: 0,
       explicacao: 'Sem o tipo dos elementos, o Jackson usa a representação genérica de um objeto JSON, um mapa. Para receber `Item`, use `new TypeReference<List<Item>>() {}`.',
+      dica: 'Sem dizer o tipo dos elementos, o Jackson usa a estrutura genérica para objetos.',
     },
     {
       id: 'backend-junior-t2-e03-q06',
@@ -355,6 +466,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O apagamento de tipos remove os genéricos dos objetos, mas não das declarações. `getGenericSuperclass()` na subclasse anônima devolve `TypeReference<List<Item>>` completo.',
+      dica: 'O apagamento de tipos some com o genérico em tempo de execução, menos na declaração de uma subclasse.',
     },
     {
       id: 'backend-junior-t2-e03-q07',
@@ -369,6 +481,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Assim, `{"total": 99.90, "cupom": null}` vira `{"total": 99.90}`. Para o cliente, a ausência do campo e o `null` costumam ter o mesmo significado.',
+      dica: 'NON_NULL: o que acontece com os campos que valem `null`?',
     },
     {
       id: 'backend-junior-t2-e03-q08',
@@ -383,6 +496,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: '`raiz.path("cupom").path("codigo").asString()` funciona mesmo sem o campo, e `isMissingNode()` diz que ele não existia.',
+      dica: 'Um devolve `null` para campo ausente; o outro, um nó que permite continuar encadeando.',
     },
     {
       id: 'backend-junior-t2-e03-q09',
@@ -397,6 +511,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O Jackson 3 mudou o padrão de `FAIL_ON_UNKNOWN_PROPERTIES` para desligado, o comportamento de leitor tolerante.',
+      dica: 'Campo desconhecido: o Jackson 2 falha por padrão, e o 3 mudou isso.',
     },
     {
       id: 'backend-junior-t2-e03-q10',
@@ -411,6 +526,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O Jackson 3 ligou `FAIL_ON_NULL_FOR_PRIMITIVES` por padrão. Um zero silencioso numa quantidade costuma ser um defeito, não um valor desejado.',
+      dica: '`int` ausente: o Jackson 2 usa o padrão do tipo, e o 3 passou a recusar.',
     },
     {
       id: 'backend-junior-t2-e03-q11',
@@ -425,6 +541,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Depois de configurado, o mapper é seguro para uso concorrente, e criá-lo é caro porque ele monta e guarda os serializadores de cada classe.',
+      dica: 'O `ObjectMapper` é caro de criar e seguro entre threads.',
     },
     {
       id: 'backend-junior-t2-e03-q12',
@@ -439,6 +556,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'É o ataque de *mass assignment*. Um `record` de entrada com `nome` e `email` não tem como receber o `administrador`.',
+      dica: 'O que impede o cliente de mandar `"administrador": true` junto com o nome?',
     },
     {
       id: 'backend-junior-t2-e03-q13',
@@ -469,6 +587,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os componentes vêm na ordem da declaração, e é por isso que o JSON de um `record` segue essa ordem. O tipo de `ativo` é o primitivo `boolean`.',
+      dica: 'Siga o que cada linha do programa imprime, com o tipo de cada valor.',
     },
     {
       id: 'backend-junior-t2-e03-q14',
@@ -478,6 +597,7 @@ public class Teste {
       opcoes: ['`[2025,9,16,14,30]`', '`"2025-09-16T14:30:00"`', '`1758043800000`', '`"16/09/2025 14:30"`'],
       resposta: 0,
       explicacao: 'No Jackson 2, `WRITE_DATES_AS_TIMESTAMPS` vem ligado, e datas locais viram listas de números. Desligando a opção, ou no Jackson 3, sai o texto ISO 8601.',
+      dica: 'Com o módulo e sem configuração, o Jackson 2 escreve datas como uma lista de números.',
     },
     {
       id: 'backend-junior-t2-e03-q15',
@@ -493,6 +613,7 @@ public class Teste {
 }`,
       resposta: '150.00 150.0',
       explicacao: 'O `double` não guarda a escala, só o valor. Para dinheiro, declare o campo como `BigDecimal` numa classe ou `record`, e o Jackson preserva o `150.00`.',
+      dica: 'O `Double` não guarda a escala; o `BigDecimal` guarda.',
     },
   ],
 };

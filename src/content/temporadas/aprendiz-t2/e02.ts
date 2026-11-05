@@ -13,6 +13,22 @@ const episodio: EpisodioConteudo = {
     'Em C, acesso fora do array é comportamento indefinido; em Java, é exceção.',
     'Em Java, `int` tem sempre 32 bits e `long` sempre 64, em qualquer máquina.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a entender as etapas de compilação do C e a comparar o modelo de memória do C com o do Java. Use-a para explicar mensagens do `gcc` e do ligador, e confira rodando os comandos.',
+    pedido:
+      'Estou comparando C e Java para entender o que acontece por baixo.\n<cole o código C aqui>\n- Diga o que cada etapa do gcc (-E, -S, -c, ligação) produz para este arquivo.\n- Aponte acessos de memória que seriam comportamento indefinido e o que o Java faria no lugar.\n- Mostre o equivalente em Java e explique a diferença no uso de memória.',
+    erros: [
+      'Esquece o `free` ou libera a mesma memória duas vezes.',
+      'Usa `strcpy` e `gets` sem conferir o tamanho do destino.',
+      'Diz que `long` em C tem sempre 64 bits.',
+    ],
+    conferir: [
+      'Compile com `gcc -Wall -fsanitize=address` e rode.',
+      'Rode cada etapa separada (`-E`, `-S`, `-c`) e olhe os arquivos gerados.',
+      'Em Java, confira tamanhos com `Integer.SIZE` e `Long.SIZE`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JEP 454: Foreign Function & Memory API',
@@ -143,6 +159,104 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O Java não deixa você estourar um array de verdade, então a simulação usa um array grande para fazer o papel da memória inteira, como ela é vista por um programa C. Funções como `strcpy` do C copiam até achar o fim do texto, sem saber o tamanho do destino, e foi assim que surgiram muitos ataques reais: o texto excedente sobrescreve o que vem depois, inclusive o endereço de retorno na pilha.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t2-e02-b01',
+      dificuldade: 1,
+      sintoma: 'A soma das notas lança `ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3`.',
+      codigo: `public class Notas {
+    public static void main(String[] args) {
+        int[] notas = {7, 8, 9};
+        int soma = 0;
+        for (int i = 0; i <= notas.length; i++) {
+            soma += notas[i];
+        }
+        System.out.println(soma);
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
+      correcao: `public class Notas {
+    public static void main(String[] args) {
+        int[] notas = {7, 8, 9};
+        int soma = 0;
+        for (int i = 0; i < notas.length; i++) {
+            soma += notas[i];
+        }
+        System.out.println(soma);
+    }
+}`,
+      saidaCorrigida: '24',
+      dica: 'Um array de 3 posições tem índices de 0 a quanto? Quantas voltas o laço dá?',
+      explicacao: 'Os índices vão de 0 a `length - 1`, e `i <= length` faz uma volta a mais. Em C, essa volta leria memória vizinha sem aviso; em Java, a checagem de limites lança exceção na hora.',
+    },
+    {
+      id: 'aprendiz-t2-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O método de inverter um array devolve o array na ordem original: `[1, 2, 3, 4]`.',
+      codigo: `import java.util.Arrays;
+
+public class Inverte {
+    static void inverter(int[] v) {
+        for (int i = 0; i < v.length; i++) {
+            int tmp = v[i];
+            v[i] = v[v.length - 1 - i];
+            v[v.length - 1 - i] = tmp;
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] v = {1, 2, 3, 4};
+        inverter(v);
+        System.out.println(Arrays.toString(v));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: '[1, 2, 3, 4]' },
+      correcao: `import java.util.Arrays;
+
+public class Inverte {
+    static void inverter(int[] v) {
+        for (int i = 0; i < v.length / 2; i++) {
+            int tmp = v[i];
+            v[i] = v[v.length - 1 - i];
+            v[v.length - 1 - i] = tmp;
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] v = {1, 2, 3, 4};
+        inverter(v);
+        System.out.println(Arrays.toString(v));
+    }
+}`,
+      saidaCorrigida: '[4, 3, 2, 1]',
+      dica: 'Acompanhe o array a cada volta. O que acontece quando `i` passa da metade?',
+      explicacao: 'Cada troca envolve duas posições. Percorrendo o array inteiro, a segunda metade das voltas desfaz as trocas da primeira. O laço deve ir só até a metade: `i < v.length / 2`.',
+    },
+    {
+      id: 'aprendiz-t2-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O cálculo de memória para reservar 4 GiB devolve `0 bytes`.',
+      codigo: `public class Reserva {
+    public static void main(String[] args) {
+        long bytes = 4 * 1024 * 1024 * 1024;
+        System.out.println(bytes + " bytes");
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '0 bytes' },
+      correcao: `public class Reserva {
+    public static void main(String[] args) {
+        long bytes = 4L * 1024 * 1024 * 1024;
+        System.out.println(bytes + " bytes");
+    }
+}`,
+      saidaCorrigida: '4294967296 bytes',
+      dica: 'A variável é `long`, mas de que tipo são os quatro literais da conta?',
+      explicacao: 'Todos os literais são `int`, então a conta é feita em 32 bits: 4 × 2³⁰ = 2³², que dá a volta e vira exatamente 0. Só o resultado é convertido em `long`, tarde demais. Com `4L`, a conta inteira é feita em 64 bits.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t2-e02-q01',
@@ -157,6 +271,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'O texto é expandido, vira assembly, vira código objeto e por fim é ligado às bibliotecas. O `gcc` chama cada uma dessas ferramentas por você.',
+      dica: 'Primeiro mexe no texto, por último junta os pedaços.',
     },
     {
       id: 'aprendiz-t2-e02-q02',
@@ -172,6 +287,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'O código objeto chama funções que estão em outros arquivos ou bibliotecas. O ligador encontra onde cada uma está e preenche os endereços. Expandir `#include` é do pré-processador, e carregar na memória é do sistema operacional.',
+      dica: 'É ele quem descobre onde fica o `printf`.',
     },
     {
       id: 'aprendiz-t2-e02-q03',
@@ -181,6 +297,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['O pré-processador', 'O compilador', 'O ligador', 'O sistema operacional', 'O montador'],
       resposta: 0,
       explicacao: 'Linhas que começam com `#` são diretivas do pré-processador. O `#include` copia o conteúdo do arquivo no lugar da linha antes de o compilador ver qualquer coisa.',
+      dica: 'Linhas que começam com `#` são tratadas antes da compilação.',
     },
     {
       id: 'aprendiz-t2-e02-q04',
@@ -196,6 +313,7 @@ const episodio: EpisodioConteudo = {
       ],
       respostas: [0, 1],
       explicacao: 'O executável nativo depende da ISA e do formato do sistema operacional. O `.class` tem bytecode, que é independente de plataforma, e cada JVM o traduz.',
+      dica: 'Um tem código de máquina; o outro, bytecode.',
     },
     {
       id: 'aprendiz-t2-e02-q05',
@@ -219,6 +337,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
       explicacao: 'Os índices vão de 0 a 2. O compilador não confere índices, mas a JVM confere todo acesso em tempo de execução e lança a exceção antes de escrever qualquer coisa.',
+      dica: 'O Java confere todo acesso a array.',
     },
     {
       id: 'aprendiz-t2-e02-q06',
@@ -233,6 +352,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'C não confere limites. O valor pode cair em cima de outra variável, do endereço de retorno ou de nada importante, e o programa pode até parecer funcionar. É a origem do buffer overflow.',
+      dica: 'Em C, ninguém confere o limite do array.',
     },
     {
       id: 'aprendiz-t2-e02-q07',
@@ -247,6 +367,7 @@ try {
 }`,
       resposta: 'Index 5 out of bounds for length 5',
       explicacao: 'A mensagem da exceção diz o índice tentado e o tamanho do array. Um array de 5 posições aceita os índices de 0 a 4.',
+      dica: 'A mensagem tem o índice e o tamanho.',
     },
     {
       id: 'aprendiz-t2-e02-q08',
@@ -256,6 +377,7 @@ try {
       opcoes: ['Sempre 64', 'Depende do sistema operacional', '32 no Windows e 64 no Linux', 'No mínimo 32', 'Depende do processador'],
       resposta: 0,
       explicacao: 'A especificação do Java fixa os tamanhos de todos os primitivos. Em C, `long` tem 32 bits no Windows de 64 bits e 64 bits no Linux de 64 bits.',
+      dica: 'O Java fixou o tamanho dos tipos na especificação.',
     },
     {
       id: 'aprendiz-t2-e02-q09',
@@ -272,6 +394,7 @@ try {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Java confere limites, não tem `free` nem ponteiros aritméticos. Erros de lógica, laços infinitos e a divisão inteira truncando continuam sendo responsabilidade de quem programa, em qualquer linguagem.',
+      dica: 'Pense em limites de array, `free` e ponteiros.',
     },
     {
       id: 'aprendiz-t2-e02-q10',
@@ -286,6 +409,7 @@ try {
       ],
       resposta: 0,
       explicacao: '`p` guarda o endereço de `idade`, e `*p` acessa o que está nesse endereço. Para mudar para onde `p` aponta, seria `p = ...` sem o asterisco.',
+      dica: '`*p` acessa o que está no endereço guardado em `p`.',
     },
     {
       id: 'aprendiz-t2-e02-q11',
@@ -300,6 +424,7 @@ try {
       ],
       resposta: 0,
       explicacao: 'A CPU é a mesma, mas o Linux usa o formato ELF e o Windows o PE, e cada sistema oferece serviços (abrir arquivo, escrever na tela) de jeitos diferentes. O código de máquina em si poderia até ser parecido.',
+      dica: 'Além da ISA, o executável depende do sistema operacional.',
     },
     {
       id: 'aprendiz-t2-e02-q12',
@@ -311,6 +436,7 @@ System.out.println(x + 1);
 System.out.println(Math.addExact(1, 2));`,
       resposta: '-2147483648\n3',
       explicacao: 'Em Java, overflow de `int` é definido: dá a volta para o menor valor. Em C, o mesmo overflow com sinal é comportamento indefinido. `Math.addExact` faz a soma normal quando ela cabe.',
+      dica: 'O `+` dá a volta; `addExact` só reclama quando estoura.',
     },
     {
       id: 'aprendiz-t2-e02-q13',
@@ -322,6 +448,7 @@ System.out.println(Math.addExact(1, 2));`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ArithmeticException' },
       explicacao: 'Os métodos `*Exact` da classe `Math` conferem overflow e lançam `ArithmeticException` em vez de dar a volta. São a escolha certa quando um valor fora da faixa indica um erro, como em cálculos financeiros.',
+      dica: '`addExact` não deixa a conta dar a volta em silêncio.',
     },
     {
       id: 'aprendiz-t2-e02-q14',
@@ -331,6 +458,7 @@ System.out.println(Math.addExact(1, 2));`,
       opcoes: ['C++', 'Java', 'Assembly', 'Python', 'Kotlin'],
       resposta: 0,
       explicacao: 'A HotSpot é um programa C++, com trechos em assembly. Partes da plataforma Java são escritas em Java, mas o núcleo que interpreta, compila e coleta lixo é nativo.',
+      dica: 'A JVM é um programa nativo.',
     },
     {
       id: 'aprendiz-t2-e02-q15',
@@ -345,6 +473,7 @@ System.out.println(Math.addExact(1, 2));`,
       respostas: ['SIZE'],
       saida: '32',
       explicacao: 'Cada wrapper tem `SIZE` (em bits) e `BYTES` (em bytes). Como o Java fixa os tamanhos, esses valores são os mesmos em qualquer máquina.',
+      dica: 'A constante tem o mesmo nome em `Long` e `Character`.',
     },
   ],
 };

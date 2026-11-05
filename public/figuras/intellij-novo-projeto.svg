@@ -48,7 +48,7 @@
 
     <text x="226" y="274">JDK:</text>
     <rect x="330" y="258" width="360" height="26" rx="4" fill="#1e1f22" stroke="#43454a"/>
-    <text x="340" y="276" fill="#dfe1e5">25  Oracle OpenJDK 25</text>
+    <text x="340" y="276" fill="#dfe1e5" xml:space="preserve">25  Oracle OpenJDK 25</text>
     <path d="M674 268 l5 6 l5 -6" fill="none" stroke="#bcbec4" stroke-width="1.5"/>
 
     <rect x="330" y="300" width="14" height="14" rx="3" fill="#548af7"/>

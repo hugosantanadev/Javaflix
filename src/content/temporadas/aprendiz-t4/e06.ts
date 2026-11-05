@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     '`grafo.get(v)` devolve `null` para vértice sem entrada no mapa. Use `getOrDefault(v, List.of())`.',
     'DFS recursiva em grafos muito grandes pode estourar a pilha.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a modelar um problema como grafo e a escrever BFS e DFS. Confira onde o vértice é marcado como visitado, se a fila é mesmo FIFO e se a recursão aguenta o tamanho real da entrada.',
+    pedido:
+      'Modele este problema como grafo e resolva em Java.\n<descreva o problema aqui>\n- Diga o que são os vértices e as arestas, e se o grafo é dirigido ou tem pesos.\n- Escolha entre BFS e DFS e justifique.\n- Escreva testes com um grafo com ciclo, um desconexo e um caminho impossível.',
+    erros: [
+      'Marca o vértice como visitado só quando ele sai da fila.',
+      'Usa `push` e `pop` num `Deque` achando que é fila.',
+      'Faz DFS recursiva em grades enormes, sem pensar na pilha.',
+    ],
+    conferir: [
+      'Teste com um grafo com ciclos: a busca precisa terminar.',
+      'Confira que cada vértice aparece uma vez só na ordem de visita.',
+      'Teste a grade com terra encostada nas bordas.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de Map.computeIfAbsent',
@@ -193,6 +209,156 @@ public class OrdemDeBuild {
     comentarios:
       'É a ordenação topológica, e ela está em toda ferramenta de build: o Maven e o Gradle a usam para decidir a ordem dos módulos, e acusam erro quando há dependência circular. A ordem encontrada não é a única válida (`documentar` poderia vir antes de `testar`), mas toda ordem válida respeita as setas. Com o ciclo, nenhuma tarefa começa com grau 0, a fila nasce vazia e a ordem sai incompleta. O custo é O(V + E), como o de qualquer busca.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t4-e06-b01',
+      dificuldade: 1,
+      sintoma: 'A busca em largura a partir de 1 deveria visitar por camadas, `[1, 2, 3, 4]`, mas imprime `[1, 3, 4, 2]`.',
+      codigo: `import java.util.*;
+
+public class Largura {
+    public static void main(String[] args) {
+        Map<Integer, List<Integer>> grafo = Map.of(1, List.of(2, 3), 2, List.of(1), 3, List.of(1, 4), 4, List.of(3));
+        Deque<Integer> fila = new ArrayDeque<>();
+        Set<Integer> visitados = new HashSet<>(Set.of(1));
+        List<Integer> ordem = new ArrayList<>();
+        fila.offer(1);
+        while (!fila.isEmpty()) {
+            int v = fila.pop();
+            ordem.add(v);
+            for (int w : grafo.get(v)) {
+                if (visitados.add(w)) fila.push(w);
+            }
+        }
+        System.out.println(ordem);
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'saida', saida: '[1, 3, 4, 2]' },
+      correcao: `import java.util.*;
+
+public class Largura {
+    public static void main(String[] args) {
+        Map<Integer, List<Integer>> grafo = Map.of(1, List.of(2, 3), 2, List.of(1), 3, List.of(1, 4), 4, List.of(3));
+        Deque<Integer> fila = new ArrayDeque<>();
+        Set<Integer> visitados = new HashSet<>(Set.of(1));
+        List<Integer> ordem = new ArrayList<>();
+        fila.offer(1);
+        while (!fila.isEmpty()) {
+            int v = fila.pop();
+            ordem.add(v);
+            for (int w : grafo.get(v)) {
+                if (visitados.add(w)) fila.offer(w);
+            }
+        }
+        System.out.println(ordem);
+    }
+}`,
+      saidaCorrigida: '[1, 2, 3, 4]',
+      dica: 'O `pop` retira da frente. Em que ponta o `push` insere os vizinhos?',
+      explicacao: 'O `push` insere na frente, e o vizinho descoberto por último é visitado primeiro: a "fila" vira pilha e a busca vira uma DFS. Para a BFS, os vizinhos entram no fim, com `offer`.',
+    },
+    {
+      id: 'aprendiz-t4-e06-b02',
+      dificuldade: 2,
+      sintoma: 'Contar as ilhas do mapa lança `ArrayIndexOutOfBoundsException: Index -1 out of bounds for length 3`.',
+      codigo: `public class Ilhas {
+    static void afundar(char[][] mapa, int l, int c) {
+        if (l >= mapa.length || c >= mapa[0].length) return;
+        if (mapa[l][c] != '#') return;
+        mapa[l][c] = '~';
+        afundar(mapa, l + 1, c);
+        afundar(mapa, l - 1, c);
+        afundar(mapa, l, c + 1);
+        afundar(mapa, l, c - 1);
+    }
+
+    public static void main(String[] args) {
+        char[][] mapa = {"##~".toCharArray(), "~~#".toCharArray(), "#~#".toCharArray()};
+        int ilhas = 0;
+        for (int l = 0; l < mapa.length; l++)
+            for (int c = 0; c < mapa[0].length; c++)
+                if (mapa[l][c] == '#') { ilhas++; afundar(mapa, l, c); }
+        System.out.println(ilhas);
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
+      correcao: `public class Ilhas {
+    static void afundar(char[][] mapa, int l, int c) {
+        if (l < 0 || c < 0 || l >= mapa.length || c >= mapa[0].length) return;
+        if (mapa[l][c] != '#') return;
+        mapa[l][c] = '~';
+        afundar(mapa, l + 1, c);
+        afundar(mapa, l - 1, c);
+        afundar(mapa, l, c + 1);
+        afundar(mapa, l, c - 1);
+    }
+
+    public static void main(String[] args) {
+        char[][] mapa = {"##~".toCharArray(), "~~#".toCharArray(), "#~#".toCharArray()};
+        int ilhas = 0;
+        for (int l = 0; l < mapa.length; l++)
+            for (int c = 0; c < mapa[0].length; c++)
+                if (mapa[l][c] == '#') { ilhas++; afundar(mapa, l, c); }
+        System.out.println(ilhas);
+    }
+}`,
+      saidaCorrigida: '3',
+      dica: 'Uma célula da primeira linha chama `afundar(l - 1, c)`. O teste de limites confere índices negativos?',
+      explicacao: 'O teste só confere o limite de cima, e a vizinha de cima da linha 0 é a linha −1. Toda busca em grade precisa conferir os quatro limites antes de acessar a célula.',
+    },
+    {
+      id: 'aprendiz-t4-e06-b03',
+      dificuldade: 3,
+      sintoma: 'Num grafo em forma de losango, a BFS visita o vértice 4 duas vezes: imprime `[1, 2, 3, 4, 4]`.',
+      codigo: `import java.util.*;
+
+public class Losango {
+    public static void main(String[] args) {
+        Map<Integer, List<Integer>> grafo = Map.of(1, List.of(2, 3), 2, List.of(1, 4), 3, List.of(1, 4), 4, List.of(2, 3));
+        Queue<Integer> fila = new ArrayDeque<>();
+        Set<Integer> visitados = new HashSet<>();
+        List<Integer> ordem = new ArrayList<>();
+        fila.offer(1);
+        while (!fila.isEmpty()) {
+            int v = fila.poll();
+            visitados.add(v);
+            ordem.add(v);
+            for (int w : grafo.get(v)) {
+                if (!visitados.contains(w)) fila.offer(w);
+            }
+        }
+        System.out.println(ordem);
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'saida', saida: '[1, 2, 3, 4, 4]' },
+      correcao: `import java.util.*;
+
+public class Losango {
+    public static void main(String[] args) {
+        Map<Integer, List<Integer>> grafo = Map.of(1, List.of(2, 3), 2, List.of(1, 4), 3, List.of(1, 4), 4, List.of(2, 3));
+        Queue<Integer> fila = new ArrayDeque<>();
+        Set<Integer> visitados = new HashSet<>();
+        List<Integer> ordem = new ArrayList<>();
+        fila.offer(1); visitados.add(1);
+        while (!fila.isEmpty()) {
+            int v = fila.poll();
+            // marcado quando entrou na fila
+            ordem.add(v);
+            for (int w : grafo.get(v)) {
+                if (visitados.add(w)) fila.offer(w);
+            }
+        }
+        System.out.println(ordem);
+    }
+}`,
+      saidaCorrigida: '[1, 2, 3, 4]',
+      dica: 'O 4 é descoberto pelo 2 e depois pelo 3. Quando o 3 olha o 4, ele já está marcado?',
+      explicacao: 'Marcando só na saída, o 4 entra na fila pelo 2 e, antes de sair, entra de novo pelo 3. Marque o vértice ao descobri-lo, no momento em que entra na fila: `visitados.add` devolve `false` para quem já foi visto.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t4-e06-q01',
@@ -202,6 +368,7 @@ public class OrdemDeBuild {
       opcoes: ['Uma fila', 'Uma pilha', 'Uma fila de prioridade', 'Uma árvore binária de busca'],
       resposta: 0,
       explicacao: 'A fila garante que os vértices descobertos primeiro, mais perto da origem, sejam visitados primeiro: é isso que faz a BFS andar em camadas. Com pilha, a busca vira DFS; com fila de prioridade e pesos, vira Dijkstra.',
+      dica: 'Quem foi descoberto primeiro é visitado primeiro.',
     },
     {
       id: 'aprendiz-t4-e06-q02',
@@ -211,6 +378,7 @@ public class OrdemDeBuild {
       opcoes: ['Busca em largura (BFS)', 'Busca em profundidade (DFS)', 'Ordenação topológica', 'Merge sort'],
       resposta: 0,
       explicacao: 'A BFS visita os vértices em ordem de distância: todos a 1 aresta, depois todos a 2, e assim por diante. A primeira vez que alcança o destino é pelo caminho mais curto. A DFS pode achar um caminho, mas não necessariamente o menor.',
+      dica: 'Ela visita por distância crescente.',
     },
     {
       id: 'aprendiz-t4-e06-q03',
@@ -246,6 +414,7 @@ public class Profundidade {
 }`,
       resposta: '1 2 4 6 3 5',
       explicacao: 'A DFS vai fundo antes de voltar: 1 → 2 → 4 → 6, que não tem vizinhos. Volta até o 1 (o 4 já foi visitado pelo caminho do 2), segue para o 3 e dali para o 5; o 6 já foi visitado. A BFS daria 1 2 3 4 5 6.',
+      dica: 'Siga o primeiro vizinho não visitado até não poder mais, depois volte.',
     },
     {
       id: 'aprendiz-t4-e06-q04',
@@ -273,6 +442,7 @@ System.out.println(dist.get(6));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O 6 é alcançado por 1 → 2 → 4 → 6, por 1 → 3 → 4 → 6 ou por 1 → 3 → 5 → 6: todos com 3 arestas. A BFS registra a distância na primeira descoberta, que é sempre a menor.',
+      dica: 'Conte as camadas até chegar ao 6.',
     },
     {
       id: 'aprendiz-t4-e06-q05',
@@ -288,6 +458,7 @@ System.out.println(dist.get(6));`,
       ],
       respostas: [0, 1],
       explicacao: 'A DFS detecta ciclo ao reencontrar um vértice que ainda está no caminho atual, e conta componentes chamando a busca a partir de cada vértice ainda não visitado. Menor caminho sem pesos é tarefa da BFS; com pesos, do Dijkstra.',
+      dica: 'A DFS serve para estrutura, não para distâncias.',
     },
     {
       id: 'aprendiz-t4-e06-q06',
@@ -302,6 +473,7 @@ System.out.println(dist.get(6));`,
       ],
       resposta: 0,
       explicacao: 'A matriz gasta V² = (10⁶)² posições, quase todas falsas. A lista gasta O(V + E). A vantagem real da matriz, responder "são vizinhos?" em O(1), não compensa tanto desperdício em grafos esparsos.',
+      dica: 'Compare V² células com o número real de ligações.',
     },
     {
       id: 'aprendiz-t4-e06-q07',
@@ -311,6 +483,7 @@ System.out.println(dist.get(6));`,
       opcoes: ['10', '25', '20', '5', '15'],
       resposta: 0,
       explicacao: 'Cada par de vértices tem uma aresta, e há 5 × 4 / 2 = 10 pares. Os 20 contariam cada aresta duas vezes (a-b e b-a), e os 25 ainda incluiriam laços de cada vértice consigo mesmo.',
+      dica: 'n(n − 1)/2.',
     },
     {
       id: 'aprendiz-t4-e06-q08',
@@ -340,6 +513,7 @@ public class Largura {
       respostas: ['poll', 'pollFirst', 'remove', 'removeFirst', 'pop'],
       saida: '[1, 2, 3, 4]',
       explicacao: '`offer` insere no fim, e `poll` retira do começo: o comportamento de fila. No `ArrayDeque`, `pollFirst`, `remove`, `removeFirst` e `pop` também retiram do começo. Repare em `vistos.add(w)`: ele devolve `false` se o vértice já estava lá, marcando e testando de uma vez.',
+      dica: 'O método que retira do começo da fila.',
     },
     {
       id: 'aprendiz-t4-e06-q09',
@@ -367,6 +541,7 @@ public class Largura {
 }`,
       resposta: '5',
       explicacao: 'As cinco terras só se tocam pelas diagonais, que não contam como vizinhança. Cada uma é uma ilha. Com 8 direções (incluindo diagonais), seria uma ilha só: a definição de vizinho é parte do grafo.',
+      dica: 'Afunde cada ilha ao encontrá-la e conte quantas vezes isso acontece.',
     },
     {
       id: 'aprendiz-t4-e06-q10',
@@ -376,6 +551,7 @@ public class Largura {
       opcoes: ['O(V + E)', 'O(V²)', 'O(V · E)', 'O(log V)', 'O(E²)'],
       resposta: 0,
       explicacao: 'Cada vértice entra na fila (ou na pilha) uma vez, e a lista de vizinhos de cada um é percorrida uma vez: a soma de todas as listas é o número de arestas. Com matriz de adjacência, olhar os vizinhos custa V por vértice, e o total vira O(V²).',
+      dica: 'Cada vértice uma vez, cada aresta uma ou duas vezes.',
     },
     {
       id: 'aprendiz-t4-e06-q11',
@@ -390,6 +566,7 @@ public class Largura {
       ],
       resposta: 0,
       explicacao: 'Entre o momento em que é descoberto e o momento em que sai da fila, um vértice pode ser descoberto de novo por outros vizinhos e enfileirado de novo. O resultado continua correto se a saída checar os visitados, mas a fila pode crescer até O(E). Marcar na entrada garante uma vez por vértice.',
+      dica: 'Um vértice com dois vizinhos já visitados pode entrar duas vezes.',
     },
     {
       id: 'aprendiz-t4-e06-q12',
@@ -411,6 +588,7 @@ for (String o : ordens) {
 }
 System.out.println(sj);`,
       explicacao: 'Uma ordem é válida quando toda seta aponta para a frente. A precisa vir primeiro e D por último; B e C podem trocar entre si. "B A C D" põe B antes de A, e "A B D C" põe D antes de C. Ordenação topológica raramente é única.',
+      dica: 'A precisa vir antes de B e C, e os dois antes de D.',
     },
     {
       id: 'aprendiz-t4-e06-q13',
@@ -429,6 +607,7 @@ public class Grafo {
 }`,
       resposta: 7,
       explicacao: 'A lista de vizinhos é uma `List<String>`, e `add(1)` tenta inserir um `int`. Os genéricos do Java pegam esse erro na compilação; sem eles, ele só apareceria como `ClassCastException` lá na frente.',
+      dica: 'Confira os tipos genéricos e os argumentos.',
     },
     {
       id: 'aprendiz-t4-e06-q14',
@@ -447,6 +626,7 @@ System.out.println(grafo.get("z").size());`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: '`get` devolve `null` para uma chave ausente, e chamar `size()` em `null` lança `NullPointerException`. Em grafos, vértices sem arestas de saída são comuns: use `grafo.getOrDefault(v, List.of())`.',
+      dica: 'Siga o código e veja se a busca termina.',
     },
     {
       id: 'aprendiz-t4-e06-q15',
@@ -461,6 +641,7 @@ System.out.println(grafo.get("z").size());`,
       ],
       resposta: 0,
       explicacao: 'Cada célula é um vértice: 10⁶. Cada uma tem até 4 vizinhos, e cada aresta é contada por duas células: cerca de 4 × 10⁶ / 2 = 2 milhões. É um grafo bem esparso, e por isso uma DFS ou BFS na grade é O(V + E), linear no tamanho do mapa.',
+      dica: 'V = 10⁶ e cada célula tem até 4 arestas.',
     },
   ],
 };

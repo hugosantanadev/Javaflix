@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'O `equals` compara todos os componentes, mas arrays são comparados por referência.',
     'A imutabilidade é rasa: uma lista recebida continua podendo ser alterada por fora.',
   ],
+  ia: {
+    uso:
+      'A IA converte classes de dados em records com facilidade. O trabalho que fica com você é conferir os acessores, a imutabilidade dos componentes e se o tipo deveria mesmo ser um record.',
+    pedido:
+      'Converta esta classe Java 21 em record, se fizer sentido.\n<cole o código aqui>\n- Diga se a classe só carrega dados ou tem estado que muda; no segundo caso, não converta.\n- Liste as chamadas getX() que precisam virar x().\n- Aponte componentes mutáveis (List, array, Date) e proponha cópia defensiva.',
+    erros: [
+      'Mantém chamadas `getNome()` depois de converter para record.',
+      'Acrescenta setters ou campos de instância, que records não aceitam.',
+      'Deixa um componente `List` mutável, quebrando a imutabilidade.',
+    ],
+    conferir: [
+      'Compile: `getX()` e campos extras aparecem como erro.',
+      'Crie dois records com os mesmos dados e confira `equals` e `hashCode`.',
+      'Altere a lista passada ao construtor e veja se o record muda junto.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Using Records to Model Immutable Data',
@@ -159,6 +175,116 @@ public class Extrato {
     comentarios:
       'Dois records de uma linha substituem duas classes completas, com `toString` legível e `equals` correto de graça. `Resumo` mostra um uso muito comum: agrupar vários resultados num único retorno, sem criar uma classe só para isso. Os métodos acrescentados (`credito`, `saldo`) são derivados dos componentes, sem estado extra.',
   },
+  bugs: [
+    {
+      id: 'junior-t5-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: cannot find symbol`, apontando `getNome()`.',
+      codigo: `record Produto(String nome, double preco) { }
+
+public class Vitrine {
+    public static void main(String[] args) {
+        Produto p = new Produto("Caneta", 2.5);
+        System.out.println(p.getNome() + ": " + p.preco());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `record Produto(String nome, double preco) { }
+
+public class Vitrine {
+    public static void main(String[] args) {
+        Produto p = new Produto("Caneta", 2.5);
+        System.out.println(p.nome() + ": " + p.preco());
+    }
+}`,
+      saidaCorrigida: 'Caneta: 2.5',
+      dica: 'Como se chama o acessor que o record gera para o componente `nome`?',
+      explicacao: 'O record gera acessores com o nome exato do componente, sem o prefixo `get`: `nome()` e `preco()`. Um `getNome()` só existe se você o escrever.',
+    },
+    {
+      id: 'junior-t5-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O conjunto de jogadas deveria recusar repetições, mas termina com `2` jogadas iguais.',
+      codigo: `import java.util.HashSet;
+import java.util.Set;
+
+record Jogada(int[] casas) { }
+
+public class Tabuleiro {
+    public static void main(String[] args) {
+        Set<Jogada> jogadas = new HashSet<>();
+        jogadas.add(new Jogada(new int[] {1, 5, 9}));
+        jogadas.add(new Jogada(new int[] {1, 5, 9}));
+        System.out.println(jogadas.size());
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: '2' },
+      correcao: `import java.util.HashSet;
+import java.util.Set;
+
+record Jogada(java.util.List<Integer> casas) { }
+
+public class Tabuleiro {
+    public static void main(String[] args) {
+        Set<Jogada> jogadas = new HashSet<>();
+        jogadas.add(new Jogada(java.util.List.of(1, 5, 9)));
+        jogadas.add(new Jogada(java.util.List.of(1, 5, 9)));
+        System.out.println(jogadas.size());
+    }
+}`,
+      saidaCorrigida: '1',
+      dica: 'O `equals` do record compara cada componente com o `equals` dele. Como um array compara?',
+      explicacao: 'O record compara os componentes com `equals`, e arrays não sobrescrevem `equals`: comparam a referência. Dois arrays com o mesmo conteúdo são diferentes. Com `List`, que compara elemento a elemento, as jogadas iguais viram uma só.',
+    },
+    {
+      id: 'junior-t5-e01-b03',
+      dificuldade: 3,
+      sintoma: 'Matricular uma aluna nova lança `UnsupportedOperationException`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+record Turma(String nome, List<String> alunos) {
+    Turma comAluno(String aluno) {
+        List<String> nova = new ArrayList<>(alunos);
+        nova.add(aluno);
+        return new Turma(nome, List.copyOf(nova));
+    }
+}
+
+public class Secretaria {
+    public static void main(String[] args) {
+        Turma t = new Turma("Java", List.of("Ana"));
+        t.alunos().add("Bia");
+        System.out.println(t);
+    }
+}`,
+      linha: 15,
+      efeito: { tipo: 'excecao', nome: 'UnsupportedOperationException' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+record Turma(String nome, List<String> alunos) {
+    Turma comAluno(String aluno) {
+        List<String> nova = new ArrayList<>(alunos);
+        nova.add(aluno);
+        return new Turma(nome, List.copyOf(nova));
+    }
+}
+
+public class Secretaria {
+    public static void main(String[] args) {
+        Turma t = new Turma("Java", List.of("Ana"));
+        t = t.comAluno("Bia");
+        System.out.println(t);
+    }
+}`,
+      saidaCorrigida: 'Turma[nome=Java, alunos=[Ana, Bia]]',
+      dica: 'A lista dentro da turma veio de `List.of`. Ela aceita `add`? E qual é o jeito de "mudar" um record?',
+      explicacao: '`List.of` cria uma lista imutável, e `add` nela lança `UnsupportedOperationException`. Records não mudam: para uma turma com mais uma aluna, crie outra turma, como `comAluno` faz, e guarde o resultado.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t5-e01-q01',
@@ -173,6 +299,7 @@ public class Extrato {
       ],
       resposta: 0,
       explicacao: 'O record é uma classe completa e imutável. Os acessores levam o nome do componente, e não há setters.',
+      dica: 'O record gera tudo o que uma classe imutável de dados precisa.',
     },
     {
       id: 'junior-t5-e01-q02',
@@ -185,6 +312,7 @@ Livro l = new Livro("Dom Casmurro", 1899);
 System.out.println(l.titulo().length() + " " + l.ano() + " " + l);`,
       resposta: '12 1899 Livro[titulo=Dom Casmurro, ano=1899]',
       explicacao: '"Dom Casmurro" tem 12 caracteres, contando o espaço. O `toString` gerado mostra o nome do record e cada componente com o seu valor.',
+      dica: '"Dom Casmurro" tem 12 caracteres, contando o espaço; o `toString` mostra os componentes.',
     },
     {
       id: 'junior-t5-e01-q03',
@@ -199,6 +327,7 @@ System.out.println(p.getNome());`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 4 },
       explicacao: 'O acessor gerado é `nome()`. Records não seguem a convenção JavaBeans de `get`, a não ser que você declare o método.',
+      dica: 'Qual é o nome do acessor gerado?',
     },
     {
       id: 'junior-t5-e01-q04',
@@ -215,6 +344,7 @@ System.out.println(p.getNome());`,
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Campos `static` e interfaces são permitidos. Campos de instância extras não, e nenhum record pode ter `extends`, nem mesmo de `Object`.',
+      dica: 'Campos `static` e interfaces são permitidos; campos de instância extras e `extends`, não.',
     },
     {
       id: 'junior-t5-e01-q05',
@@ -232,6 +362,7 @@ System.out.println(cores.size() + " " + cores.contains(new Cor(0, 0, 255)));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`equals` e `hashCode` gerados usam todos os componentes. Duas cores com os mesmos valores são iguais, e o `HashSet` guarda só uma.',
+      dica: 'Records iguais têm o mesmo `hashCode` e contam uma vez no conjunto.',
     },
     {
       id: 'junior-t5-e01-q06',
@@ -249,6 +380,7 @@ public class Mapa {
       respostas: ['record'],
       saida: '12 Ponto[x=3, y=4]',
       explicacao: 'A palavra `record` com a lista de componentes basta para ter construtor, acessores e o `toString` no formato `Ponto[x=3, y=4]`.',
+      dica: 'Qual palavra declara uma classe de dados com componentes?',
     },
     {
       id: 'junior-t5-e01-q07',
@@ -265,6 +397,7 @@ public class Mapa {
 }`,
       resposta: 3,
       explicacao: 'O estado de um record é só o que está entre parênteses. Campos `static` são permitidos; campos de instância extras, não. `status` teria de virar um componente.',
+      dica: 'Um record pode ter campos de instância além dos componentes?',
     },
     {
       id: 'junior-t5-e01-q08',
@@ -281,6 +414,7 @@ System.out.println(c.itens().size() + " " + c);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O record guarda a referência à mesma lista, sem copiar. O campo é `final`, mas a lista apontada continua mutável: a imutabilidade do record é rasa.',
+      dica: 'O record guardou a mesma lista que `base` aponta.',
     },
     {
       id: 'junior-t5-e01-q09',
@@ -297,6 +431,7 @@ System.out.println(c.itens().size() + " " + c);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 3 },
       explicacao: 'O campo `valor` é `final`. Num record, a forma de "incrementar" é devolver um novo: `return new Contador(valor + 1);`.',
+      dica: 'Os campos do record são `final`.',
     },
     {
       id: 'junior-t5-e01-q10',
@@ -313,6 +448,7 @@ System.out.println(a.equals(b) + " " + new Notas(mesmo).equals(new Notas(mesmo))
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `equals` do record usa o `equals` de cada componente, e arrays herdam o de `Object`, que compara referências. Dois arrays com o mesmo conteúdo são diferentes; o mesmo array é igual a si mesmo.',
+      dica: 'Arrays comparam por referência no `equals`.',
     },
     {
       id: 'junior-t5-e01-q11',
@@ -322,6 +458,7 @@ System.out.println(a.equals(b) + " " + new Notas(mesmo).equals(new Notas(mesmo))
       opcoes: ['`java.lang.Record`', '`java.lang.Object`, diretamente', '`java.io.Serializable`', 'Nenhuma: records não têm superclasse'],
       resposta: 0,
       explicacao: 'Todo record estende `java.lang.Record`, que estende `Object`. Por isso um record não pode declarar `extends`.',
+      dica: 'Todo record estende uma classe específica de `java.lang`.',
     },
     {
       id: 'junior-t5-e01-q12',
@@ -342,6 +479,7 @@ Temperatura t = Temperatura.deFahrenheit(212);
 System.out.println(t + " " + new Temperatura(0).fahrenheit());`,
       resposta: 'Temperatura[celsius=100.0] 32.0',
       explicacao: 'Métodos `static` funcionam como fábricas, e métodos de instância podem calcular valores derivados dos componentes. 212 °F são 100 °C, e 0 °C são 32 °F.',
+      dica: '212 °F são 100 °C, e 0 °C são 32 °F.',
     },
     {
       id: 'junior-t5-e01-q13',
@@ -357,6 +495,7 @@ System.out.println(t + " " + new Temperatura(0).fahrenheit());`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'O estado é fixo pelo cabeçalho, mas o comportamento é livre. A herança de classes é proibida porque o record já estende `Record`.',
+      dica: 'O corpo aceita métodos, membros `static` e implementações de interfaces.',
     },
     {
       id: 'junior-t5-e01-q14',
@@ -374,6 +513,7 @@ class Cachorro extends Animal {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 3 },
       explicacao: 'Todo record é implicitamente `final`. Para compartilhar comportamento entre records, use interfaces.',
+      dica: 'Records são implicitamente `final`.',
     },
     {
       id: 'junior-t5-e01-q15',
@@ -388,6 +528,7 @@ class Cachorro extends Animal {
       ],
       resposta: 0,
       explicacao: 'O bootstrap `ObjectMethods` gera os três métodos na primeira chamada. Records antigos ganham automaticamente as otimizações de versões novas do JDK.',
+      dica: 'A implementação é montada na primeira execução, a partir dos componentes.',
     },
   ],
 };

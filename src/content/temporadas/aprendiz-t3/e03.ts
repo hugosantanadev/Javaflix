@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`new BigDecimal(0.1)` herda o erro do `double`. Use `new BigDecimal("0.1")`.',
     '`BigDecimal.equals` considera a escala (`2.50` ≠ `2.5`); para comparar valores, use `compareTo`.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a decodificar os campos de um `double`, a explicar um resultado estranho de conta e a revisar código que lida com dinheiro. Confira os valores com `Double.doubleToLongBits` e `new BigDecimal(x)`, que mostram o que está guardado de verdade.',
+    pedido:
+      'Revise as contas com números decimais deste código Java.\n<cole o código aqui>\n- Aponte comparações de double com == e proponha uma tolerância adequada.\n- Aponte valores de dinheiro em double ou float e mostre a versão com BigDecimal ou centavos em long.\n- Aponte casts de double para int que deveriam arredondar, e testes de NaN feitos com ==.',
+    erros: [
+      'Usa `double` para dinheiro.',
+      'Cria `new BigDecimal(0.1)`, que copia o erro do `double`.',
+      'Testa NaN com `x == Double.NaN`, que é sempre falso.',
+    ],
+    conferir: [
+      'Imprima `new BigDecimal(x)` para ver o valor exato guardado.',
+      'Teste valores como 0,1, 1,15 e 2,675, que não têm representação exata.',
+      'Teste divisões por zero e raízes de negativos para ver NaN e infinito.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JLS 4.2.3: Floating-Point Types, Formats, and Values',
@@ -152,6 +168,108 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'A última linha mostra o que o `float` guarda de fato quando você escreve `0.1f`: 0,100000001490116..., o número representável mais próximo. O `Float.toString` imprime `0.1` porque escolhe o decimal mais curto que identifica aquele `float` sem ambiguidade. O decodificador não trata os casos especiais (expoente 0 ou 255): acrescente os subnormais, os infinitos e o NaN como exercício extra.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t3-e03-b01',
+      dificuldade: 1,
+      sintoma: 'Dez parcelas de 0,1 deveriam fechar 1,0, mas o caixa imprime `diferença no caixa`.',
+      codigo: `public class Caixa {
+    public static void main(String[] args) {
+        double soma = 0;
+        for (int i = 0; i < 10; i++) {
+            soma += 0.1;
+        }
+        if (soma == 1.0) {
+            System.out.println("caixa fechado");
+        } else {
+            System.out.println("diferença no caixa");
+        }
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'diferença no caixa' },
+      correcao: `public class Caixa {
+    public static void main(String[] args) {
+        double soma = 0;
+        for (int i = 0; i < 10; i++) {
+            soma += 0.1;
+        }
+        if (Math.abs(soma - 1.0) < 1e-9) {
+            System.out.println("caixa fechado");
+        } else {
+            System.out.println("diferença no caixa");
+        }
+    }
+}`,
+      saidaCorrigida: 'caixa fechado',
+      dica: 'Imprima `soma` antes do `if`. O 0,1 tem representação exata em binário?',
+      explicacao: 'Cada 0,1 carrega um erro minúsculo, e a soma termina em 0,9999999999999999. Resultados de contas com `double` se comparam com uma tolerância, `Math.abs(a - b) < epsilon`, nunca com `==`.',
+    },
+    {
+      id: 'aprendiz-t3-e03-b02',
+      dificuldade: 2,
+      sintoma: 'A média de uma lista vazia sai `NaN` no relatório, embora o código tenha um teste para trocar NaN por 0.',
+      codigo: `public class Media {
+    static double media(double soma, int quantidade) {
+        double m = soma / quantidade;
+        if (m == Double.NaN) {
+            return 0;
+        }
+        return m;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(media(0, 0));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'NaN' },
+      correcao: `public class Media {
+    static double media(double soma, int quantidade) {
+        double m = soma / quantidade;
+        if (Double.isNaN(m)) {
+            return 0;
+        }
+        return m;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(media(0, 0));
+    }
+}`,
+      saidaCorrigida: '0.0',
+      dica: 'Qual é o resultado de `Double.NaN == Double.NaN`?',
+      explicacao: 'NaN é diferente de tudo, inclusive de si mesmo, então `m == Double.NaN` é sempre falso. O único jeito de testar é `Double.isNaN(m)`.',
+    },
+    {
+      id: 'aprendiz-t3-e03-b03',
+      dificuldade: 3,
+      sintoma: 'Um produto de R$ 1,15 é cobrado como `114 centavos`.',
+      codigo: `public class Centavos {
+    static long emCentavos(double reais) {
+        return (long) (reais * 100);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(emCentavos(1.15) + " centavos");
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '114 centavos' },
+      correcao: `public class Centavos {
+    static long emCentavos(double reais) {
+        return Math.round(reais * 100);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(emCentavos(1.15) + " centavos");
+    }
+}`,
+      saidaCorrigida: '115 centavos',
+      dica: 'Imprima `1.15 * 100`. O cast para inteiro arredonda ou corta?',
+      explicacao: 'O `double` mais próximo de 1,15 é um pouco menor, e a conta dá 114,99999999999999. O cast descarta a fração e perde um centavo. `Math.round` arredonda para o inteiro mais próximo; para dinheiro de verdade, o ideal é não passar por `double`.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t3-e03-q01',
@@ -161,6 +279,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['11 e 52', '8 e 23', '11 e 53', '16 e 47', '10 e 53'],
       resposta: 0,
       explicacao: 'O `double` tem 64 bits: 1 de sinal, 11 de expoente e 52 de fração. Com o bit implícito, a precisão é de 53 bits. 8 e 23 são os campos do `float`.',
+      dica: 'O `double` tem 64 bits: 1 de sinal, o resto dividido entre expoente e fração.',
     },
     {
       id: 'aprendiz-t3-e03-q02',
@@ -172,6 +291,7 @@ const episodio: EpisodioConteudo = {
       verificar: { tipo: 'executa', saida: '3.0' },
       codigoVerificacao: `System.out.println(Float.intBitsToFloat(0b0_10000000_10000000000000000000000));`,
       explicacao: 'Sinal 0, positivo. Expoente 128 − 127 = 1. Fração `1` seguida de zeros, com o bit implícito: 1,1 em binário, que é 1,5. Então 1,5 × 2¹ = 3,0.',
+      dica: 'Expoente 128 − 127 = 1; a fração `1` vira 1,1 em binário.',
     },
     {
       id: 'aprendiz-t3-e03-q03',
@@ -185,6 +305,7 @@ const episodio: EpisodioConteudo = {
         + " " + new BigDecimal(0.1).equals(new BigDecimal("0.1"))
         + " " + new BigDecimal(0.2).equals(new BigDecimal("0.2")));`,
       explicacao: '0,5 = 1/2, 0,75 = 3/4 e 0,375 = 3/8: denominadores que são potências de 2. 0,1 = 1/10 e 0,2 = 1/5 têm o fator 5 no denominador e viram dízimas em binário. 1/3 não é exato nem em decimal.',
+      dica: 'Exatos são os que têm denominador potência de 2.',
     },
     {
       id: 'aprendiz-t3-e03-q04',
@@ -199,6 +320,7 @@ System.out.println(a == 1.0);
 System.out.println(b == 1.0);`,
       resposta: 'true\nfalse',
       explicacao: '0,25 é 2⁻², exato em binário, e as somas parciais (0,5; 0,75; 1,0) também são exatas. Já cada 0,1 carrega um erro, que se acumula até 0,9999999999999999.',
+      dica: 'Pense no espaçamento entre floats vizinhos perto de 2²⁴.',
     },
     {
       id: 'aprendiz-t3-e03-q05',
@@ -211,6 +333,7 @@ System.out.println((x == x) + " " + Double.isNaN(x) + " " + Double.valueOf(x).eq
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Pelo IEEE 754, NaN é diferente de tudo, até de si mesmo, então `x == x` é falso. Já `equals` compara os bits, e aí NaN é igual a NaN; é isso que permite usar `Double` como chave de um `HashMap`.',
+      dica: 'Confira a conta passo a passo, lembrando que 0,1 não é exato.',
     },
     {
       id: 'aprendiz-t3-e03-q06',
@@ -228,6 +351,7 @@ System.out.println((x == x) + " " + Double.isNaN(x) + " " + Double.valueOf(x).eq
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com um operando `double`, a divisão segue o IEEE 754 e não lança exceção. O zero negativo existe e guarda o sinal: 1 ÷ (−0,0) é −∞. Só a divisão de inteiros por zero lança `ArithmeticException`.',
+      dica: 'Divisão de `double` por zero não lança exceção.',
     },
     {
       id: 'aprendiz-t3-e03-q07',
@@ -242,6 +366,7 @@ System.out.println((x == x) + " " + Double.isNaN(x) + " " + Double.valueOf(x).eq
       ],
       resposta: 0,
       explicacao: 'Ao contrário de `Integer.MIN_VALUE`, o `MIN_VALUE` dos tipos de ponto flutuante é o menor valor positivo, um subnormal. O `double` mais negativo é `-Double.MAX_VALUE`.',
+      dica: 'Não é o mais negativo.',
     },
     {
       id: 'aprendiz-t3-e03-q08',
@@ -260,6 +385,7 @@ System.out.println((x == x) + " " + Double.isNaN(x) + " " + Double.valueOf(x).eq
       respostas: ['abs'],
       saida: 'true',
       explicacao: 'A diferença pode ser positiva ou negativa; o que importa é o tamanho dela. `Math.abs(a - b) < tolerância` é o jeito certo de comparar resultados de contas com ponto flutuante.',
+      dica: 'Compare o tamanho da diferença com a tolerância.',
     },
     {
       id: 'aprendiz-t3-e03-q09',
@@ -272,6 +398,7 @@ System.out.println(Math.floor(-7.5));
 System.out.println((int) 1e10);`,
       resposta: '-7\n-7\n-8.0\n2147483647',
       explicacao: 'O cast trunca em direção a zero: −7. `Math.round` manda o empate para +∞: −7. `Math.floor` vai para −∞ e devolve `double`: −8.0. E 10¹⁰ não cabe num `int`, então o cast satura em `Integer.MAX_VALUE`.',
+      dica: 'O cast corta em direção a zero; `Math.floor` vai para baixo; o cast satura no limite.',
     },
     {
       id: 'aprendiz-t3-e03-q10',
@@ -283,6 +410,7 @@ System.out.println((int) 1e10);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Um `BigDecimal` é um valor mais uma escala, e `equals` compara os dois: 2,0 tem escala 1 e 2,00 tem escala 2. Para comparar só o valor, use `compareTo(...) == 0`.',
+      dica: 'NaN é diferente de tudo, e `equals` compara os bits.',
     },
     {
       id: 'aprendiz-t3-e03-q11',
@@ -300,6 +428,7 @@ System.out.println(um.divide(new BigDecimal("3")));`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ArithmeticException' },
       explicacao: 'Sem escala nem modo de arredondamento, `divide` tenta o resultado exato. 1/3 é uma dízima infinita em decimal, então ele lança `ArithmeticException`. Informe a escala: `divide(tres, 2, RoundingMode.HALF_EVEN)`.',
+      dica: 'Divisão de inteiros por zero é outra história.',
     },
     {
       id: 'aprendiz-t3-e03-q12',
@@ -317,6 +446,7 @@ System.out.println(um.divide(new BigDecimal("3")));`,
 }`,
       resposta: 5,
       explicacao: 'Um literal com ponto é `double` por padrão. Atribuir `double` a `float` perde precisão, então exige o sufixo `f` ou um cast. O contrário, `float` para `double`, é uma ampliação e compila.',
+      dica: 'Um literal com vírgula sem `f` é `double`.',
     },
     {
       id: 'aprendiz-t3-e03-q13',
@@ -338,6 +468,7 @@ System.out.println(((int) (double) m == m) + " " + (0.1 + 0.2 == 0.3)
         + " " + ((long) (double) grande == grande)
         + " " + ((0.1 + 0.2) + 0.3 == 0.1 + (0.2 + 0.3)));`,
       explicacao: 'Um `int` tem 32 bits e o `double` tem 53 de precisão: cabe. Um `long` tem 64, e a partir de 2⁵³ começam a faltar valores. A soma não é associativa porque cada passo arredonda, e a divisão por zero em ponto flutuante dá infinito.',
+      dica: 'Pense no `-0.0`, no NaN e no erro relativo.',
     },
     {
       id: 'aprendiz-t3-e03-q14',
@@ -347,6 +478,7 @@ System.out.println(((int) (double) m == m) + " " + (0.1 + 0.2 == 0.3)
       opcoes: ['2²⁴ = 16.777.216', '2²³ = 8.388.608', '2³¹ − 1', '2³²', '2⁵³'],
       resposta: 0,
       explicacao: 'O `float` tem 23 bits de fração mais o implícito: 24 bits de precisão. Até 2²⁴, o espaçamento entre floats vizinhos é no máximo 1; depois passa a ser 2, e 16.777.217 já não existe. Para `double`, o limite é 2⁵³.',
+      dica: 'O `float` tem 24 bits significativos.',
     },
     {
       id: 'aprendiz-t3-e03-q15',
@@ -361,6 +493,7 @@ System.out.println(((int) (double) m == m) + " " + (0.1 + 0.2 == 0.3)
       ],
       resposta: 0,
       explicacao: 'Dinheiro exige exatidão decimal. `double` e `float` acumulam erros binários, e arredondar só na exibição não conserta somas erradas. `new BigDecimal(19.90)` recebe o `double` já errado; a versão com `String` guarda exatamente 19,90.',
+      dica: 'Dinheiro precisa ser exato em decimal.',
     },
   ],
 };

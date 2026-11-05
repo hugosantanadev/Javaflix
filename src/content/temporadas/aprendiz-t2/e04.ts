@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     'Exceção num inicializador `static` aparece como `ExceptionInInitializerError`.',
     'Java começa interpretado; medir desempenho sem aquecimento mede o interpretador.',
   ],
+  ia: {
+    uso:
+      'A IA explica bem as áreas de memória da JVM e o papel do JIT, e ajuda a ler a saída do `javap -c`. Para afirmações de desempenho, peça a fonte ou meça, porque mitos antigos sobre a JVM aparecem com frequência.',
+    pedido:
+      'Estou estudando a JVM por dentro.\n<cole a saída do javap -c aqui>\n- Explique cada instrução e mostre a pilha de operandos depois de cada uma.\n- Diga em que área de memória ficam as variáveis locais, os objetos e o bytecode deste método.\n- Diga quando a classe é inicializada e se alguma constante foi copiada pelo javac.',
+    erros: [
+      'Diz que o Java é interpretado, ignorando o JIT.',
+      'Afirma que `System.gc()` libera a memória na hora.',
+      'Recomenda `final` em métodos "para ficar mais rápido".',
+    ],
+    conferir: [
+      'Rode `javap -c` na classe e compare com a explicação.',
+      'Use `-XX:+PrintCompilation` para ver quais métodos o JIT compilou.',
+      'Meça desempenho com JMH, nunca com um laço e `currentTimeMillis`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JVMS 2.5: Run-Time Data Areas',
@@ -169,6 +185,104 @@ public class MaquinaDePilha {
     comentarios:
       'É a mesma ideia do bytecode: `iload`/`bipush` empilham, `iadd`/`imul`/`isub` desempilham dois valores e empilham o resultado. Repare que a expressão não precisou de parênteses: a ordem das instruções já resolve a precedência, o que é chamado de notação pós-fixa. Um interpretador de verdade é este laço com mais instruções e muita otimização.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t2-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O programa cai no primeiro uso de `Config` com `ExceptionInInitializerError`, causado por `NumberFormatException: For input string: "80 80"`.',
+      codigo: `class Config {
+    static int porta = Integer.parseInt("80 80");
+}
+
+public class Servidor {
+    public static void main(String[] args) {
+        System.out.println("subindo na porta " + Config.porta);
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'excecao', nome: 'ExceptionInInitializerError' },
+      correcao: `class Config {
+    static int porta = Integer.parseInt("8080");
+}
+
+public class Servidor {
+    public static void main(String[] args) {
+        System.out.println("subindo na porta " + Config.porta);
+    }
+}`,
+      saidaCorrigida: 'subindo na porta 8080',
+      dica: 'A exceção aparece quando `Config` é inicializada. O que a inicialização de `Config` executa?',
+      explicacao: 'O valor inicial de um campo `static` roda na inicialização da classe. Uma exceção ali é embrulhada em `ExceptionInInitializerError`, e a causa real fica na linha "Caused by". O texto com espaço não é um número válido para `parseInt`.',
+    },
+    {
+      id: 'aprendiz-t2-e04-b02',
+      dificuldade: 2,
+      sintoma: 'A máquina de pilha de brinquedo calcula `7 2 -` como `-5`, quando deveria dar 5.',
+      codigo: `import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class MaquinaDePilha {
+    public static void main(String[] args) {
+        Deque<Integer> pilha = new ArrayDeque<>();
+        pilha.push(7);
+        pilha.push(2);
+        int a = pilha.pop();
+        int b = pilha.pop();
+        pilha.push(a - b);
+        System.out.println(pilha.pop());
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: '-5' },
+      correcao: `import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class MaquinaDePilha {
+    public static void main(String[] args) {
+        Deque<Integer> pilha = new ArrayDeque<>();
+        pilha.push(7);
+        pilha.push(2);
+        int a = pilha.pop();
+        int b = pilha.pop();
+        pilha.push(b - a);
+        System.out.println(pilha.pop());
+    }
+}`,
+      saidaCorrigida: '5',
+      dica: 'Qual valor sai primeiro da pilha: o 7, que entrou primeiro, ou o 2?',
+      explicacao: 'A pilha devolve primeiro o último que entrou: `a` é o 2 e `b` é o 7. Para soma e multiplicação a ordem não importa, mas para subtração e divisão sim. O `isub` da JVM faz exatamente isso: o operando de baixo menos o de cima.',
+    },
+    {
+      id: 'aprendiz-t2-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O tempo limite deveria ser o dobro do padrão, 20 segundos, mas a configuração mostra `limite = 0`.',
+      codigo: `class Tempo {
+    static int limite = Tempo.padrao * 2;
+    static int padrao = 10;
+}
+
+public class Painel {
+    public static void main(String[] args) {
+        System.out.println("limite = " + Tempo.limite);
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'saida', saida: 'limite = 0' },
+      correcao: `class Tempo {
+    static int padrao = 10;
+    static int limite = Tempo.padrao * 2;
+}
+
+public class Painel {
+    public static void main(String[] args) {
+        System.out.println("limite = " + Tempo.limite);
+    }
+}`,
+      saidaCorrigida: 'limite = 20',
+      dica: 'Os campos `static` recebem os valores iniciais em que ordem? Quanto vale `padrao` antes de receber o 10?',
+      explicacao: 'A inicialização da classe executa os inicializadores `static` na ordem em que aparecem no código. Quando `limite` é calculado, `padrao` ainda tem o valor padrão, 0. O nome qualificado `Tempo.padrao` engana o compilador, que recusaria `padrao * 2` sozinho. Declare primeiro o que é usado depois.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t2-e04-q01',
@@ -183,6 +297,7 @@ public class MaquinaDePilha {
       ],
       resposta: 0,
       explicacao: 'O interpretador ganha em portabilidade e começa a rodar na hora, mas paga o custo de entender cada instrução toda vez que ela executa. O JIT existe justamente para tirar esse custo dos trechos que rodam muito.',
+      dica: 'O interpretador refaz o trabalho a cada execução da linha.',
     },
     {
       id: 'aprendiz-t2-e04-q02',
@@ -211,6 +326,7 @@ public class Main {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A JVM só inicializa `Config` quando o campo estático é lido, depois de `início` já ter sido impresso. O bloco `static` roda uma única vez, logo antes do primeiro uso.',
+      dica: 'A classe só é inicializada no primeiro uso ativo.',
     },
     {
       id: 'aprendiz-t2-e04-q03',
@@ -239,6 +355,7 @@ public class Main {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`PORTA` é uma constante de compilação. O `javac` copia o 8080 direto no bytecode de `Main`, que nem chega a tocar em `Config`. Sem uso ativo, a classe não é inicializada e o bloco `static` não roda.',
+      dica: 'Constantes `static final` são copiadas para quem usa.',
     },
     {
       id: 'aprendiz-t2-e04-q04',
@@ -248,6 +365,7 @@ public class Main {
       opcoes: ['Heap', 'Metaspace (área de métodos)', 'Pilha da JVM', 'PC', 'Variáveis locais'],
       respostas: [0, 1],
       explicacao: 'Objetos e estrutura das classes são de todos. Cada thread tem a sua pilha (com as variáveis locais) e o seu PC, porque cada uma está num ponto diferente do programa.',
+      dica: 'Uma pilha e um PC são de cada thread.',
     },
     {
       id: 'aprendiz-t2-e04-q05',
@@ -262,6 +380,7 @@ public class Main {
       ],
       resposta: 0,
       explicacao: 'O `.class` pode ter vindo de qualquer lugar, até de um compilador malicioso. O verificador confere tipos, pilha e inicialização das variáveis antes de executar, e é parte do que torna a JVM segura.',
+      dica: 'Um `.class` pode ter sido adulterado.',
     },
     {
       id: 'aprendiz-t2-e04-q06',
@@ -276,6 +395,7 @@ public class Main {
       ],
       resposta: 0,
       explicacao: 'Just-in-time quer dizer "na hora certa": o JIT espera descobrir quais trechos são quentes e só então gasta tempo compilando-os. Bytecode é trabalho do `javac`, e remover objetos é do coletor de lixo.',
+      dica: '*Just in time*: na hora em que precisa.',
     },
     {
       id: 'aprendiz-t2-e04-q07',
@@ -290,6 +410,7 @@ public class Main {
       ],
       resposta: 0,
       explicacao: 'Nas primeiras execuções você mede o interpretador e o próprio trabalho de compilar. Ferramentas como o JMH rodam o código muitas vezes antes de começar a medir.',
+      dica: 'O código começa interpretado.',
     },
     {
       id: 'aprendiz-t2-e04-q08',
@@ -299,6 +420,7 @@ public class Main {
       opcoes: ['Java, na JVM', 'C#, no .NET', 'C compilado com gcc', 'Assembly x86', 'Rust'],
       respostas: [0, 1],
       explicacao: 'Java e C# compilam para um bytecode próprio e usam JIT. C e Rust são compilados antecipadamente para código de máquina, e assembly já é código de máquina com nomes.',
+      dica: 'Quais têm bytecode e máquina virtual?',
     },
     {
       id: 'aprendiz-t2-e04-q09',
@@ -313,6 +435,7 @@ public class Main {
       ],
       resposta: 0,
       explicacao: 'Cada operação usa os dois valores do topo. Primeiro `a` e `b` são empilhados e multiplicados; o resultado fica no topo, `c` é empilhado e a soma junta os dois. A última opção calcularia `a * (b + c)`.',
+      dica: 'Os operandos são empilhados antes da operação.',
     },
     {
       id: 'aprendiz-t2-e04-q10',
@@ -345,6 +468,7 @@ public class Ordem {
 }`,
       resposta: 'main\nA\noi de A\noi de A\nfim',
       explicacao: 'A primeira chamada a `A.oi()` inicializa `A`, e a segunda não repete o bloco `static`. Declarar `B b = null` não é um uso ativo: nenhum objeto é criado e nenhum membro estático é acessado, então `B` nunca é inicializada.',
+      dica: 'A inicialização acontece uma vez, no primeiro uso; siga a ordem do `main`.',
     },
     {
       id: 'aprendiz-t2-e04-q11',
@@ -354,6 +478,7 @@ public class Ordem {
       opcoes: ['No heap', 'Na pilha da thread', 'No metaspace', 'No PC', 'No arquivo `.class`'],
       resposta: 0,
       explicacao: 'Todo objeto e todo array vivem no heap, compartilhado entre as threads. Uma variável local guarda só a referência, e essa referência fica no frame, na pilha.',
+      dica: 'Objetos não ficam na pilha.',
     },
     {
       id: 'aprendiz-t2-e04-q12',
@@ -368,6 +493,7 @@ public class Ordem {
       ],
       resposta: 0,
       explicacao: 'O coletor parte das raízes (variáveis locais ativas, campos estáticos) e marca tudo o que alcança. O que sobra é lixo. Um objeto devolvido por um método continua vivo se quem chamou guardou a referência.',
+      dica: 'O coletor segue as referências a partir das raízes.',
     },
     {
       id: 'aprendiz-t2-e04-q13',
@@ -382,6 +508,7 @@ public class Ordem {
       ],
       resposta: 0,
       explicacao: 'Um executável nativo não precisa carregar classes nem aquecer, por isso é ótimo para serverless e linha de comando. Em compensação, perde a portabilidade do bytecode e as otimizações especulativas do JIT.',
+      dica: 'Compilar antes ganha no início e perde o que só se descobre rodando.',
     },
     {
       id: 'aprendiz-t2-e04-q14',
@@ -407,6 +534,7 @@ public class Main {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ExceptionInInitializerError' },
       explicacao: 'A divisão inteira por zero lança `ArithmeticException` durante a inicialização da classe. A JVM embrulha qualquer exceção que escape de um inicializador `static` num `ExceptionInInitializerError`. O compilador não recusa `10 / 0`, porque isso só falha na execução.',
+      dica: 'Exceção no inicializador `static` é embrulhada.',
     },
     {
       id: 'aprendiz-t2-e04-q15',
@@ -416,6 +544,7 @@ public class Main {
       opcoes: ['O interpretador de bytecode', 'O compilador JIT', 'O `javac`', 'A IDE', 'O classpath'],
       respostas: [0, 1],
       explicacao: 'O motor de execução interpreta e compila bytecode enquanto o programa roda, junto com o coletor de lixo. O `javac` roda antes, separado da JVM, e o classpath é só a lista de lugares onde procurar classes.',
+      dica: 'O motor executa bytecode.',
     },
   ],
 };

@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Em coleções imutáveis, os métodos de leitura funcionam e os de alteração lançam `UnsupportedOperationException`.',
     '`LinkedList.reversed()` devolve `LinkedList`, por ser ao mesmo tempo `List` e `Deque`.',
   ],
+  ia: {
+    uso:
+      'As sequenced collections são do Java 21, e a IA mistura as versões: ora diz que `List` não tem `getFirst`, ora usa `getFirst` num `HashSet`. Ela é útil para converter código antigo, com índices e iteradores ao contrário, para `getFirst`, `getLast` e `reversed`, desde que você diga a versão e confira o que é visão e o que é cópia.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código que pega o primeiro, o último ou percorre de trás para a frente>\n- Reescreva usando getFirst, getLast e reversed onde o tipo declarado permitir.\n- Diga, para cada reversed(), se o resultado é uma visão e o que acontece se for alterado.\n- Aponte chamadas que lançam UnsupportedOperationException ou NoSuchElementException.\n- Não use getFirst em HashSet nem em HashMap.',
+    erros: [
+      'Afirma que `List` não tem `getFirst` e `getLast`, o que só vale até o Java 20.',
+      'Chama `getFirst` numa variável declarada como `Set` ou `HashSet`, que não compila.',
+      'Trata `reversed()` como uma cópia e altera a visão achando que a original fica intacta.',
+      'Usa `addFirst` num `TreeSet`, que lança `UnsupportedOperationException`.',
+    ],
+    conferir: [
+      'Compile com o nível de linguagem 21 e, para comparar, com 17.',
+      'Altere a visão de `reversed()` e imprima a coleção original.',
+      'Teste `getFirst` numa coleção vazia e veja a exceção.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JEP 431: Sequenced Collections',
@@ -130,6 +147,109 @@ public class Historico {
     comentarios:
       'Antes do Java 21, esse histórico exigiria remover e reinserir a página para mudá-la de lugar, e descobrir a mais antiga com `iterator().next()`. Com `addLast`, `removeFirst` e `reversed`, o código diz exatamente o que faz. Repare na quarta visita: "home" não foi duplicada, foi para o fim, e o histórico continuou com 3 páginas.',
   },
+  bugs: [
+    {
+      id: 'pleno-t3-e06-b01',
+      dificuldade: 1,
+      sintoma: 'A tela de histórico quebra ao mostrar o último pedido: `IndexOutOfBoundsException: Index 3 out of bounds for length 3`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Historico {
+    public static void main(String[] args) {
+        List<String> pedidos = new ArrayList<>(List.of("PED-101", "PED-102", "PED-103"));
+        String ultimo = pedidos.get(pedidos.size());
+        System.out.println("último pedido: " + ultimo);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'excecao', nome: 'IndexOutOfBoundsException' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Historico {
+    public static void main(String[] args) {
+        List<String> pedidos = new ArrayList<>(List.of("PED-101", "PED-102", "PED-103"));
+        String ultimo = pedidos.getLast();
+        System.out.println("último pedido: " + ultimo);
+    }
+}`,
+      saidaCorrigida: 'último pedido: PED-103',
+      dica: 'Numa lista de 3 elementos, quais são os índices válidos? E o Java 21 tem um jeito sem índice de pegar o último?',
+      explicacao:
+        'Os índices vão de 0 a `size() - 1`, e `get(size())` passa uma posição do fim, o erro clássico de um a mais. Antes do Java 21, a forma certa era `get(size() - 1)`; desde o Java 21, `getLast()` faz o mesmo sem conta nenhuma, e funciona em qualquer coleção sequenciada.',
+    },
+    {
+      id: 'pleno-t3-e06-b02',
+      dificuldade: 2,
+      sintoma: 'Depois de gerar o boletim em ordem inversa com uma nota ajustada só para o relatório, a última nota lançada do aluno mudou de 8 para 10: `relatório: [10, 9, 7], notas lançadas: [7, 9, 10]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Boletim {
+    public static void main(String[] args) {
+        List<Integer> notas = new ArrayList<>(List.of(7, 9, 8));
+        List<Integer> doFimProComeco = notas.reversed();
+        doFimProComeco.set(0, 10);
+        System.out.println("relatório: " + doFimProComeco + ", notas lançadas: " + notas);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'relatório: [10, 9, 7], notas lançadas: [7, 9, 10]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Boletim {
+    public static void main(String[] args) {
+        List<Integer> notas = new ArrayList<>(List.of(7, 9, 8));
+        List<Integer> doFimProComeco = new ArrayList<>(notas.reversed());
+        doFimProComeco.set(0, 10);
+        System.out.println("relatório: " + doFimProComeco + ", notas lançadas: " + notas);
+    }
+}`,
+      saidaCorrigida: 'relatório: [10, 9, 7], notas lançadas: [7, 9, 8]',
+      dica: '`reversed()` devolve uma lista nova ou uma visão da mesma lista?',
+      explicacao:
+        '`reversed()` não copia nada: devolve uma visão da mesma lista em ordem inversa, e alterar a visão altera a original. A posição 0 da visão é o último elemento das notas lançadas. Quando precisar de uma cópia independente, crie uma: `new ArrayList<>(notas.reversed())`.',
+    },
+    {
+      id: 'pleno-t3-e06-b03',
+      dificuldade: 3,
+      sintoma: 'Depois de uma refatoração para manter as etapas sem repetição, a aplicação não sobe: `UnsupportedOperationException` em `TreeSet.addFirst`.',
+      codigo: `import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.SequencedSet;
+import java.util.TreeSet;
+
+public class Inicializacao {
+    public static void main(String[] args) {
+        SequencedSet<String> etapas = new TreeSet<>(List.of("banco", "cache"));
+        etapas.addFirst("autenticacao");
+        etapas.addLast("rotas");
+        System.out.println("ordem de subida: " + etapas);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'excecao', nome: 'UnsupportedOperationException' },
+      correcao: `import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.SequencedSet;
+import java.util.TreeSet;
+
+public class Inicializacao {
+    public static void main(String[] args) {
+        SequencedSet<String> etapas = new LinkedHashSet<>(List.of("banco", "cache"));
+        etapas.addFirst("autenticacao");
+        etapas.addLast("rotas");
+        System.out.println("ordem de subida: " + etapas);
+    }
+}`,
+      saidaCorrigida: 'ordem de subida: [autenticacao, banco, cache, rotas]',
+      dica: 'A variável é um `SequencedSet`, mas qual é a implementação? Num `TreeSet`, quem decide a posição de cada elemento?',
+      explicacao:
+        '`TreeSet` é um `SequencedSet`, mas a posição dos elementos é decidida pela comparação, então `addFirst` e `addLast` lançam `UnsupportedOperationException`. O código compila, porque o tipo declarado tem os métodos, e só falha na execução. Para controlar a ordem por posição sem repetidos, use `LinkedHashSet`.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t3-e06-q01',
@@ -150,6 +270,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Desde o Java 21, `List` estende `SequencedCollection` e ganhou os métodos de ponta.',
+      dica: '`addFirst` põe no começo; `addLast`, no fim.',
     },
     {
       id: 'pleno-t3-e06-q02',
@@ -168,6 +289,7 @@ public class Teste {
 }`,
       resposta: '[1, 2, 3, 8]',
       explicacao: 'O começo da visão invertida é o fim da original: `addFirst(9)` acrescenta no fim, e `set(0, 8)` troca justamente esse último elemento.',
+      dica: '`reversed()` é uma visão: o começo dela é o fim da original.',
     },
     {
       id: 'pleno-t3-e06-q03',
@@ -189,6 +311,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'No `LinkedHashSet`, `addFirst` e `addLast` de elementos existentes os movem para a ponta. O 3 vai para o começo, o 4 entra antes dele, e o 1 vai para o fim.',
+      dica: 'No `LinkedHashSet`, elemento repetido muda de lugar em vez de duplicar.',
     },
     {
       id: 'pleno-t3-e06-q04',
@@ -214,6 +337,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedOperationException', saida: '3' },
       explicacao: '`TreeSet` é `SequencedSet`, então o método existe e compila. Mas a posição é decidida pela comparação, e a implementação recusa a inserção numa ponta escolhida.',
+      dica: 'No `TreeSet`, quem decide a posição é a comparação.',
     },
     {
       id: 'pleno-t3-e06-q05',
@@ -238,6 +362,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NoSuchElementException', saida: 'vazia' },
       explicacao: 'Os métodos de ponta lançam `NoSuchElementException` em coleções vazias, como `Deque.getFirst` sempre fez.',
+      dica: 'Numa coleção vazia, `getFirst` lança exceção.',
     },
     {
       id: 'pleno-t3-e06-q06',
@@ -247,6 +372,7 @@ public class Teste {
       opcoes: ['`ArrayList`', '`ArrayDeque`', '`LinkedHashSet`', '`HashSet`', '`PriorityQueue`'],
       respostas: [0, 1, 2],
       explicacao: 'Só coleções com ordem de encontro definida são sequenciadas. A `HashSet` não tem ordem, e a `PriorityQueue` só garante a ordem de saída, não a de iteração.',
+      dica: 'Só coleções com ordem definida são sequenciadas.',
     },
     {
       id: 'pleno-t3-e06-q07',
@@ -268,6 +394,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`putFirst` com uma chave existente atualiza o valor e move a entrada para o começo. A última entrada passa a ser "x".',
+      dica: '`putFirst` move a chave para o começo e atualiza o valor.',
     },
     {
       id: 'pleno-t3-e06-q08',
@@ -285,6 +412,7 @@ public class Ultimo {
       respostas: ['getLast'],
       saida: 'Caio',
       explicacao: '`getLast()` substitui o antigo `get(size() - 1)` e funciona também em listas imutáveis, porque só lê.',
+      dica: 'É o par de `getFirst`.',
     },
     {
       id: 'pleno-t3-e06-q09',
@@ -303,6 +431,7 @@ public class Teste {
 }`,
       resposta: 8,
       explicacao: '`HashSet` não tem ordem definida e não implementa `SequencedSet`, então não ganhou `getFirst`. O `LinkedHashSet`, que estende `HashSet`, ganhou.',
+      dica: '`HashSet` não tem ordem definida.',
     },
     {
       id: 'pleno-t3-e06-q10',
@@ -321,6 +450,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`pollFirstEntry` e `pollLastEntry` removem e devolvem as entradas das pontas, impressas como `chave=valor`. Remover funciona no `TreeMap`; só `putFirst` e `putLast` são recusados.',
+      dica: '`pollFirstEntry` e `pollLastEntry` removem as pontas.',
     },
     {
       id: 'pleno-t3-e06-q11',
@@ -346,6 +476,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedOperationException', saida: '[3, 2, 1]' },
       explicacao: '`reversed()` só cria uma visão, o que uma lista imutável permite. `addFirst` alteraria a lista e é recusado na execução.',
+      dica: 'Ler funciona numa lista imutável; alterar, não.',
     },
     {
       id: 'pleno-t3-e06-q12',
@@ -366,6 +497,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`push` na visão insere no começo dela, que é o fim da original. `peek` na visão olha esse mesmo elemento.',
+      dica: 'O `push` na visão invertida vai para o fim da original.',
     },
     {
       id: 'pleno-t3-e06-q13',
@@ -388,6 +520,7 @@ public class Teste {
 }`,
       resposta: 'cba [y, x] y=2',
       explicacao: 'O for-each sobre a visão invertida percorre de trás para a frente. Nos mapas, `sequencedKeySet()` e `reversed()` oferecem o mesmo para chaves e entradas.',
+      dica: '`reversed()` funciona em listas, conjuntos de chaves e mapas sequenciados.',
     },
     {
       id: 'pleno-t3-e06-q14',
@@ -413,6 +546,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A `LinkedList` sobrescreve `reversed()` com retorno `LinkedList`, compatível com `List` e com `Deque`. O `addFirst` na visão acrescenta no fim da original.',
+      dica: '`LinkedList.reversed()` devolve `LinkedList`.',
     },
     {
       id: 'pleno-t3-e06-q15',
@@ -427,6 +561,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `TreeSet` herda o método de `SequencedCollection`, mas não pode honrá-lo sem quebrar a ordenação. Os métodos de leitura e de remoção das pontas funcionam.',
+      dica: 'Num `TreeSet`, a posição não é escolhida por quem insere.',
     },
   ],
 };

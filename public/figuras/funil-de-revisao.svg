@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Funil de conferência do código gerado: o compilador pega métodos e tipos inventados; os testes existentes pegam regressões; os testes novos de fronteira e o teste diferencial pegam erros de lógica; a revisão humana pega segurança, dependências e escopo; cada camada deixa passar menos problemas</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <path d="M40 30 L720 30 L670 90 L90 90 Z" fill="#1b1916" stroke="#8a8277"/>
+    <text x="380" y="56" font-size="14" font-weight="700" fill="#f3eee7" text-anchor="middle">Compilador</text>
+    <text x="380" y="76" font-size="12" fill="#bdb5aa" text-anchor="middle">métodos inventados, tipos errados, imports que não existem</text>
+
+    <path d="M95 96 L665 96 L615 156 L145 156 Z" fill="#1b1916" stroke="#8a8277"/>
+    <text x="380" y="122" font-size="14" font-weight="700" fill="#f3eee7" text-anchor="middle">Testes existentes</text>
+    <text x="380" y="142" font-size="12" fill="#bdb5aa" text-anchor="middle">regressões: o que funcionava e parou</text>
+
+    <path d="M150 162 L610 162 L560 222 L200 222 Z" fill="#13221a" stroke="#4fd68b"/>
+    <text x="380" y="188" font-size="14" font-weight="700" fill="#4fd68b" text-anchor="middle">Testes novos</text>
+    <text x="380" y="208" font-size="12" fill="#bdb5aa" text-anchor="middle">fronteiras, nulos, teste diferencial</text>
+
+    <path d="M205 228 L555 228 L505 288 L255 288 Z" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="380" y="254" font-size="14" font-weight="700" fill="#ff7a1a" text-anchor="middle">Revisão humana</text>
+    <text x="380" y="274" font-size="12" fill="#bdb5aa" text-anchor="middle">segurança, dependências, escopo</text>
+  </g>
+  <text x="380" y="316" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277" text-anchor="middle">Cada camada barra uma parte; nenhuma, sozinha, barra tudo.</text>
+</svg>

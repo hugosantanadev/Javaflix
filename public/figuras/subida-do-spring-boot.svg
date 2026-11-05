@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="290" viewBox="0 0 760 290" role="img" aria-labelledby="t">
+  <title id="t">O que acontece no SpringApplication.run, em cinco passos: lê o ambiente e as propriedades; varre os pacotes e registra os beans do projeto; avalia as autoconfigurações e aplica só as que passam nas condições; cria os beans e injeta as dependências; sobe o Tomcat e imprime Started</title>
+  <rect width="760" height="290" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" text-anchor="middle">
+    <rect x="20" y="60" width="128" height="96" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="84" y="88" font-size="13" font-weight="700" fill="#f3eee7">1. Ambiente</text>
+    <text x="84" y="110" font-size="11" fill="#bdb5aa">properties,</text>
+    <text x="84" y="126" font-size="11" fill="#bdb5aa">variáveis e</text>
+    <text x="84" y="142" font-size="11" fill="#bdb5aa">linha de comando</text>
+
+    <rect x="168" y="60" width="128" height="96" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="232" y="88" font-size="13" font-weight="700" fill="#f3eee7">2. Varredura</text>
+    <text x="232" y="110" font-size="11" fill="#bdb5aa">beans do projeto,</text>
+    <text x="232" y="126" font-size="11" fill="#bdb5aa">a partir do pacote</text>
+    <text x="232" y="142" font-size="11" fill="#bdb5aa">principal</text>
+
+    <rect x="316" y="60" width="128" height="96" rx="8" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="380" y="88" font-size="13" font-weight="700" fill="#ff7a1a">3. Autoconfig.</text>
+    <text x="380" y="110" font-size="11" fill="#bdb5aa">91 candidatos,</text>
+    <text x="380" y="126" font-size="11" fill="#bdb5aa">só os que passam</text>
+    <text x="380" y="142" font-size="11" fill="#bdb5aa">nas condições</text>
+
+    <rect x="464" y="60" width="128" height="96" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="528" y="88" font-size="13" font-weight="700" fill="#f3eee7">4. Beans</text>
+    <text x="528" y="110" font-size="11" fill="#bdb5aa">criados na ordem</text>
+    <text x="528" y="126" font-size="11" fill="#bdb5aa">das dependências</text>
+    <text x="528" y="142" font-size="11" fill="#bdb5aa">e injetados</text>
+
+    <rect x="612" y="60" width="128" height="96" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="676" y="88" font-size="13" font-weight="700" fill="#4fd68b">5. Tomcat</text>
+    <text x="676" y="110" font-size="11" fill="#bdb5aa">porta 8080</text>
+    <text x="676" y="126" font-size="11" fill="#bdb5aa">e a linha</text>
+    <text x="676" y="142" font-size="11" fill="#4fd68b">Started</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M148 108 L165 108"/>
+    <path d="M296 108 L313 108"/>
+    <path d="M444 108 L461 108"/>
+    <path d="M592 108 L609 108"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="20" y="200" fill="#bdb5aa">O passo 3 vem depois do 2 de propósito: um @ConditionalOnMissingBean só enxerga os seus beans</text>
+    <text x="20" y="218" fill="#bdb5aa">se eles já estiverem registrados. Por isso um bean seu substitui o padrão do Spring Boot.</text>
+    <text x="20" y="252" fill="#8a8277">Erro de configuração para no passo 1, bean ausente no 4, porta ocupada no 5:</text>
+    <text x="20" y="270" fill="#8a8277">o relatório APPLICATION FAILED TO START diz em qual deles parou.</text>
+  </g>
+</svg>

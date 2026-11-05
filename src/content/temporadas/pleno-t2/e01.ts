@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Uma classe genérica não pode estender `Throwable`, nem indiretamente.',
     'Raw type compila com aviso de `unchecked`; aviso não é erro de compilação.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a transformar uma classe que guarda `Object` numa classe genérica e a explicar mensagens como `incompatible types` ou `unexpected type`. Mas ela traz vícios de código antigo: raw types, casts que o generics já dispensa e `var` com diamante, que vira `Object` sem ninguém notar.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui a classe que guarda Object e faz cast>\n- Transforme-a numa classe genérica, com um parâmetro de tipo de uma letra, pela convenção.\n- Mostre o uso com dois argumentos de tipo diferentes e uma linha que não compila, com a mensagem do javac.\n- Não use raw types nem @SuppressWarnings, e evite var com diamante.\n- Explique o que muda no bytecode: o que vira Object e onde entra o checkcast.',
+    erros: [
+      'Usa raw types, como `List lista = new ArrayList();`, copiados de exemplos anteriores ao Java 5.',
+      'Escreve `var lista = new ArrayList<>();` achando que o tipo será deduzido pelo uso, quando vira `ArrayList<Object>`.',
+      'Propõe `new T()` ou `new T[10]` dentro da classe genérica, que não compilam.',
+      'Declara um campo `static T`, que não compila.',
+    ],
+    conferir: [
+      'Compile com `javac -Xlint:unchecked` e confira que não sai nenhum aviso.',
+      'Use `Ctrl+Shift+P` no IntelliJ para ver o tipo que o diamante ou o `var` deduziu.',
+      'Rode `javap -c` na classe compilada e procure o `checkcast` nos pontos de uso.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Introducing Generics',
@@ -193,6 +210,155 @@ public class Pilhas {
     comentarios:
       'Uma única classe atende a texto, a números e a qualquer outro tipo, e cada uso é conferido pelo compilador: `edicoes.empilhar(3)` não compilaria. Em `digitos.empilhar(c - \'0\')`, o `int` é embalado em `Integer`; em `invertido * 10 + digitos.desempilhar()`, é desembalado de volta. A `Pilha<Double>` vazia mostra que o argumento de tipo não muda o comportamento: o código que roda é o mesmo para todos.',
   },
+  bugs: [
+    {
+      id: 'pleno-t2-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O cálculo da média de notas não compila: `unexpected type`, com `required: reference` e `found: int` logo abaixo.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Notas {
+    public static void main(String[] args) {
+        List<int> notas = new ArrayList<>();
+        notas.add(8);
+        notas.add(10);
+        int soma = 0;
+        for (int n : notas) soma += n;
+        System.out.println("média: " + soma / notas.size());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Notas {
+    public static void main(String[] args) {
+        List<Integer> notas = new ArrayList<>();
+        notas.add(8);
+        notas.add(10);
+        int soma = 0;
+        for (int n : notas) soma += n;
+        System.out.println("média: " + soma / notas.size());
+    }
+}`,
+      saidaCorrigida: 'média: 9',
+      dica: 'Que tipo de tipo um argumento de tipo precisa ser?',
+      explicacao:
+        'Argumentos de tipo precisam ser tipos de referência, porque o generics trabalha com objetos. Use a classe embrulhadora, `List<Integer>`: o autoboxing converte o `8` e o `10` para `Integer` no `add`, e o `for` desembala de volta para `int`.',
+    },
+    {
+      id: 'pleno-t2-e01-b02',
+      dificuldade: 2,
+      sintoma: 'A prateleira encontra o código 100, mas jura que o 4500 não está lá, embora tenha acabado de ser guardado: `100: true, 4500: false`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Estoque {
+    static class Prateleira<T> {
+        private final List<T> itens = new ArrayList<>();
+
+        void guardar(T item) {
+            itens.add(item);
+        }
+
+        boolean tem(T procurado) {
+            for (T item : itens) {
+                if (item == procurado) return true;
+            }
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
+        Prateleira<Integer> codigos = new Prateleira<>();
+        codigos.guardar(100);
+        codigos.guardar(4500);
+        System.out.println("100: " + codigos.tem(100) + ", 4500: " + codigos.tem(4500));
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'saida', saida: '100: true, 4500: false' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Estoque {
+    static class Prateleira<T> {
+        private final List<T> itens = new ArrayList<>();
+
+        void guardar(T item) {
+            itens.add(item);
+        }
+
+        boolean tem(T procurado) {
+            for (T item : itens) {
+                if (item.equals(procurado)) return true;
+            }
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
+        Prateleira<Integer> codigos = new Prateleira<>();
+        codigos.guardar(100);
+        codigos.guardar(4500);
+        System.out.println("100: " + codigos.tem(100) + ", 4500: " + codigos.tem(4500));
+    }
+}`,
+      saidaCorrigida: '100: true, 4500: true',
+      dica: 'Dentro da classe genérica, `T` é sempre um objeto. O que `==` compara entre dois objetos?',
+      explicacao:
+        'Com `T`, `==` compara referências. O `Integer` guarda em cache os valores de -128 a 127, por isso o 100 vira o mesmo objeto nas duas chamadas e o 4500 não. Código genérico não sabe que tipo vai receber, então precisa comparar com `equals`, ou com `Objects.equals` quando os itens podem ser `null`.',
+    },
+    {
+      id: 'pleno-t2-e01-b03',
+      dificuldade: 3,
+      sintoma: 'A listagem de códigos quebra com `ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String`, num `for` sobre uma `List<String>` que só deveria ter texto.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Cadastro {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    static void importarLegado(List destino) {
+        destino.add(2024);
+    }
+
+    public static void main(String[] args) {
+        List<String> codigos = new ArrayList<>();
+        codigos.add("A-10");
+        importarLegado(codigos);
+        for (String codigo : codigos) {
+            System.out.println(codigo.toLowerCase());
+        }
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'excecao', nome: 'ClassCastException' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Cadastro {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    static void importarLegado(List destino) {
+        destino.add(String.valueOf(2024));
+    }
+
+    public static void main(String[] args) {
+        List<String> codigos = new ArrayList<>();
+        codigos.add("A-10");
+        importarLegado(codigos);
+        for (String codigo : codigos) {
+            System.out.println(codigo.toLowerCase());
+        }
+    }
+}`,
+      saidaCorrigida: 'a-10\n2024',
+      dica: 'O erro aparece no laço, mas onde um `Integer` entrou numa lista de `String`? Que verificação deixou isso passar?',
+      explicacao:
+        'O método legado recebe a lista como *raw type*, `List` sem argumento, e para ele qualquer `add` vale: o `2024` entrou como `Integer`. É a poluição do heap, e o erro só aparece longe dali, no cast que o compilador inseriu no `for`. O `@SuppressWarnings` escondeu justamente o aviso que apontaria o problema: tipe o parâmetro como `List<String>` e o compilador recusa o `add` errado.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t2-e01-q01',
@@ -207,6 +373,7 @@ public class Pilhas {
       ],
       resposta: 0,
       explicacao: 'Como em métodos, o parâmetro é o nome declarado e o argumento é o valor passado no uso. `Caixa<String>` é chamado de tipo parametrizado.',
+      dica: 'Um é declarado pela classe; o outro é passado por quem a usa.',
     },
     {
       id: 'pleno-t2-e01-q02',
@@ -231,6 +398,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Primitivos não podem ser argumentos de tipo. Com `List<Integer>`, o `add(1)` funcionaria por autoboxing.',
+      dica: 'Argumentos de tipo precisam ser tipos de referência.',
     },
     {
       id: 'pleno-t2-e01-q03',
@@ -263,6 +431,7 @@ public class Teste {
 }`,
       resposta: 'bx2 7x1',
       explicacao: 'Cada objeto tem os próprios campos, qualquer que seja o argumento de tipo. `letras` registrou duas vezes e guarda o último, "b".',
+      dica: 'Cada `Contador` tem os próprios campos, e `ultimo` guarda só o último registro.',
     },
     {
       id: 'pleno-t2-e01-q04',
@@ -279,6 +448,7 @@ public class Teste {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'O diamante fica só do lado do `new`. Com `var`, ele deduz `Object`. Primitivos nunca são argumentos de tipo.',
+      dica: 'O diamante só existe do lado do `new`, e primitivos não são argumentos de tipo.',
     },
     {
       id: 'pleno-t2-e01-q05',
@@ -299,6 +469,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem tipo à esquerda, o diamante deduz `Object`, então a lista aceita os dois valores. `getClass()` mostra o tipo real do objeto, `String`.',
+      dica: 'Com `var`, o diamante deduz `Object`.',
     },
     {
       id: 'pleno-t2-e01-q06',
@@ -318,6 +489,7 @@ public class Teste {
 }`,
       resposta: 5,
       explicacao: 'Um campo `static` é único para todas as parametrizações, então não pode ter o tipo `T`. Um `static int` é permitido.',
+      dica: 'Um membro `static` é um só para todos os argumentos de tipo.',
     },
     {
       id: 'pleno-t2-e01-q07',
@@ -342,6 +514,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: 'O `catch` precisa identificar o tipo exato da exceção na execução, e o argumento de tipo não existe lá. Por isso a regra vale mesmo estendendo `Throwable` indiretamente.',
+      dica: 'Uma classe genérica pode estender `Throwable`?',
     },
     {
       id: 'pleno-t2-e01-q08',
@@ -363,6 +536,7 @@ public class Teste {
       respostas: ['A, B'],
       saida: 'idade=31',
       explicacao: 'Records genéricos declaram os parâmetros depois do nome, como as classes. Os dois tipos são separados por vírgula.',
+      dica: 'Os dois parâmetros vão entre `<` e `>`, separados por vírgula.',
     },
     {
       id: 'pleno-t2-e01-q09',
@@ -395,6 +569,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Ao fixar `Conversor<String, Integer>`, o método passa a receber `String` e devolver `Integer`. A soma é 2 + 3.',
+      dica: '`converter` devolve o tamanho de cada texto.',
     },
     {
       id: 'pleno-t2-e01-q10',
@@ -421,6 +596,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Ao fixar `String`, o método a implementar é `converter(String)`. O `converter(Object)` tem o mesmo apagamento mas não o sobrescreve, e o compilador acusa conflito de nomes.',
+      dica: 'Implementar `Conversor<String, Integer>` exige um `converter(String)`.',
     },
     {
       id: 'pleno-t2-e01-q11',
@@ -436,6 +612,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'Não se cria instância de `T`, e `T` não aparece em membros `static`. Declarar um campo `T[]` é permitido; o problema seria criar o array com `new T[n]`. Todo `T` tem `equals`, herdado de `Object`.',
+      dica: 'Criar instâncias de `T` e usar `T` em membros estáticos são proibidos.',
     },
     {
       id: 'pleno-t2-e01-q12',
@@ -456,6 +633,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O raw type desliga a verificação: o `Integer` entra numa lista de `String`, e o código compila só com aviso. `contains` recebe `Object`, então não há cast para falhar.',
+      dica: 'O raw type desliga a verificação: o `add` entra sem conferência.',
     },
     {
       id: 'pleno-t2-e01-q13',
@@ -465,6 +643,7 @@ public class Teste {
       opcoes: ['`E`', '`T`', '`K`', '`R`'],
       resposta: 0,
       explicacao: '`E` de *element* aparece em `List<E>`, `Set<E>` e `Collection<E>`. `K` e `V` são de mapas, e `R` costuma ser o resultado de uma função.',
+      dica: 'É a inicial, em inglês, da palavra que descreve o que uma coleção guarda.',
     },
     {
       id: 'pleno-t2-e01-q14',
@@ -485,6 +664,7 @@ public class Teste {
 }`,
       resposta: '2x',
       explicacao: 'Depois de invertido, `p` é um `Par<Integer, String>`. Os dois `Integer` são somados como números antes de a concatenação com `"x"` começar.',
+      dica: 'Depois de `invertido()`, `primeiro()` é o número.',
     },
     {
       id: 'pleno-t2-e01-q15',
@@ -514,6 +694,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Desde o Java 9, o diamante funciona com classes anônimas, e aqui ele deduz `Comparator<String>`. A comparação invertida ordena de trás para a frente.',
+      dica: 'Desde o Java 9, o diamante funciona com classes anônimas.',
     },
   ],
 };

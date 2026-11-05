@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     '`List.sort` e `Collections.sort` são estáveis: elementos iguais mantêm a ordem anterior.',
     '`Collections.sort(lista)` sem `Comparator` exige que os elementos sejam `Comparable`.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a implementar e comparar algoritmos de ordenação e a escrever `Comparator`s com vários critérios. Peça sempre os testes de borda e compare o resultado com `Arrays.sort`.',
+    pedido:
+      'Implemente o insertion sort e o merge sort em Java para int[].\n- Explique o invariante de cada laço.\n- Conte as comparações para um array ordenado, um invertido e um aleatório de 1.000 elementos.\n- Escreva um teste que compara cada um com Arrays.sort para 100 arrays aleatórios, incluindo vazios e com repetidos.',
+    erros: [
+      'Erra limites, como `j > 0` no lugar de `j >= 0`.',
+      'Escreve `Comparator` com subtração, que estoura com valores grandes.',
+      'Chama a recursão do quicksort com o pivô incluído, e a recursão não termina.',
+    ],
+    conferir: [
+      'Compare com `Arrays.sort` para muitos arrays aleatórios.',
+      'Teste array vazio, de um elemento, ordenado, invertido e com repetidos.',
+      'Para objetos, confira a estabilidade com elementos de chave igual.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de Arrays.sort(int[])',
@@ -191,6 +207,160 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Com o pivô no fim, o array ordenado é o pior caso: 1000 × 999 / 2 = 499.500 comparações, e a recursão chega a 1.000 níveis de profundidade (com 100 mil elementos, estouraria a pilha). A mediana de três escolhe exatamente o elemento do meio quando o array já está ordenado, e o quicksort volta a dividir ao meio: 7.987 comparações, abaixo de n log₂ n ≈ 10.000. É uma das técnicas que o Dual-Pivot Quicksort do JDK usa, junto com dois pivôs e insertion sort para pedaços pequenos.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t4-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O ranking deveria sair em ordem crescente, mas o bubble sort devolve `[9, 5, 3, 1]`.',
+      codigo: `import java.util.Arrays;
+
+public class Ranking {
+    static void bubble(int[] a) {
+        for (int fim = a.length - 1; fim > 0; fim--) {
+            for (int j = 0; j < fim; j++) {
+                if (a[j] < a[j + 1]) {
+                    int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] v = {5, 1, 9, 3};
+        bubble(v);
+        System.out.println(Arrays.toString(v));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: '[9, 5, 3, 1]' },
+      correcao: `import java.util.Arrays;
+
+public class Ranking {
+    static void bubble(int[] a) {
+        for (int fim = a.length - 1; fim > 0; fim--) {
+            for (int j = 0; j < fim; j++) {
+                if (a[j] > a[j + 1]) {
+                    int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] v = {5, 1, 9, 3};
+        bubble(v);
+        System.out.println(Arrays.toString(v));
+    }
+}`,
+      saidaCorrigida: '[1, 3, 5, 9]',
+      dica: 'Para a ordem crescente, quando dois vizinhos estão fora de ordem?',
+      explicacao: 'A troca acontece quando o da esquerda é menor, então os menores vão para o fim: ordem decrescente. Para a crescente, troque quando o da esquerda for maior.',
+    },
+    {
+      id: 'aprendiz-t4-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O insertion sort devolve `[3, 1, 2]` para a entrada `[3, 1, 2]`: o primeiro elemento nunca sai do lugar.',
+      codigo: `import java.util.Arrays;
+
+public class Insercao {
+    static void insertion(int[] a) {
+        for (int i = 1; i < a.length; i++) {
+            int x = a[i];
+            int j = i - 1;
+            while (j > 0 && a[j] > x) {
+                a[j + 1] = a[j];
+                j--;
+            }
+            a[j + 1] = x;
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] v = {3, 1, 2};
+        insertion(v);
+        System.out.println(Arrays.toString(v));
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: '[3, 1, 2]' },
+      correcao: `import java.util.Arrays;
+
+public class Insercao {
+    static void insertion(int[] a) {
+        for (int i = 1; i < a.length; i++) {
+            int x = a[i];
+            int j = i - 1;
+            while (j >= 0 && a[j] > x) {
+                a[j + 1] = a[j];
+                j--;
+            }
+            a[j + 1] = x;
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] v = {3, 1, 2};
+        insertion(v);
+        System.out.println(Arrays.toString(v));
+    }
+}`,
+      saidaCorrigida: '[1, 2, 3]',
+      dica: 'Na primeira volta, `j` começa em 0. O `while` chega a comparar com `a[0]`?',
+      explicacao: 'Com `j > 0`, o laço nunca compara com a posição 0, e nenhum elemento consegue passar para a frente do primeiro. O índice 0 é válido: a condição precisa ser `j >= 0`.',
+    },
+    {
+      id: 'aprendiz-t4-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O quicksort derruba o programa com `StackOverflowError` ao ordenar `[1, 2, 3]`, um array que já está em ordem.',
+      codigo: `import java.util.Arrays;
+
+public class Rapido {
+    static void quick(int[] a, int ini, int fim) {
+        if (ini >= fim) return;
+        int pivo = a[fim];
+        int i = ini;
+        for (int j = ini; j < fim; j++) {
+            if (a[j] < pivo) { int t = a[i]; a[i] = a[j]; a[j] = t; i++; }
+        }
+        int t = a[i]; a[i] = a[fim]; a[fim] = t;
+        quick(a, ini, i);
+        quick(a, i + 1, fim);
+    }
+
+    public static void main(String[] args) {
+        int[] v = {1, 2, 3};
+        quick(v, 0, v.length - 1);
+        System.out.println(Arrays.toString(v));
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'excecao', nome: 'StackOverflowError' },
+      correcao: `import java.util.Arrays;
+
+public class Rapido {
+    static void quick(int[] a, int ini, int fim) {
+        if (ini >= fim) return;
+        int pivo = a[fim];
+        int i = ini;
+        for (int j = ini; j < fim; j++) {
+            if (a[j] < pivo) { int t = a[i]; a[i] = a[j]; a[j] = t; i++; }
+        }
+        int t = a[i]; a[i] = a[fim]; a[fim] = t;
+        quick(a, ini, i - 1);
+        quick(a, i + 1, fim);
+    }
+
+    public static void main(String[] args) {
+        int[] v = {1, 2, 3};
+        quick(v, 0, v.length - 1);
+        System.out.println(Arrays.toString(v));
+    }
+}`,
+      saidaCorrigida: '[1, 2, 3]',
+      dica: 'Depois da partição, o pivô está na posição `i`, já no lugar certo. Ele precisa entrar de novo na recursão?',
+      explicacao: 'Com o array em ordem, o pivô (o maior) termina em `i == fim`, e `quick(a, ini, i)` repete exatamente o mesmo intervalo, para sempre. Cada chamada recursiva precisa receber um problema menor: o pivô fica de fora, `i - 1`.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t4-e03-q01',
@@ -200,6 +370,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['Merge sort', 'Quicksort', 'Bubble sort', 'Insertion sort', 'Selection sort'],
       resposta: 0,
       explicacao: 'O merge sort sempre divide ao meio, então sempre tem log n níveis com n de trabalho cada. O quicksort depende do pivô e pode cair para O(n²). Bubble, insertion e selection são O(n²) no pior caso.',
+      dica: 'Um deles não depende da escolha do pivô.',
     },
     {
       id: 'aprendiz-t4-e03-q02',
@@ -217,6 +388,7 @@ for (int i = 0; i < a.length - 1; i++) {
 System.out.println(Arrays.toString(a));`,
       resposta: '[1, 4, 2, 5, 8]',
       explicacao: '5 e 1 trocam, 5 e 4 trocam, 5 e 2 trocam, 5 e 8 ficam. O 5 foi empurrado para a direita até encontrar um maior que ele. Ao fim de cada passada, o maior valor do trecho percorrido está na última posição; outras passadas ordenam o resto.',
+      dica: 'Compare vizinhos da esquerda para a direita, trocando os fora de ordem.',
     },
     {
       id: 'aprendiz-t4-e03-q03',
@@ -231,6 +403,7 @@ System.out.println(Arrays.toString(a));`,
       ],
       resposta: 0,
       explicacao: 'Estabilidade é sobre empates. Ordenando pedidos por valor de forma estável, dois pedidos de R$ 50 continuam na ordem em que estavam, por exemplo, por data. Ordenar sem memória extra é outra propriedade, "no lugar".',
+      dica: 'Pense em elementos de chave igual.',
     },
     {
       id: 'aprendiz-t4-e03-q04',
@@ -245,6 +418,7 @@ System.out.println(Arrays.toString(a));`,
       ],
       resposta: 0,
       explicacao: 'Num array ordenado, o último elemento é o maior: a partição deixa n − 1 elementos de um lado e nenhum do outro, a cada nível. São n níveis com trabalho decrescente, n(n − 1)/2 comparações. Em ordem aleatória, o pivô costuma dividir bem.',
+      dica: 'O último elemento de um array ordenado é o maior.',
     },
     {
       id: 'aprendiz-t4-e03-q05',
@@ -270,6 +444,7 @@ System.out.println(Arrays.toString(a));`,
 }`,
       resposta: '[1, 2, 3, 4, 9, 10]',
       explicacao: 'A intercalação compara os primeiros de cada lista e tira o menor, até uma acabar; o que sobra da outra já está em ordem e vai para o fim. Custa O(a + b): cada elemento é copiado uma vez.',
+      dica: 'O resultado de uma ordenação correta.',
     },
     {
       id: 'aprendiz-t4-e03-q06',
@@ -293,6 +468,7 @@ System.out.println(pedidos.stream().map(Pedido::cliente).toList());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`List.sort` é estável: entre os de valor 30, Ana vinha antes de Duda; entre os de 50, Bia antes de Caio. A ordem relativa original é preservada. A ordem alfabética só apareceria com `thenComparing(Pedido::cliente)`.',
+      dica: 'Siga o código com o array dado, passo a passo.',
     },
     {
       id: 'aprendiz-t4-e03-q07',
@@ -319,6 +495,7 @@ public class Insercao {
       respostas: ['>', '>='],
       saida: '[1, 2, 3, 5, 8]',
       explicacao: 'Enquanto o elemento à esquerda for maior que `x`, ele anda uma casa para a direita, abrindo espaço. Com `>`, empates param a caminhada e a ordenação fica estável; com `>=`, também ordena, mas troca a ordem de iguais.',
+      dica: 'Desliza enquanto o vizinho da esquerda for maior.',
     },
     {
       id: 'aprendiz-t4-e03-q08',
@@ -333,6 +510,7 @@ public class Insercao {
       ],
       resposta: 0,
       explicacao: 'O algoritmo precisa descobrir qual das n! permutações recebeu, e cada comparação é uma pergunta de sim ou não. É o mesmo argumento dos bits: para distinguir N possibilidades, são precisos log₂ N bits de informação. Counting sort escapa porque não compara: usa o valor como índice.',
+      dica: 'Há n! ordens possíveis, e cada comparação tem duas respostas.',
     },
     {
       id: 'aprendiz-t4-e03-q09',
@@ -342,6 +520,7 @@ public class Insercao {
       opcoes: ['O(n), para o array auxiliar da intercalação', 'O(1)', 'O(n²)', 'O(log n) e nada mais'],
       resposta: 0,
       explicacao: 'A intercalação escreve o resultado num array auxiliar do mesmo tamanho e depois copia de volta. Além disso há O(log n) de pilha de recursão, mas o termo dominante é o auxiliar.',
+      dica: 'Pense no array auxiliar.',
     },
     {
       id: 'aprendiz-t4-e03-q10',
@@ -372,6 +551,7 @@ public class Insercao {
 }`,
       resposta: '4\n10',
       explicacao: 'Ordenado: a primeira passada faz 4 comparações, não troca nada e para. Invertido: todas as passadas trocam, e são 4 + 3 + 2 + 1 = 10 = 5 × 4 / 2 comparações.',
+      dica: 'Com parada antecipada, um array ordenado precisa de uma passada só.',
     },
     {
       id: 'aprendiz-t4-e03-q11',
@@ -381,6 +561,7 @@ public class Insercao {
       opcoes: ['Dual-Pivot Quicksort', 'TimSort', 'Bubble sort', 'Merge sort clássico', 'Heap sort'],
       resposta: 0,
       explicacao: 'Para primitivos, a estabilidade não importa (dois `int` iguais são indistinguíveis), então o JDK usa um quicksort com dois pivôs, muito rápido na prática. Para objetos, onde a estabilidade importa, usa o TimSort.',
+      dica: 'Para tipos primitivos, estabilidade não importa.',
     },
     {
       id: 'aprendiz-t4-e03-q12',
@@ -390,6 +571,7 @@ public class Insercao {
       opcoes: ['Bubble sort', 'Insertion sort', 'Quicksort', 'Merge sort tradicional', 'Counting sort'],
       respostas: [0, 1, 2],
       explicacao: 'Bubble e insertion só trocam e deslocam elementos. O quicksort particiona no lugar e usa apenas a pilha da recursão. O merge sort precisa de um auxiliar de tamanho n, e o counting sort de um array de contagens.',
+      dica: 'Só um deles precisa de um array auxiliar.',
     },
     {
       id: 'aprendiz-t4-e03-q13',
@@ -411,6 +593,7 @@ public class Ordena {
 }`,
       resposta: 10,
       explicacao: '`Collections.sort(lista)` sem comparador exige elementos `Comparable`, e o record `Pedido` não implementa essa interface. A linha 9 compila porque informa como comparar.',
+      dica: 'Confira os tipos dos argumentos na chamada.',
     },
     {
       id: 'aprendiz-t4-e03-q14',
@@ -420,6 +603,7 @@ public class Ordena {
       opcoes: ['Insertion sort', 'Quicksort com pivô no último elemento', 'Bubble sort sem parada antecipada', 'Selection sort'],
       resposta: 0,
       explicacao: 'No insertion sort, cada elemento anda só o necessário para a esquerda: com poucos fora do lugar, o total fica perto de O(n). O quicksort com pivô no fim é o pior caso nessa situação, e o selection sort sempre faz n²/2 comparações. O TimSort explora justamente essa ideia.',
+      dica: 'Cada elemento anda pouco num array quase ordenado.',
     },
     {
       id: 'aprendiz-t4-e03-q15',
@@ -435,6 +619,7 @@ public class Ordena {
       ],
       respostas: [0, 1],
       explicacao: 'Duas metades de n/2 mais uma intercalação de n: log n níveis de n cada. Tirando da esquerda nos empates, quem vinha antes continua antes. O merge sort não depende da entrada, usa O(n) extra e não tem pivô (isso é do quicksort).',
+      dica: 'É estável e garante n log n.',
     },
   ],
 };

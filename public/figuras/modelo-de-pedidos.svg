@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Modelo do banco da API de pedidos: clientes tem muitos pedidos; pedidos tem muitos itens_pedido; cada item aponta para um produto e guarda o preco_unitario do momento da compra; pedidos tem as colunas situacao, criado_em e versao, com um índice em situacao e criado_em</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="40" width="150" height="96" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="34" y="62" fill="#f3eee7" font-weight="700">clientes</text>
+    <text x="34" y="86" fill="#f2c75c">id</text>
+    <text x="34" y="106" fill="#bdb5aa">nome</text>
+    <text x="34" y="126" fill="#bdb5aa">email</text>
+
+    <rect x="220" y="40" width="170" height="156" rx="8" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="234" y="62" fill="#f3eee7" font-weight="700">pedidos</text>
+    <text x="234" y="86" fill="#f2c75c">id</text>
+    <text x="234" y="106" fill="#bdb5aa">cliente_id</text>
+    <text x="234" y="126" fill="#ff7a1a">situacao</text>
+    <text x="234" y="146" fill="#ff7a1a">criado_em</text>
+    <text x="234" y="166" fill="#4fd68b">versao</text>
+    <text x="234" y="186" fill="#8a8277">total</text>
+
+    <rect x="440" y="40" width="170" height="136" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="454" y="62" fill="#f3eee7" font-weight="700">itens_pedido</text>
+    <text x="454" y="86" fill="#f2c75c">id</text>
+    <text x="454" y="106" fill="#bdb5aa">pedido_id</text>
+    <text x="454" y="126" fill="#bdb5aa">produto_id</text>
+    <text x="454" y="146" fill="#bdb5aa">quantidade</text>
+    <text x="454" y="166" fill="#4fd68b">preco_unitario</text>
+
+    <rect x="640" y="40" width="105" height="96" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="652" y="62" fill="#f3eee7" font-weight="700">produtos</text>
+    <text x="652" y="86" fill="#f2c75c">id</text>
+    <text x="652" y="106" fill="#bdb5aa">sku</text>
+    <text x="652" y="126" fill="#bdb5aa">preco</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none">
+    <path d="M170 86 L220 106"/>
+    <path d="M390 86 L440 106"/>
+    <path d="M610 126 L640 86"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">
+    <text x="174" y="80">1</text>
+    <text x="204" y="102">N</text>
+    <text x="394" y="80">1</text>
+    <text x="424" y="102">N</text>
+    <text x="614" y="134">N</text>
+    <text x="628" y="82">1</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <rect x="20" y="226" width="12" height="12" rx="2" fill="#ff7a1a"/>
+    <text x="40" y="237" fill="#bdb5aa">índice (situacao, criado_em DESC): a listagem por situação, do mais novo ao mais antigo</text>
+    <rect x="20" y="252" width="12" height="12" rx="2" fill="#4fd68b"/>
+    <text x="40" y="263" fill="#bdb5aa">versao: trava otimista contra pagar e cancelar ao mesmo tempo</text>
+    <rect x="20" y="278" width="12" height="12" rx="2" fill="#4fd68b"/>
+    <text x="40" y="289" fill="#bdb5aa">preco_unitario: o preço congelado na compra, que não muda quando o produto muda</text>
+  </g>
+</svg>

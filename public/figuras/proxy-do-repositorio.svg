@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Como o Spring Data implementa um repositório: na inicialização, ele lê a interface ProdutoRepository, analisa o nome de cada método, como findByStatusAndPrecoGreaterThan, e monta a consulta JPQL; depois cria um proxy que implementa a interface; quando o serviço chama o método, o proxy executa a consulta, e o Hibernate a traduz para SQL</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <text x="20" y="30" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ff7a1a">Na inicialização, uma vez</text>
+  <text x="20" y="176" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#4fd68b">A cada chamada</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="20" y="42" width="220" height="90" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="32" y="62" fill="#f3eee7" font-weight="700">interface ProdutoRepository</text>
+    <text x="32" y="84" fill="#bdb5aa">findByStatusAnd</text>
+    <text x="32" y="100" fill="#bdb5aa">  PrecoGreaterThan(...)</text>
+    <text x="32" y="120" fill="#6b645b">sem implementação</text>
+    <rect x="280" y="42" width="220" height="90" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="292" y="62" fill="#ff7a1a" font-weight="700">análise do nome</text>
+    <text x="292" y="84" fill="#bdb5aa">Status = ?1</text>
+    <text x="292" y="100" fill="#bdb5aa">and Preco &gt; ?2</text>
+    <text x="292" y="120" fill="#6b645b">atributo errado: não sobe</text>
+    <rect x="540" y="42" width="200" height="90" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="552" y="62" fill="#f3eee7" font-weight="700">Proxy</text>
+    <text x="552" y="84" fill="#bdb5aa">implementa a interface</text>
+    <text x="552" y="100" fill="#bdb5aa">com a consulta pronta</text>
+    <text x="552" y="120" fill="#6b645b">vira um bean</text>
+
+    <rect x="20" y="188" width="220" height="56" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="32" y="210" fill="#f3eee7" font-weight="700">ProdutoService</text>
+    <text x="32" y="230" fill="#bdb5aa">repo.findBy...(ATIVO, 100)</text>
+    <rect x="280" y="188" width="220" height="56" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="292" y="210" fill="#4fd68b" font-weight="700">Proxy executa a JPQL</text>
+    <text x="292" y="230" fill="#bdb5aa">liga os parâmetros</text>
+    <rect x="540" y="188" width="200" height="56" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="552" y="210" fill="#f3eee7" font-weight="700">Hibernate</text>
+    <text x="552" y="230" fill="#bdb5aa">select ... where ...</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M240 87 L277 87"/>
+    <path d="M500 87 L537 87"/>
+    <path d="M240 216 L277 216"/>
+    <path d="M500 216 L537 216"/>
+    <path d="M640 132 C 640 160, 390 160, 390 185"/>
+  </g>
+  <text x="20" y="282" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">O trabalho de interpretar o nome acontece uma vez só; cada chamada só executa a consulta já montada.</text>
+</svg>

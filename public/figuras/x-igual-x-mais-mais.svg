@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
   <title id="t">x = x++ em três passos de bytecode: iload empilha o 10, iinc muda a variável para 11, istore grava de volta o 10 que estava na pilha, e o incremento se perde</title>
   <rect width="760" height="300" fill="#13110f"/>
-  <text x="30" y="34" font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700" fill="#f3eee7">x = x++;   com x valendo 10</text>
+  <text x="30" y="34" font-family="Cascadia Code, Consolas, monospace" font-size="16" font-weight="700" fill="#f3eee7" xml:space="preserve">x = x++;   com x valendo 10</text>
 
   <g font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" font-weight="700" letter-spacing="1.2" fill="#8a8277">
     <text x="30" y="128">PILHA</text>

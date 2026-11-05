@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Os sete dias da semana num círculo, numerados de 0, domingo, a 6, sábado. Andar 100 dias a partir do sábado dá 14 voltas completas e mais 2 casas, parando na segunda. Voltar 100 dias dá −94, e o operador % do Java devolveria −3, que não é um índice válido; o floorMod devolve 4, quinta</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <circle cx="200" cy="150" r="105" fill="none" stroke="#43403a" stroke-width="2"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" text-anchor="middle">
+    <circle cx="200" cy="45" r="26" fill="#1b1916" stroke="#bdb5aa"/><text x="200" y="42" fill="#8a8277">0</text><text x="200" y="56" fill="#f3eee7">dom</text>
+    <circle cx="282" cy="85" r="26" fill="#1b1916" stroke="#4fd68b"/><text x="282" y="82" fill="#8a8277">1</text><text x="282" y="96" fill="#4fd68b">seg</text>
+    <circle cx="302" cy="174" r="26" fill="#1b1916" stroke="#bdb5aa"/><text x="302" y="171" fill="#8a8277">2</text><text x="302" y="185" fill="#f3eee7">ter</text>
+    <circle cx="245" cy="245" r="26" fill="#1b1916" stroke="#bdb5aa"/><text x="245" y="242" fill="#8a8277">3</text><text x="245" y="256" fill="#f3eee7">qua</text>
+    <circle cx="155" cy="245" r="26" fill="#1b1916" stroke="#f2c75c"/><text x="155" y="242" fill="#8a8277">4</text><text x="155" y="256" fill="#f2c75c">qui</text>
+    <circle cx="98" cy="174" r="26" fill="#1b1916" stroke="#bdb5aa"/><text x="98" y="171" fill="#8a8277">5</text><text x="98" y="185" fill="#f3eee7">sex</text>
+    <circle cx="118" cy="85" r="26" fill="#1b1916" stroke="#ff7a1a"/><text x="118" y="82" fill="#8a8277">6</text><text x="118" y="96" fill="#ff7a1a">sáb</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <text x="380" y="70" fill="#ff7a1a">hoje = 6 (sábado)</text>
+    <text x="380" y="110" fill="#4fd68b" xml:space="preserve">(6 + 100) % 7 = 1        → segunda</text>
+    <text x="380" y="150" fill="#bdb5aa" xml:space="preserve">(6 − 100) % 7 = −3       → índice inválido</text>
+    <text x="380" y="190" fill="#f2c75c">floorMod(6 − 100, 7) = 4 → quinta</text>
+  </g>
+  <text x="380" y="236" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Para frente, o % basta. Para trás, o resultado</text>
+  <text x="380" y="254" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">pode ficar negativo, e só o floorMod dá a volta</text>
+  <text x="380" y="272" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">no círculo do jeito certo.</text>
+</svg>

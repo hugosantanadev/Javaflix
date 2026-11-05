@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Um índice em `(cidade, nome)` não ajuda a buscar só por `nome`.',
     'O PostgreSQL não indexa chaves estrangeiras sozinho, ao contrário do MySQL.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a transformar uma descrição de negócio em tabelas, e a revisar um modelo existente procurando dados repetidos, listas em colunas e chaves faltando. Para índices, ela só acerta com o plano de execução na mão; sem ele, chuta índices em tudo.',
+    pedido:
+      'Revise este modelo de tabelas de uma loja, para PostgreSQL.\n<cole aqui os CREATE TABLE>\n- Aponte violações das três primeiras formas normais e proponha a correção.\n- Confira os tipos de dinheiro, datas e ids, e as restrições UNIQUE, NOT NULL, FOREIGN KEY e CHECK que faltam.\n- Para esta consulta lenta e o EXPLAIN ANALYZE dela, proponha o índice e explique a ordem das colunas: <cole a consulta e o plano>.\n- Não sugira índices para consultas que eu não mostrei.',
+    erros: [
+      'Usa `FLOAT` ou `DOUBLE` para valores em dinheiro.',
+      'Sugere índices em todas as colunas, sem olhar as consultas.',
+      'Esquece o índice da chave estrangeira no PostgreSQL.',
+      'Põe a coluna de intervalo antes da de igualdade num índice composto.',
+    ],
+    conferir: [
+      'Rode o `EXPLAIN ANALYZE` antes e depois do índice sugerido e compare os tempos.',
+      'Tente inserir dados inválidos e veja se as restrições recusam.',
+      'Confira se cada índice novo aparece em algum plano das consultas reais.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Documentação do PostgreSQL: Constraints',
@@ -170,6 +187,115 @@ public class IndiceComposto {
     comentarios:
       'Os números contam a história do prefixo à esquerda. Com a cidade, a busca vai direto ao começo do trecho de Recife e lê só as 200 entradas dele; com a cidade e o começo do nome, lê só as 25 que interessam. Sem a cidade, as entradas de "Hugo 999" estão espalhadas, uma em cada trecho de cidade, e só uma varredura completa as encontra. Um banco faria o mesmo julgamento: para buscar por nome, ou se cria outro índice começando por `nome`, ou se aceita a varredura. O `TreeMap` é uma árvore rubro-negra, binária; a árvore B+ de um banco tem centenas de chaves por nó, mas a lógica da busca por intervalo é a mesma.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t3-e04-b01',
+      dificuldade: 1,
+      sintoma: 'Depois de anos no ar, o sistema de pedidos começou a criar pedidos com id negativo: `novo pedido: -2147483648`.',
+      codigo: `public class ProximoId {
+    public static void main(String[] args) {
+        int ultimoId = 2_147_483_647;
+        var novo = ultimoId + 1;
+        System.out.println("novo pedido: " + novo);
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: 'novo pedido: -2147483648' },
+      correcao: `public class ProximoId {
+    public static void main(String[] args) {
+        long ultimoId = 2_147_483_647L;
+        var novo = ultimoId + 1;
+        System.out.println("novo pedido: " + novo);
+    }
+}`,
+      saidaCorrigida: 'novo pedido: 2147483648',
+      dica: 'Qual é o maior valor que um `int` guarda?',
+      explicacao:
+        'O `int` vai até 2.147.483.647; somar 1 dá a volta para o menor valor negativo. Ids de tabelas que crescem para sempre ficam em `BIGINT` no banco e em `long` no Java, que só estouram depois de 9 × 10¹⁸.',
+    },
+    {
+      id: 'backend-junior-t3-e04-b02',
+      dificuldade: 2,
+      sintoma: 'A mesma pessoa conseguiu dois cadastros, com `ana@exemplo.com` e `Ana@Exemplo.com`. O log mostra `cadastrado: Ana@Exemplo.com`.',
+      codigo: `import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
+public class Cadastro {
+    static final Set<String> cadastrados = new HashSet<>(Set.of("ana@exemplo.com"));
+
+    static String cadastrar(String email) {
+        if (cadastrados.contains(email)) return "recusado: " + email + " já existe";
+        cadastrados.add(email.toLowerCase(Locale.ROOT));
+        return "cadastrado: " + email;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(cadastrar("Ana@Exemplo.com"));
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'cadastrado: Ana@Exemplo.com' },
+      correcao: `import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
+public class Cadastro {
+    static final Set<String> cadastrados = new HashSet<>(Set.of("ana@exemplo.com"));
+
+    static String cadastrar(String email) {
+        if (cadastrados.contains(email.toLowerCase(Locale.ROOT))) return "recusado: " + email + " já existe";
+        cadastrados.add(email.toLowerCase(Locale.ROOT));
+        return "cadastrado: " + email;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(cadastrar("Ana@Exemplo.com"));
+    }
+}`,
+      saidaCorrigida: 'recusado: Ana@Exemplo.com já existe',
+      dica: 'O conjunto guarda os e-mails em minúsculas. E a consulta, compara em minúsculas também?',
+      explicacao:
+        'O cadastro grava em minúsculas, mas confere o e-mail como veio, e `Ana@Exemplo.com` não está no conjunto. A comparação tem de usar a mesma normalização da gravação. No banco, o equivalente é um `UNIQUE` sobre `LOWER(email)`, que garante a regra mesmo com duas requisições ao mesmo tempo.',
+    },
+    {
+      id: 'backend-junior-t3-e04-b03',
+      dificuldade: 3,
+      sintoma: 'A busca de clientes por cidade, que usa um índice ordenado por "cidade|nome", não acha ninguém de Recife: `Recife: []`.',
+      codigo: `import java.util.TreeMap;
+
+public class IndiceComposto {
+    public static void main(String[] args) {
+        TreeMap<String, Integer> indice = new TreeMap<>();
+        indice.put("Curitiba|Carla", 3);
+        indice.put("Recife|Bruno", 2);
+        indice.put("Recife|Davi", 4);
+        indice.put("São Paulo|Ana", 1);
+        String cidade = "Recife";
+        System.out.println(cidade + ": " + indice.subMap(cidade, cidade + "|").keySet());
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'Recife: []' },
+      correcao: `import java.util.TreeMap;
+
+public class IndiceComposto {
+    public static void main(String[] args) {
+        TreeMap<String, Integer> indice = new TreeMap<>();
+        indice.put("Curitiba|Carla", 3);
+        indice.put("Recife|Bruno", 2);
+        indice.put("Recife|Davi", 4);
+        indice.put("São Paulo|Ana", 1);
+        String cidade = "Recife";
+        System.out.println(cidade + ": " + indice.subMap(cidade + "|", cidade + "}").keySet());
+    }
+}`,
+      saidaCorrigida: 'Recife: [Recife|Bruno, Recife|Davi]',
+      dica: 'As chaves começam com `Recife|`. Onde ficam, na ordem, em relação a `"Recife"` e a `"Recife|"`?',
+      explicacao:
+        'Num índice composto, as chaves de uma cidade formam um intervalo contínuo, mas os limites precisam cercá-lo: `"Recife|Bruno"` é **maior** que `"Recife|"`, então o intervalo de `"Recife"` até `"Recife|"` (exclusivo) fica vazio. De `"Recife|"` até `"Recife}"`, o caractere seguinte ao `|`, ele pega todas as chaves com o prefixo. É a mesma regra do prefixo à esquerda da aula.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t3-e04-q01',
@@ -184,6 +310,7 @@ public class IndiceComposto {
       ],
       resposta: 0,
       explicacao: 'A chave substituta nunca muda. O e-mail continua único, com a sua própria restrição `UNIQUE`.',
+      dica: 'O que acontece com as tabelas que referenciam o cliente quando o e-mail dele muda?',
     },
     {
       id: 'backend-junior-t3-e04-q02',
@@ -198,6 +325,7 @@ public class IndiceComposto {
       ],
       resposta: 0,
       explicacao: 'A verificação e a inserção não são atômicas. Com o `UNIQUE`, a segunda inserção falha, e a aplicação trata o erro.',
+      dica: 'Entre a consulta e a inserção, outra requisição pode fazer o mesmo.',
     },
     {
       id: 'backend-junior-t3-e04-q03',
@@ -212,6 +340,7 @@ public class IndiceComposto {
       ],
       resposta: 0,
       explicacao: 'É por isso que o `CASCADE` é perigoso em dados de negócio. O padrão, `RESTRICT`, recusaria; o `SET NULL` manteria os pedidos sem cliente.',
+      dica: 'CASCADE leva a remoção adiante.',
     },
     {
       id: 'backend-junior-t3-e04-q04',
@@ -226,6 +355,7 @@ public class IndiceComposto {
       ],
       resposta: 0,
       explicacao: 'Relações de muitos para muitos viram uma tabela associativa. As outras opções limitam o número de promoções ou quebram a 1ª forma normal.',
+      dica: 'Muitos para muitos pede uma tabela no meio.',
     },
     {
       id: 'backend-junior-t3-e04-q05',
@@ -240,6 +370,7 @@ public class IndiceComposto {
       ],
       resposta: 0,
       explicacao: 'Cada coluna deve guardar um valor. Telefones viram uma tabela `telefones_cliente`, com uma linha por telefone.',
+      dica: 'A 1ª forma normal pede um valor por coluna.',
     },
     {
       id: 'backend-junior-t3-e04-q06',
@@ -254,6 +385,7 @@ public class IndiceComposto {
       ],
       resposta: 0,
       explicacao: 'Com uma tabela `cidades` com o estado de cada uma, e `clientes` apontando para ela, a contradição fica impossível.',
+      dica: 'Uma coluna que depende de outra coluna, e não da chave.',
     },
     {
       id: 'backend-junior-t3-e04-q07',
@@ -263,6 +395,7 @@ public class IndiceComposto {
       opcoes: ['`DECIMAL(10, 2)`', '`DOUBLE`', '`FLOAT`', '`VARCHAR(20)`'],
       resposta: 0,
       explicacao: 'O `DECIMAL` guarda os centavos exatos. Tipos de ponto flutuante acumulam erros de arredondamento, e texto não permite contas nem comparações numéricas.',
+      dica: 'Dinheiro precisa de casas decimais exatas.',
     },
     {
       id: 'backend-junior-t3-e04-q08',
@@ -277,6 +410,7 @@ public class IndiceComposto {
       ],
       resposta: 0,
       explicacao: 'Outra saída é guardar o e-mail já em minúsculas e comparar sem função. O que não pode é aplicar uma função à coluna e esperar o índice dela.',
+      dica: 'O índice guarda os valores originais da coluna, não o resultado de uma função sobre ela.',
     },
     {
       id: 'backend-junior-t3-e04-q09',
@@ -291,6 +425,7 @@ public class IndiceComposto {
       ],
       resposta: 0,
       explicacao: 'Sem a primeira coluna, a segunda está espalhada pelo índice. As outras usam o prefixo, e a última ainda recebe as linhas já ordenadas.',
+      dica: 'Prefixo à esquerda: a consulta precisa começar pela primeira coluna do índice.',
     },
     {
       id: 'backend-junior-t3-e04-q10',
@@ -300,6 +435,7 @@ public class IndiceComposto {
       opcoes: ["`nome LIKE 'Monitor%'`", "`nome LIKE '%27'`", "`nome LIKE '%itor%'`", 'Nenhuma: `LIKE` nunca usa índice'],
       resposta: 0,
       explicacao: "O prefixo fixo vira um intervalo, `nome >= 'Monitor' AND nome < 'Monitos'`. Começando com `%`, não há por onde entrar na ordem.",
+      dica: 'Um começo conhecido vira um intervalo no índice; um `%` no começo, não.',
     },
     {
       id: 'backend-junior-t3-e04-q11',
@@ -315,6 +451,7 @@ public class IndiceComposto {
       ],
       respostas: [0, 1],
       explicacao: 'As leituras que não usam o índice continuam iguais. O custo está nas escritas e no espaço, por isso índices se criam para consultas que existem.',
+      dica: 'Pense no que acontece em cada escrita e no espaço ocupado.',
     },
     {
       id: 'backend-junior-t3-e04-q12',
@@ -334,6 +471,7 @@ public class IndiceComposto {
 }`,
       resposta: '20',
       explicacao: 'log₂ de um milhão é cerca de 20. Um bilhão de linhas pediria só 30 passos: é por isso que buscas em índices quase não crescem com a tabela.',
+      dica: 'Conte quantas vezes 1.000.000 pode ser dividido por 2 até chegar a 1.',
     },
     {
       id: 'backend-junior-t3-e04-q13',
@@ -359,6 +497,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Como num `BETWEEN 100 AND 400` com índice, o `subMap` pega o trecho ordenado sem olhar o resto. O `ceilingKey` é o primeiro preço a partir de 300,00, e o primeiro do mapa é o menor.',
+      dica: 'O `TreeMap` mantém as chaves em ordem, como um índice.',
     },
     {
       id: 'backend-junior-t3-e04-q14',
@@ -373,6 +512,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A verificação da chave estrangeira é uma busca por `cliente_id` em `pedidos`. O PostgreSQL não cria esse índice sozinho, ao contrário do MySQL.',
+      dica: 'Para garantir a chave estrangeira, o banco precisa procurar pedidos desse cliente.',
     },
     {
       id: 'backend-junior-t3-e04-q15',
@@ -387,6 +527,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Índices brilham quando a condição seleciona poucas linhas. Para achar os 5% inativos, ele pode valer, e um índice parcial (`WHERE ativo = false`) seria ainda melhor.',
+      dica: 'Se quase todas as linhas atendem a condição, o índice evita alguma leitura?',
     },
   ],
 };

@@ -13,6 +13,22 @@ const episodio: EpisodioConteudo = {
     'Variáveis locais e endereços de retorno ficam na pilha; objetos criados com `new` ficam no heap.',
     'Recursão sem caso base termina em `StackOverflowError`, não em loop infinito.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a acompanhar o ciclo de instrução passo a passo e a estender a CPU de brinquedo com instruções novas. Use-a para propor programas e explicar cada ciclo, e rode tudo no simulador.',
+    pedido:
+      'Estou estudando a CPU de brinquedo deste episódio (LOAD_A, LOAD_B, ADD, STORE_A, HALT; opcode nos 4 bits de cima).\n<cole o código da CPU aqui>\n- Acrescente uma instrução JUMP e uma JZ (salta se A for zero), explicando a mudança no laço.\n- Escreva um programa que conta de 3 até 0 usando essas instruções.\n- Mostre, ciclo a ciclo, os valores de PC, A e B.',
+    erros: [
+      'Esquece de avançar o PC na busca, e o programa repete a mesma instrução.',
+      'Cita tempos de acesso de cache e RAM sem fonte, com números que não batem com nenhuma máquina.',
+      'Diz que objetos criados com `new` ficam na pilha.',
+    ],
+    conferir: [
+      'Rode o simulador e confira os valores impressos com a tabela ciclo a ciclo.',
+      'Use o depurador para ver o PC mudar a cada volta do laço.',
+      'Para números de desempenho, consulte a especificação do processador ou meça.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JVMS 2.5: Run-Time Data Areas',
@@ -161,6 +177,122 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Repare no padrão: testar a condição no começo, sair do laço com um salto condicional e voltar com um salto incondicional. É exatamente o que um `while (contador != 0)` vira em linguagem de máquina. E as 16 posições acabam: programa e dados disputam a mesma memória, a ideia de von Neumann na prática.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t1-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O programa deveria somar 5 + 3, mas a memória termina com `memoria[13] = 10`.',
+      codigo: `public class Cpu {
+    public static void main(String[] args) {
+        int[] memoria = {0x1E, 0x2F, 0x30, 0x4D, 0xF0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 3};
+        int pc = 0, a = 0, b = 0;
+        while (true) {
+            int instrucao = memoria[pc++];
+            int opcode = instrucao >> 4, endereco = instrucao & 0xF;
+            if (opcode == 0x1) a = memoria[endereco];
+            else if (opcode == 0x2) b = memoria[endereco];
+            else if (opcode == 0x3) a = a + a;
+            else if (opcode == 0x4) memoria[endereco] = a;
+            else if (opcode == 0xF) break;
+        }
+        System.out.println("memoria[13] = " + memoria[13]);
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: 'memoria[13] = 10' },
+      correcao: `public class Cpu {
+    public static void main(String[] args) {
+        int[] memoria = {0x1E, 0x2F, 0x30, 0x4D, 0xF0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 3};
+        int pc = 0, a = 0, b = 0;
+        while (true) {
+            int instrucao = memoria[pc++];
+            int opcode = instrucao >> 4, endereco = instrucao & 0xF;
+            if (opcode == 0x1) a = memoria[endereco];
+            else if (opcode == 0x2) b = memoria[endereco];
+            else if (opcode == 0x3) a = a + b;
+            else if (opcode == 0x4) memoria[endereco] = a;
+            else if (opcode == 0xF) break;
+        }
+        System.out.println("memoria[13] = " + memoria[13]);
+    }
+}`,
+      saidaCorrigida: 'memoria[13] = 8',
+      dica: 'O resultado é o dobro do primeiro número. Qual instrução usa os dois registradores?',
+      explicacao: 'O ADD deveria somar os dois registradores, `A = A + B`, mas soma A com ele mesmo. O valor carregado em B nunca é usado. Seguir o programa ciclo a ciclo, anotando A e B, mostra o erro na terceira instrução.',
+    },
+    {
+      id: 'aprendiz-t1-e04-b02',
+      dificuldade: 2,
+      sintoma: 'A CPU de brinquedo para logo na primeira instrução com `ArrayIndexOutOfBoundsException: Index 30 out of bounds for length 16`.',
+      codigo: `public class Cpu {
+    public static void main(String[] args) {
+        int[] memoria = {0x1E, 0x2F, 0x30, 0x4D, 0xF0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 3};
+        int pc = 0, a = 0, b = 0;
+        while (true) {
+            int instrucao = memoria[pc++];
+            int opcode = instrucao >> 4, endereco = instrucao & 0xFF;
+            if (opcode == 0x1) a = memoria[endereco];
+            else if (opcode == 0x2) b = memoria[endereco];
+            else if (opcode == 0x3) a = a + b;
+            else if (opcode == 0x4) memoria[endereco] = a;
+            else if (opcode == 0xF) break;
+        }
+        System.out.println("memoria[13] = " + memoria[13]);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
+      correcao: `public class Cpu {
+    public static void main(String[] args) {
+        int[] memoria = {0x1E, 0x2F, 0x30, 0x4D, 0xF0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 3};
+        int pc = 0, a = 0, b = 0;
+        while (true) {
+            int instrucao = memoria[pc++];
+            int opcode = instrucao >> 4, endereco = instrucao & 0xF;
+            if (opcode == 0x1) a = memoria[endereco];
+            else if (opcode == 0x2) b = memoria[endereco];
+            else if (opcode == 0x3) a = a + b;
+            else if (opcode == 0x4) memoria[endereco] = a;
+            else if (opcode == 0xF) break;
+        }
+        System.out.println("memoria[13] = " + memoria[13]);
+    }
+}`,
+      saidaCorrigida: 'memoria[13] = 8',
+      dica: '30 é `0x1E`, a instrução inteira. Quantos bits a máscara do endereço deixa passar?',
+      explicacao: 'O endereço são os 4 bits de baixo da instrução, e a máscara `0xFF` deixa passar 8 bits, incluindo o opcode. `0x1E & 0xFF` é 30, fora da memória de 16 posições. Com `0xF`, sobram só os 4 bits do endereço: 14.',
+    },
+    {
+      id: 'aprendiz-t1-e04-b03',
+      dificuldade: 3,
+      sintoma: 'A soma dos números ímpares de 7 até 1 derruba o programa com `StackOverflowError`.',
+      codigo: `public class Impares {
+    static int somaImpares(int n) {
+        if (n == 0) return 0;
+        return n + somaImpares(n - 2);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(somaImpares(7));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'StackOverflowError' },
+      correcao: `public class Impares {
+    static int somaImpares(int n) {
+        if (n <= 0) return 0;
+        return n + somaImpares(n - 2);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(somaImpares(7));
+    }
+}`,
+      saidaCorrigida: '16',
+      dica: 'Escreva os valores de `n` em cada chamada: 7, 5, 3, 1... O caso base chega a ser atingido?',
+      explicacao: 'Descendo de 2 em 2 a partir de um ímpar, `n` passa de 1 para -1 sem nunca valer 0, e a recursão continua empilhando quadros até estourar a pilha. Um caso base com `<=` pega qualquer valor que passe do limite.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t1-e04-q01',
@@ -175,6 +307,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Antes, programar um computador era religar cabos. Guardar o programa na memória, como números, permite trocar de programa carregando outros números, e permite que um programa gere outro, que é o que um compilador faz.',
+      dica: 'Pense no que muda para carregar um programa novo sem religar fios.',
     },
     {
       id: 'aprendiz-t1-e04-q02',
@@ -189,6 +322,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'A cada busca, o PC avança para a instrução seguinte. Um salto é só uma instrução que escreve um novo endereço no PC.',
+      dica: 'O nome em inglês diz: *program counter*.',
     },
     {
       id: 'aprendiz-t1-e04-q03',
@@ -198,6 +332,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['Busca, decodifica, executa', 'Decodifica, busca, executa', 'Executa, busca, decodifica', 'Busca, executa, decodifica'],
       resposta: 0,
       explicacao: 'Primeiro a instrução vem da memória (busca), depois a unidade de controle descobre o que ela significa (decodifica) e por fim a operação acontece (executa).',
+      dica: 'A CPU precisa ter a instrução antes de saber o que ela é.',
     },
     {
       id: 'aprendiz-t1-e04-q04',
@@ -232,6 +367,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: '12 6',
       explicacao: 'A começa com 2 e B com 5. Os dois ADD fazem A = 7 e depois A = 12, que é guardado no endereço 13. Foram 6 instruções buscadas, contando o HALT.',
+      dica: 'Siga o programa instrução por instrução, anotando A, B e a memória.',
     },
     {
       id: 'aprendiz-t1-e04-q05',
@@ -246,6 +382,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Quanto mais perto da ALU, mais rápido e menor. Registradores ficam dentro da CPU, os caches no mesmo chip, a RAM em pentes separados e o SSD do outro lado de um barramento ainda mais lento.',
+      dica: 'Quanto mais perto da ALU, mais rápido e menor.',
     },
     {
       id: 'aprendiz-t1-e04-q06',
@@ -260,6 +397,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Giga é 10⁹ e hertz é por segundo. Quantas instruções saem por pulso depende do processador: algumas levam vários ciclos, e pipelines modernos terminam várias por ciclo.',
+      dica: 'Giga é bilhão, e hertz é pulso por segundo.',
     },
     {
       id: 'aprendiz-t1-e04-q07',
@@ -285,6 +423,7 @@ const episodio: EpisodioConteudo = {
       resposta: 2,
       verificar: { tipo: 'excecao', nome: 'StackOverflowError' },
       explicacao: 'Cada chamada empilha um quadro com `n` e o endereço de retorno, e nenhuma chega a retornar. Quando a pilha da thread acaba, a JVM lança `StackOverflowError`. O compilador não tem como saber que a recursão nunca termina.',
+      dica: 'Sem caso base, quando a recursão para?',
     },
     {
       id: 'aprendiz-t1-e04-q08',
@@ -300,6 +439,7 @@ const episodio: EpisodioConteudo = {
       ],
       respostas: [0, 1],
       explicacao: 'Cada quadro da pilha guarda o endereço de retorno, os parâmetros e as variáveis locais. Objetos vão para o heap; a pilha guarda só a referência a eles, quando ela está numa variável local.',
+      dica: 'Objetos criados com `new` vão para outro lugar.',
     },
     {
       id: 'aprendiz-t1-e04-q09',
@@ -314,6 +454,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Cada leitura da RAM traz uma linha de cache inteira, em geral 64 bytes. Lendo em ordem, os próximos elementos já estão no cache. Saltando aleatoriamente, quase toda leitura paga a viagem até a RAM.',
+      dica: 'Lembre da linha de cache de 64 bytes.',
     },
     {
       id: 'aprendiz-t1-e04-q10',
@@ -331,6 +472,7 @@ const episodio: EpisodioConteudo = {
       respostas: ['>>', '>>>'],
       saida: '2 15',
       explicacao: 'Deslocar 4 bits para a direita descarta o nibble de baixo e traz o de cima para o lugar dele: `0x2F >> 4` = `0x2`. A máscara `& 0xF` faz o oposto: fica só com os 4 bits de baixo. Dividir por 16 também funcionaria aqui.',
+      dica: 'Que operador desloca os bits para a direita?',
     },
     {
       id: 'aprendiz-t1-e04-q11',
@@ -345,6 +487,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Saltar é só escrever no PC. Num salto condicional, essa escrita só acontece se a condição (lida nas flags da ALU) for verdadeira. É assim que `if` e laços funcionam no nível da máquina.',
+      dica: 'Um salto muda onde acontece a próxima busca.',
     },
     {
       id: 'aprendiz-t1-e04-q12',
@@ -359,6 +502,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Enquanto uma instrução executa, a próxima já está sendo decodificada e a seguinte, buscada. Cada instrução continua passando por todas as etapas, mas várias andam ao mesmo tempo.',
+      dica: 'Uma linha de montagem trabalha em várias peças ao mesmo tempo.',
     },
     {
       id: 'aprendiz-t1-e04-q13',
@@ -370,6 +514,7 @@ System.out.println(Integer.toHexString(instrucao));
 System.out.println(instrucao);`,
       resposta: '4d\n77',
       explicacao: '`0x4 << 4` põe o opcode nos 4 bits de cima: `0x40`. O OR com 13 (`0xD`) preenche os 4 de baixo: `0x4D`. Em decimal, 4×16 + 13 = 77. A mesma instrução, duas formas de escrever.',
+      dica: '4 << 4 é 0x40; OR com 13 (0xD) preenche os 4 bits de baixo.',
     },
     {
       id: 'aprendiz-t1-e04-q14',
@@ -385,6 +530,7 @@ System.out.println(instrucao);`,
       ],
       respostas: [0, 1],
       explicacao: 'Toda instrução passa pela busca, e o PC sempre muda: avança para a próxima ou recebe o destino de um salto. Disco, sistema operacional e coleta de lixo só entram em ação em situações específicas.',
+      dica: 'Que etapas do ciclo nunca são puladas?',
     },
     {
       id: 'aprendiz-t1-e04-q15',
@@ -394,6 +540,7 @@ System.out.println(instrucao);`,
       opcoes: ['Dos registradores', 'Direto do disco', 'Do código-fonte', 'Do cache L3, sempre'],
       resposta: 0,
       explicacao: 'A ALU está ligada aos registradores. Dados na memória precisam ser carregados num registrador antes da conta e gravados de volta depois. Por isso o código de máquina é cheio de instruções de carga e armazenamento.',
+      dica: 'As únicas posições de memória dentro da CPU.',
     },
   ],
 };

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Um único instante, 2024-03-15T13:00:00Z, visto em quatro fusos: em Lisboa são 13h, com deslocamento zero em março; em Fernando de Noronha, 11h, com menos 2 horas; em São Paulo, 10h, com menos 3; em Manaus, 9h, com menos 4; o instante é o mesmo, só o horário de parede muda</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <rect x="200" y="22" width="360" height="52" rx="8" fill="#26170c" stroke="#ff7a1a"/>
+  <text x="222" y="44" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#ff7a1a" font-weight="700">um Instant: o mesmo ponto na linha do tempo</text>
+  <text x="222" y="64" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#f3eee7">2024-03-15T13:00:00Z</text>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M300 74 L110 147"/>
+    <path d="M350 74 L300 147"/>
+    <path d="M410 74 L470 147"/>
+    <path d="M460 74 L650 147"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="150" width="170" height="86" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="34" y="172" fill="#bdb5aa">Europe/Lisbon</text>
+    <text x="34" y="200" fill="#f3eee7" font-size="20">13:00</text>
+    <text x="34" y="224" fill="#6b645b">+00:00</text>
+
+    <rect x="210" y="150" width="170" height="86" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="224" y="172" fill="#bdb5aa">America/Noronha</text>
+    <text x="224" y="200" fill="#f3eee7" font-size="20">11:00</text>
+    <text x="224" y="224" fill="#6b645b">-02:00</text>
+
+    <rect x="400" y="150" width="170" height="86" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="414" y="172" fill="#4fd68b">America/Sao_Paulo</text>
+    <text x="414" y="200" fill="#f3eee7" font-size="20">10:00</text>
+    <text x="414" y="224" fill="#6b645b">-03:00</text>
+
+    <rect x="590" y="150" width="150" height="86" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="604" y="172" fill="#bdb5aa">America/Manaus</text>
+    <text x="604" y="200" fill="#f3eee7" font-size="20">09:00</text>
+    <text x="604" y="224" fill="#6b645b">-04:00</text>
+  </g>
+  <text x="20" y="270" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">-03:00 quer dizer três horas atrás do UTC: some 3 ao horário de São Paulo para chegar ao UTC.</text>
+  <text x="20" y="298" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">withZoneSameInstant percorre estas setas; withZoneSameLocal mantém as 10:00 e muda de instante.</text>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">A classe selada Forma permite três subclasses diretas: Circulo e Quadrado, que são final, e Triangulo, que é non-sealed. TrianguloRetangulo estende Triangulo livremente. Uma classe Hexagono, fora do permits, tenta estender Forma e é recusada</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <rect x="230" y="20" width="300" height="56" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+  <text x="246" y="44" font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">sealed Forma</text>
+  <text x="246" y="64" font-family="Cascadia Code, Consolas, monospace" font-size="11.5" fill="#ff7a1a">permits Circulo, Quadrado, Triangulo</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <rect x="40" y="130" width="180" height="50" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="56" y="152" fill="#f3eee7" font-weight="700">Circulo</text><text x="56" y="170" fill="#4fd68b" font-size="11.5">final</text>
+    <rect x="290" y="130" width="180" height="50" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="306" y="152" fill="#f3eee7" font-weight="700">Quadrado</text><text x="306" y="170" fill="#4fd68b" font-size="11.5">final</text>
+    <rect x="540" y="130" width="180" height="50" rx="6" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="556" y="152" fill="#f3eee7" font-weight="700">Triangulo</text><text x="556" y="170" fill="#f2c75c" font-size="11.5">non-sealed</text>
+    <rect x="540" y="230" width="180" height="44" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="556" y="257" fill="#bdb5aa">TrianguloRetangulo</text>
+    <rect x="40" y="230" width="180" height="44" rx="6" fill="#13110f" stroke="#ff7a1a" stroke-dasharray="5 4"/>
+    <text x="56" y="257" fill="#8a8277">Hexagono</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none">
+    <path d="M130 128 L300 80" marker-end="url(#s)"/><path d="M380 128 L380 80" marker-end="url(#s)"/><path d="M630 128 L460 80" marker-end="url(#s)"/>
+    <path d="M630 228 L630 184" marker-end="url(#s)"/>
+  </g>
+  <path d="M230 240 L330 100" stroke="#ff7a1a" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
+  <g stroke="#ff7a1a" stroke-width="3"><path d="M268 156 L292 180"/><path d="M292 156 L268 180"/></g>
+  <text x="240" y="226" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#ff7a1a">fora do permits: não compila</text>
+  <text x="250" y="292" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">non-sealed reabre a hierarquia só daquele ramo.</text>
+</svg>

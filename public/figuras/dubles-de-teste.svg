@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Os tipos de dublês de teste: dummy, que só ocupa um parâmetro e nunca é usado; stub, que devolve respostas fixas configuradas para o teste; fake, uma implementação simplificada que funciona de verdade, como um repositório em memória; mock, que registra as chamadas para o teste verificar depois; spy, um objeto real que também registra as chamadas; no Mockito, when e thenReturn fazem stubs, e verify usa o mock</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <text x="20" y="30" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">Cinco dublês, do mais simples ao que mais sabe</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11">
+    <rect x="20" y="44" width="136" height="200" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="32" y="68" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#f3eee7">dummy</text>
+    <text x="32" y="94" fill="#bdb5aa">Só ocupa um</text>
+    <text x="32" y="110" fill="#bdb5aa">parâmetro.</text>
+    <text x="32" y="126" fill="#bdb5aa">Nunca é usado.</text>
+    <text x="32" y="226" font-family="Cascadia Code, Consolas, monospace" fill="#6b645b">null, new X()</text>
+
+    <rect x="168" y="44" width="136" height="200" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="180" y="68" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#f3eee7">stub</text>
+    <text x="180" y="94" fill="#bdb5aa">Respostas fixas,</text>
+    <text x="180" y="110" fill="#bdb5aa">configuradas</text>
+    <text x="180" y="126" fill="#bdb5aa">para o teste.</text>
+    <text x="180" y="226" font-family="Cascadia Code, Consolas, monospace" fill="#6b645b">when/thenReturn</text>
+
+    <rect x="316" y="44" width="136" height="200" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="328" y="68" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#4fd68b">fake</text>
+    <text x="328" y="94" fill="#bdb5aa">Implementação</text>
+    <text x="328" y="110" fill="#bdb5aa">simples que</text>
+    <text x="328" y="126" fill="#bdb5aa">funciona de</text>
+    <text x="328" y="142" fill="#bdb5aa">verdade.</text>
+    <text x="328" y="226" font-family="Cascadia Code, Consolas, monospace" fill="#6b645b">HashMap</text>
+
+    <rect x="464" y="44" width="136" height="200" rx="8" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="476" y="68" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#ff7a1a">mock</text>
+    <text x="476" y="94" fill="#bdb5aa">Registra as</text>
+    <text x="476" y="110" fill="#bdb5aa">chamadas para</text>
+    <text x="476" y="126" fill="#bdb5aa">o teste verificar.</text>
+    <text x="476" y="226" font-family="Cascadia Code, Consolas, monospace" fill="#6b645b">@Mock, verify</text>
+
+    <rect x="612" y="44" width="128" height="200" rx="8" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="624" y="68" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" fill="#f2c75c">spy</text>
+    <text x="624" y="94" fill="#bdb5aa">Objeto real que</text>
+    <text x="624" y="110" fill="#bdb5aa">também registra</text>
+    <text x="624" y="126" fill="#bdb5aa">as chamadas.</text>
+    <text x="624" y="226" font-family="Cascadia Code, Consolas, monospace" fill="#6b645b">@Spy</text>
+  </g>
+  <text x="20" y="276" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Um @Mock do Mockito faz os papéis de stub e de mock: responde o que foi configurado e guarda as chamadas.</text>
+  <text x="20" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Para um repositório usado em muitos testes, um fake costuma dar menos trabalho que configurar cada resposta.</text>
+</svg>

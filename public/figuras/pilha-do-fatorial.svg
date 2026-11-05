@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">A pilha de chamadas de fatorial(4) no momento mais fundo: quatro frames empilhados, de fatorial(4) embaixo até fatorial(1) no topo, cada um com o seu n. Na volta, cada frame recebe o resultado do de cima e multiplica: 1, depois 2 vezes 1 igual a 2, 3 vezes 2 igual a 6 e 4 vezes 6 igual a 24</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+  <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker></defs>
+  <text x="40" y="30" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">a pilha no ponto mais fundo</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14">
+    <rect x="40" y="44" width="260" height="46" fill="#1b1916" stroke="#4fd68b"/><text x="56" y="73" fill="#f3eee7" xml:space="preserve">fatorial(1)   n = 1</text>
+    <rect x="40" y="90" width="260" height="46" fill="#1b1916" stroke="#43403a"/><text x="56" y="119" fill="#f3eee7" xml:space="preserve">fatorial(2)   n = 2</text>
+    <rect x="40" y="136" width="260" height="46" fill="#1b1916" stroke="#43403a"/><text x="56" y="165" fill="#f3eee7" xml:space="preserve">fatorial(3)   n = 3</text>
+    <rect x="40" y="182" width="260" height="46" fill="#1b1916" stroke="#43403a"/><text x="56" y="211" fill="#f3eee7" xml:space="preserve">fatorial(4)   n = 4</text>
+    <rect x="40" y="228" width="260" height="34" fill="#1b1916" stroke="#43403a"/><text x="56" y="250" fill="#8a8277">main</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#4fd68b">
+    <text x="420" y="73">caso base: devolve 1</text>
+    <text x="420" y="119">2 × 1 = 2</text>
+    <text x="420" y="165">3 × 2 = 6</text>
+    <text x="420" y="211">4 × 6 = 24</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.5" fill="none">
+    <path d="M400 80 L400 106" marker-end="url(#s)"/><path d="M400 126 L400 152" marker-end="url(#s)"/><path d="M400 172 L400 198" marker-end="url(#s)"/>
+  </g>
+  <path d="M320 211 L320 73" stroke="#ff7a1a" stroke-width="1.5" fill="none" marker-end="url(#l)"/>
+  <text x="330" y="140" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#ff7a1a">ida</text>
+  <text x="420" y="250" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#4fd68b">volta: cada frame usa o resultado do de cima</text>
+  <text x="40" y="290" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Cada chamada tem o seu próprio n; os frames só saem da pilha quando o de cima termina.</text>
+</svg>

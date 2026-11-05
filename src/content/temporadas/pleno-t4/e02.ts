@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`Period.between(a, b).getDays()` é só a parte dos dias; o total vem de `ChronoUnit.DAYS.between(a, b)`.',
     '`toMinutes()` devolve o total; `toMinutesPart()` devolve só a parte dos minutos.',
   ],
+  ia: {
+    uso:
+      'Para quantidades de tempo, a IA ajuda a escolher entre `Period` e `Duration` e a ler os formatos ISO, como `P1M5D` e `PT8H35M`. Os erros dela são previsíveis: usar `getDays()` como total de dias, encadear fábricas estáticas e somar uma `Duration` a um `LocalDate`, o que compila e quebra na execução.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código com Period, Duration e ChronoUnit>\n- Mostre o toString de cada Period e Duration e o resultado de cada soma.\n- Diga, para cada valor, se é uma parte (getDays, toMinutesPart) ou um total (ChronoUnit, toMinutes).\n- Aponte combinações que lançam UnsupportedTemporalTypeException.\n- Não use milissegundos nem Date para calcular intervalos.',
+    erros: [
+      'Usa `Period.between(a, b).getDays()` como total de dias, e erra qualquer intervalo maior que um mês.',
+      'Escreve `Period.ofYears(1).ofMonths(2)` achando que combina os dois.',
+      'Soma uma `Duration` a um `LocalDate`, o que lança `UnsupportedTemporalTypeException`.',
+      'Diz que `Duration.ofDays(1)` imprime `P1D`, quando imprime `PT24H`.',
+    ],
+    conferir: [
+      'Imprima o `Period` e o total em dias com `ChronoUnit` para o mesmo intervalo.',
+      'Teste o cálculo com um intervalo de mais de um mês e com 31 de janeiro.',
+      'Rode a soma com o tipo de data real do projeto, e não só na cabeça.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Period and Duration',
@@ -164,6 +181,109 @@ public class Prazos {
     comentarios:
       'O prazo é uma quantidade de calendário, e por isso é um `Period`: "um mês" depende de qual mês. As horas trabalhadas são uma quantidade de relógio, e por isso uma `Duration`, que divide sem perder os segundos. Como as classes são imutáveis, `total.plus(...)` sem a atribuição não acumularia nada.',
   },
+  bugs: [
+    {
+      id: 'pleno-t4-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O cálculo do horário em que o bolo fica pronto não compila: `cannot find symbol`, apontando o `Period.ofHours`.',
+      codigo: `import java.time.Duration;
+import java.time.LocalTime;
+import java.time.Period;
+
+public class Cozinha {
+    public static void main(String[] args) {
+        LocalTime inicio = LocalTime.of(10, 30);
+        Period preparo = Period.ofHours(2);
+        System.out.println("bolo pronto às " + inicio.plus(preparo));
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.time.Duration;
+import java.time.LocalTime;
+import java.time.Period;
+
+public class Cozinha {
+    public static void main(String[] args) {
+        LocalTime inicio = LocalTime.of(10, 30);
+        Duration preparo = Duration.ofHours(2);
+        System.out.println("bolo pronto às " + inicio.plus(preparo));
+    }
+}`,
+      saidaCorrigida: 'bolo pronto às 12:30',
+      dica: '`Period` mede em quais unidades? E qual classe mede horas?',
+      explicacao:
+        '`Period` guarda anos, meses e dias, como um calendário, e não tem fábricas de horas. Tempo de relógio é `Duration`, que guarda segundos e nanossegundos: `Duration.ofHours(2)`. Somado a um `LocalTime`, ele dá o horário de término.',
+    },
+    {
+      id: 'pleno-t4-e02-b02',
+      dificuldade: 2,
+      sintoma: 'Um boleto pago com mais de um mês de atraso foi cobrado como se tivesse atrasado só 5 dias: `5 dias de atraso, multa de R$ 10`.',
+      codigo: `import java.time.LocalDate;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+
+public class Multa {
+    public static void main(String[] args) {
+        LocalDate vencimento = LocalDate.of(2024, 3, 10);
+        LocalDate pagamento = LocalDate.of(2024, 4, 15);
+        long diasDeAtraso = Period.between(vencimento, pagamento).getDays();
+        System.out.println(diasDeAtraso + " dias de atraso, multa de R$ " + diasDeAtraso * 2);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: '5 dias de atraso, multa de R$ 10' },
+      correcao: `import java.time.LocalDate;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+
+public class Multa {
+    public static void main(String[] args) {
+        LocalDate vencimento = LocalDate.of(2024, 3, 10);
+        LocalDate pagamento = LocalDate.of(2024, 4, 15);
+        long diasDeAtraso = ChronoUnit.DAYS.between(vencimento, pagamento);
+        System.out.println(diasDeAtraso + " dias de atraso, multa de R$ " + diasDeAtraso * 2);
+    }
+}`,
+      saidaCorrigida: '36 dias de atraso, multa de R$ 72',
+      dica: '`Period.between` devolve um total de dias ou uma decomposição em meses e dias? O que `getDays()` pega dessa decomposição?',
+      explicacao:
+        '`Period.between` decompõe a distância em anos, meses e dias, aqui `P1M5D`, e `getDays()` devolve só a **parte** dos dias, 5. O total de dias, para cobrar por dia, vem de `ChronoUnit.DAYS.between(vencimento, pagamento)`, que deu 36. Use `Period` para mostrar "1 mês e 5 dias" e `ChronoUnit` para contas.',
+    },
+    {
+      id: 'pleno-t4-e02-b03',
+      dificuldade: 3,
+      sintoma: 'Depois que o prazo de devolução passou a vir da configuração, em `PT72H`, a tela da compra quebra com `UnsupportedTemporalTypeException: Unsupported unit: Seconds`.',
+      codigo: `import java.time.Duration;
+import java.time.LocalDate;
+
+public class Devolucao {
+    public static void main(String[] args) {
+        Duration prazo = Duration.parse("PT72H");
+        LocalDate compra = LocalDate.of(2024, 5, 10);
+        LocalDate limite = compra.plus(prazo);
+        System.out.println("devolver até " + limite);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'excecao', nome: 'UnsupportedTemporalTypeException' },
+      correcao: `import java.time.Duration;
+import java.time.LocalDate;
+
+public class Devolucao {
+    public static void main(String[] args) {
+        Duration prazo = Duration.parse("PT72H");
+        LocalDate compra = LocalDate.of(2024, 5, 10);
+        LocalDate limite = compra.plusDays(prazo.toDays());
+        System.out.println("devolver até " + limite);
+    }
+}`,
+      saidaCorrigida: 'devolver até 2024-05-13',
+      dica: '`LocalDate.plus` aceita qualquer `TemporalAmount`, mas uma data sabe somar segundos?',
+      explicacao:
+        '`plus` recebe a interface `TemporalAmount`, então somar uma `Duration` a um `LocalDate` compila. Na execução, a `Duration` tenta somar segundos, que uma data não tem, e lança a exceção. Converta para a unidade da data, `plusDays(prazo.toDays())`, ou guarde o prazo como `Period`, `P3D`, se ele é de calendário.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t4-e02-q01',
@@ -181,6 +301,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Period` não guarda semanas, só dias. O `toString` de `Duration` vai no máximo até horas.',
+      dica: '`Period` não guarda semanas, e `Duration` não mostra dias.',
     },
     {
       id: 'pleno-t4-e02-q02',
@@ -199,6 +320,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`ofDays`, `ofMonths` e `ofYears` são estáticos. Chamá-los por um objeto compila, mas ignora o objeto: cada chamada cria um período novo, e fica o último.',
+      dica: 'Cada fábrica é estática; só a última vale.',
     },
     {
       id: 'pleno-t4-e02-q03',
@@ -215,6 +337,7 @@ public class Teste {
 }`,
       resposta: 'PT1H25M 85 25',
       explicacao: 'São 1 hora e 25 minutos. `toMinutes` dá o total, 85; `toMinutesPart` dá o que sobra depois das horas, 25.',
+      dica: '`toMinutes` é o total; `toMinutesPart`, a parte.',
     },
     {
       id: 'pleno-t4-e02-q04',
@@ -239,6 +362,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedTemporalTypeException', saida: '10:00' },
       explicacao: '`plus` recebe um `TemporalAmount`, então compila. Na execução, o `LocalTime` não sabe somar dias e recusa.',
+      dica: '`LocalTime` não sabe somar dias, e o erro vem na execução.',
     },
     {
       id: 'pleno-t4-e02-q05',
@@ -260,6 +384,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Period.between` decompõe em 2 meses e 5 dias, e `getDays` devolve só os 5. `ChronoUnit.DAYS.between` conta o total: 19 dias de fevereiro, 31 de março e 15 de abril.',
+      dica: '`getDays` é só a parte dos dias; o total vem do `ChronoUnit`.',
     },
     {
       id: 'pleno-t4-e02-q06',
@@ -275,6 +400,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'Semanas viram dias, `LocalDate` não aceita unidades de segundos e `Period` só normaliza os meses com `normalized()`.',
+      dica: 'Duas afirmações falam de como os campos são guardados e impressos.',
     },
     {
       id: 'pleno-t4-e02-q07',
@@ -293,6 +419,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`normalized` converte cada 12 meses em um ano. `toTotalMonths` volta a contar tudo em meses.',
+      dica: '`normalized` converte 12 meses em 1 ano; `toTotalMonths` soma tudo em meses.',
     },
     {
       id: 'pleno-t4-e02-q08',
@@ -312,6 +439,7 @@ public class Dias {
       respostas: ['DAYS'],
       saida: '60',
       explicacao: 'Janeiro tem 31 dias e fevereiro de 2024, 29. `ChronoUnit.DAYS.between` devolve o total como `long`.',
+      dica: 'É a unidade que conta dias.',
     },
     {
       id: 'pleno-t4-e02-q09',
@@ -331,6 +459,7 @@ public class Teste {
 }`,
       resposta: 8,
       explicacao: '`Period` só trabalha com anos, meses, semanas e dias. Horas são assunto de `Duration`.',
+      dica: '`Period` não tem fábrica de horas.',
     },
     {
       id: 'pleno-t4-e02-q10',
@@ -348,6 +477,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `toString` converte para horas, minutos e segundos e omite as partes zeradas, exceto quando ainda há segundos a mostrar.',
+      dica: 'O `toString` de `Duration` usa horas, minutos e segundos, com fração.',
     },
     {
       id: 'pleno-t4-e02-q11',
@@ -371,6 +501,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`LocalDateTime` aceita as duas quantidades. Dois dias a partir de 28 de fevereiro de 2024, ano bissexto, caem em 1º de março; 30 horas levam a 29 de fevereiro às 18h.',
+      dica: '`Period.ofDays(2)` soma dias de calendário; `Duration.ofHours(30)` soma 30 horas.',
     },
     {
       id: 'pleno-t4-e02-q12',
@@ -396,6 +527,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedTemporalTypeException', saida: 'P1D' },
       explicacao: '`Duration.between` recebe `Temporal`, então compila. Mas ele mede em segundos, e `LocalDate` não tem essa unidade.',
+      dica: '`Duration.between` precisa de segundos, e `LocalDate` não tem.',
     },
     {
       id: 'pleno-t4-e02-q13',
@@ -412,6 +544,7 @@ public class Teste {
 }`,
       resposta: 'P-2M-10D true',
       explicacao: 'Com o fim antes do início, o período é negativo, e cada campo aparece com o sinal.',
+      dica: 'Do fim para o começo, o período é negativo.',
     },
     {
       id: 'pleno-t4-e02-q14',
@@ -432,6 +565,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Um mês completo a partir de 31 de janeiro exigiria chegar ao "dia 31" de fevereiro, que não existe, então ainda não passou um mês inteiro. São 29 dias, ou 4 semanas completas.',
+      dica: 'De 31 de janeiro a 29 de fevereiro ainda não é um mês completo.',
     },
     {
       id: 'pleno-t4-e02-q15',
@@ -446,6 +580,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: '`Period` preserva o horário de parede e `Duration` preserva o tempo decorrido. Quando o relógio adianta ou atrasa uma hora, essas duas coisas se separam.',
+      dica: 'Pense no horário de verão.',
     },
   ],
 };

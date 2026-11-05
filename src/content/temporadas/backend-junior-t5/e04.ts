@@ -177,6 +177,165 @@ public class Lotes {
     comentarios:
       'Sem lote, seriam cinco consultas de clientes; com lote 2, três; com lote 10, uma. O Hibernate faz o mesmo com uma fila de proxies pendentes no contexto de persistência: ao inicializar um, aproveita para inicializar outros da mesma entidade. O `null` no fim mantém o comando sempre com o mesmo número de parâmetros, para que o banco reaproveite o plano. A busca em lote não elimina o N+1, só o divide pelo tamanho do lote, e por isso é uma rede de proteção: nas telas que você conhece, `join fetch`, `@EntityGraph` ou uma projeção continuam sendo a resposta.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t5-e04-b01',
+      dificuldade: 1,
+      sintoma: 'Alguém acrescentou um `join` com o cliente na listagem para acabar com o N+1, mas o log continua mostrando um `select` por cliente: `pedidos: 4, consultas: 4`.',
+      codigo: `import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class SemFetch {
+    record Pedido(int id, int clienteId) {}
+
+    static final List<Pedido> PEDIDOS = List.of(new Pedido(1, 7), new Pedido(2, 8), new Pedido(3, 7), new Pedido(4, 9));
+    static final Map<Integer, String> CLIENTES = Map.of(7, "Ana Lima", 8, "Bruno Souza", 9, "Carla Dias");
+
+    public static void main(String[] args) {
+        String jpql = "select p from Pedido p join p.cliente c order by p.id";
+        boolean preenche = jpql.contains("join fetch");
+        int consultas = 1;
+        Map<Integer, String> contexto = new HashMap<>();
+        if (preenche) CLIENTES.forEach(contexto::put);
+        for (Pedido p : PEDIDOS) {
+            if (!contexto.containsKey(p.clienteId())) {
+                consultas++;
+                contexto.put(p.clienteId(), CLIENTES.get(p.clienteId()));
+            }
+        }
+        System.out.println("pedidos: " + PEDIDOS.size() + ", consultas: " + consultas);
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'saida', saida: 'pedidos: 4, consultas: 4' },
+      correcao: `import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class SemFetch {
+    record Pedido(int id, int clienteId) {}
+
+    static final List<Pedido> PEDIDOS = List.of(new Pedido(1, 7), new Pedido(2, 8), new Pedido(3, 7), new Pedido(4, 9));
+    static final Map<Integer, String> CLIENTES = Map.of(7, "Ana Lima", 8, "Bruno Souza", 9, "Carla Dias");
+
+    public static void main(String[] args) {
+        String jpql = "select p from Pedido p join fetch p.cliente order by p.id";
+        boolean preenche = jpql.contains("join fetch");
+        int consultas = 1;
+        Map<Integer, String> contexto = new HashMap<>();
+        if (preenche) CLIENTES.forEach(contexto::put);
+        for (Pedido p : PEDIDOS) {
+            if (!contexto.containsKey(p.clienteId())) {
+                consultas++;
+                contexto.put(p.clienteId(), CLIENTES.get(p.clienteId()));
+            }
+        }
+        System.out.println("pedidos: " + PEDIDOS.size() + ", consultas: " + consultas);
+    }
+}`,
+      saidaCorrigida: 'pedidos: 4, consultas: 1',
+      dica: 'O `join` da consulta liga as tabelas. Ele também manda preencher o relacionamento?',
+      explicacao:
+        'Um `join` comum no JPQL só serve para filtrar ou ordenar pelas colunas da outra tabela; os clientes continuam como *proxies*, e cada `getNome()` dispara a sua consulta. É o `join fetch` que pede ao Hibernate para preencher o relacionamento com as colunas trazidas pelo JOIN, em uma consulta só.',
+    },
+    {
+      id: 'backend-junior-t5-e04-b02',
+      dificuldade: 2,
+      sintoma: 'A primeira página deveria ter três pedidos completos, mas mostra dois, e o pedido 2 aparece só com um dos seus dois itens: `itens por pedido na página: {1=2, 2=1}`.',
+      codigo: `import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+public class PaginaDoJoin {
+    record Linha(int pedido, String item) {}
+
+    public static void main(String[] args) {
+        List<Linha> join = List.of(new Linha(1, "Teclado"), new Linha(1, "Mouse"), new Linha(2, "Monitor"),
+                new Linha(2, "Cabo"), new Linha(3, "Webcam"));
+        int tamanhoDaPagina = 3;
+        List<Linha> doBanco = join.subList(0, tamanhoDaPagina);
+        Map<Integer, Integer> itens = new TreeMap<>();
+        for (Linha l : doBanco) itens.merge(l.pedido(), 1, Integer::sum);
+        System.out.println("itens por pedido na página: " + itens);
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'saida', saida: 'itens por pedido na página: {1=2, 2=1}' },
+      correcao: `import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+public class PaginaDoJoin {
+    record Linha(int pedido, String item) {}
+
+    public static void main(String[] args) {
+        List<Linha> join = List.of(new Linha(1, "Teclado"), new Linha(1, "Mouse"), new Linha(2, "Monitor"),
+                new Linha(2, "Cabo"), new Linha(3, "Webcam"));
+        int tamanhoDaPagina = 3;
+        List<Linha> doBanco = join.stream().filter(l -> l.pedido() <= tamanhoDaPagina).toList();
+        Map<Integer, Integer> itens = new TreeMap<>();
+        for (Linha l : doBanco) itens.merge(l.pedido(), 1, Integer::sum);
+        System.out.println("itens por pedido na página: " + itens);
+    }
+}`,
+      saidaCorrigida: 'itens por pedido na página: {1=2, 2=2, 3=1}',
+      dica: 'O limite da página está contando pedidos ou linhas do JOIN?',
+      explicacao:
+        'Num `join fetch` de coleção, cada item vira uma linha; limitar as linhas corta um pedido no meio e devolve menos pedidos que o pedido. Por isso o Hibernate nem aplica o limite no SQL nesse caso: traz tudo e pagina na memória, com um aviso no log. A forma segura é paginar os ids dos pedidos e, depois, buscar esses pedidos com os itens, como faz a correção.',
+    },
+    {
+      id: 'backend-junior-t5-e04-b03',
+      dificuldade: 3,
+      sintoma: 'Num projeto ainda no Hibernate 5, o relatório conta um pedido a mais e o faturamento sai inflado: `pedidos: 3, faturamento: 1069.50`.',
+      codigo: `import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+public class Duplicados {
+    record Pedido(int id, BigDecimal total) {}
+
+    public static void main(String[] args) {
+        Pedido p1 = new Pedido(1, new BigDecimal("459.80"));
+        Pedido p2 = new Pedido(2, new BigDecimal("149.90"));
+        List<Pedido> linhasDoJoin = List.of(p1, p1, p2);
+        Collection<Pedido> pedidos = new ArrayList<>();
+        pedidos.addAll(linhasDoJoin);
+        BigDecimal faturamento = BigDecimal.ZERO;
+        for (Pedido p : pedidos) faturamento = faturamento.add(p.total());
+        System.out.println("pedidos: " + pedidos.size() + ", faturamento: " + faturamento);
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'saida', saida: 'pedidos: 3, faturamento: 1069.50' },
+      correcao: `import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+public class Duplicados {
+    record Pedido(int id, BigDecimal total) {}
+
+    public static void main(String[] args) {
+        Pedido p1 = new Pedido(1, new BigDecimal("459.80"));
+        Pedido p2 = new Pedido(2, new BigDecimal("149.90"));
+        List<Pedido> linhasDoJoin = List.of(p1, p1, p2);
+        Collection<Pedido> pedidos = new LinkedHashSet<>();
+        pedidos.addAll(linhasDoJoin);
+        BigDecimal faturamento = BigDecimal.ZERO;
+        for (Pedido p : pedidos) faturamento = faturamento.add(p.total());
+        System.out.println("pedidos: " + pedidos.size() + ", faturamento: " + faturamento);
+    }
+}`,
+      saidaCorrigida: 'pedidos: 2, faturamento: 609.70',
+      dica: 'Quantas linhas o pedido 1, com dois itens, ocupa no resultado do JOIN?',
+      explicacao:
+        'Até o Hibernate 5, `select p from Pedido p join fetch p.itens` devolvia uma referência ao pedido para cada linha do JOIN: o pedido 1, com dois itens, aparecia duas vezes, e o total dele era somado duas vezes. Lá era preciso escrever `select distinct p`, que faz o mesmo que o conjunto da correção: tira as referências repetidas. Do Hibernate 6 em diante, os duplicados já saem removidos.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t5-e04-q01',
@@ -191,6 +350,7 @@ public class Lotes {
       ],
       resposta: 0,
       explicacao: 'É o N+1: o "1" é a consulta da lista, e cada relacionamento acessado acrescenta uma. Clientes repetidos já estão no contexto e não geram consulta nova.',
+      dica: 'Uma consulta para a lista e uma para cada cliente que ainda não está no contexto.',
     },
     {
       id: 'backend-junior-t5-e04-q02',
@@ -205,6 +365,7 @@ public class Lotes {
       ],
       resposta: 0,
       explicacao: 'O contexto de persistência garante um objeto por linha. O proxy do cliente 1 no pedido 3 é o mesmo do pedido 1, já inicializado.',
+      dica: 'Quantos pedidos a Ana tem?',
     },
     {
       id: 'backend-junior-t5-e04-q03',
@@ -228,6 +389,7 @@ public class Teste {
 }`,
       resposta: 'pedidos: 6, consultas: 4',
       explicacao: 'Uma consulta para a lista e uma para cada cliente distinto: 5, 3 e 8. O `add` devolve `false` para os que já estão no conjunto.',
+      dica: 'Clientes repetidos não geram uma nova consulta.',
     },
     {
       id: 'backend-junior-t5-e04-q04',
@@ -242,6 +404,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Com o `join` comum, o cliente continua sendo um proxy, e acessá-lo no laço volta ao N+1. Só o `fetch` manda carregar.',
+      dica: 'Só uma das duas preenche o relacionamento.',
     },
     {
       id: 'backend-junior-t5-e04-q05',
@@ -256,6 +419,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Na aula, com `EAGER`, uma listagem que só contava itens passou de 5 para 8 consultas. `EAGER` decide quando buscar, não como.',
+      dica: 'O `EAGER` muda quando o cliente é buscado, não como.',
     },
     {
       id: 'backend-junior-t5-e04-q06',
@@ -270,6 +434,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Na aula, o SQL foi idêntico ao do `join fetch`. O plano de busca vale só para o método anotado.',
+      dica: 'É um plano de busca para um método só.',
     },
     {
       id: 'backend-junior-t5-e04-q07',
@@ -280,6 +445,7 @@ public class Teste {
       opcoes: ['4', '26', '2', '3'],
       resposta: 0,
       explicacao: 'Uma para os pedidos e três para os clientes: 10, 10 e 5, a última completada com `null`. Sem o lote, seriam 26.',
+      dica: 'Uma consulta para os pedidos e uma para cada grupo de até 10 clientes.',
     },
     {
       id: 'backend-junior-t5-e04-q08',
@@ -304,6 +470,7 @@ public class Teste {
 }`,
       resposta: '[[11, 12, 13], [14, 15, 16], [17, null, null]]',
       explicacao: 'Sete ids em lotes de três dão três consultas, e a última é completada com `null` para manter o mesmo formato de comando.',
+      dica: 'Cada lote tem o tamanho fixo, e as sobras viram `null`.',
     },
     {
       id: 'backend-junior-t5-e04-q09',
@@ -319,6 +486,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Buscar duas coleções na mesma consulta multiplica as linhas: cada pedido vem repetido para cada item. O erro protege você desse resultado.',
+      dica: 'Duas listas no mesmo JOIN multiplicam as linhas.',
     },
     {
       id: 'backend-junior-t5-e04-q10',
@@ -333,6 +501,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O aviso `HHH90003004` denuncia a paginação em memória. A forma segura é paginar os ids e depois buscar os pedidos com os itens.',
+      dica: 'No JOIN, cada item é uma linha.',
     },
     {
       id: 'backend-junior-t5-e04-q11',
@@ -348,6 +517,7 @@ public class Teste {
       ],
       respostas: [0, 1, 2],
       explicacao: 'As duas primeiras fazem uma consulta só; a busca em lote divide o N pelo tamanho do lote. O `EAGER` mantém o N+1, e o `open-in-view` só muda onde ele acontece.',
+      dica: 'Procure as que buscam junto ou em grupo, sem mudar o mapeamento para sempre.',
     },
     {
       id: 'backend-junior-t5-e04-q12',
@@ -362,6 +532,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O N+1 é invisível no código e gritante no log. Com poucos dados, o tempo engana: cada consulta é rápida.',
+      dica: 'O N+1 é invisível no código e evidente em outro lugar.',
     },
     {
       id: 'backend-junior-t5-e04-q13',
@@ -394,6 +565,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Três linhas do banco viram dois pedidos, porque as linhas do mesmo pedido se juntam. No Hibernate 5, a lista vinha com o pedido 1 repetido, e era preciso `distinct`.',
+      dica: 'As linhas do mesmo pedido viram um objeto só, com os itens juntos.',
     },
     {
       id: 'backend-junior-t5-e04-q14',
@@ -408,6 +580,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A projeção traz só as colunas da resposta, deixa a contagem para o banco e não cria entidades gerenciadas.',
+      dica: 'Só leitura: traga exatamente as colunas da resposta.',
     },
     {
       id: 'backend-junior-t5-e04-q15',
@@ -422,6 +595,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Uma listagem bem resolvida faz o mesmo número de consultas para 3 ou 3.000 pedidos. Testar esse número protege contra regressões.',
+      dica: 'Compare como o número de consultas cresce com o número de pedidos.',
     },
   ],
 };

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="280" viewBox="0 0 760 280" role="img" aria-labelledby="t">
+  <title id="t">Os 32 bits do float −6,5 divididos em três campos: 1 bit de sinal igual a 1, 8 bits de expoente 10000001, que valem 129, e 23 bits de fração começando por 101. O valor é menos 1 vírgula 101 em binário vezes 2 elevado a 129 menos 127, que dá −6,5</title>
+  <rect width="760" height="280" fill="#13110f"/>
+  <text x="380" y="34" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7" text-anchor="middle">float x = -6.5f;</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="17" font-weight="700">
+    <rect x="30" y="60" width="44" height="54" fill="#1b1916" stroke="#ff7a1a"/><text x="43" y="94" fill="#ff7a1a">1</text>
+    <rect x="74" y="60" width="210" height="54" fill="#1b1916" stroke="#f2c75c"/><text x="88" y="94" fill="#f2c75c">10000001</text>
+    <rect x="284" y="60" width="446" height="54" fill="#1b1916" stroke="#4fd68b"/><text x="298" y="94" fill="#4fd68b">10100000000000000000000</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" text-anchor="middle">
+    <text x="52" y="136" fill="#ff7a1a">sinal</text><text x="52" y="152" fill="#8a8277">1 bit</text>
+    <text x="179" y="136" fill="#f2c75c">expoente</text><text x="179" y="152" fill="#8a8277">8 bits, bias 127</text>
+    <text x="507" y="136" fill="#4fd68b">fração</text><text x="507" y="152" fill="#8a8277">23 bits (o 1 antes da vírgula fica implícito)</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#bdb5aa">
+    <text x="30" y="196" xml:space="preserve">sinal 1 → negativo     expoente 129 − 127 = 2     fração 1,101₂ = 1,625</text>
+    <text x="30" y="226" fill="#f3eee7">valor = −1,625 × 2² = −6,5</text>
+  </g>
+  <text x="30" y="264" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">O double é igual, com 1 + 11 + 52 bits e bias 1023: mais expoente e mais precisão.</text>
+</svg>

@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Métodos `private` de interface (Java 9) têm corpo e só servem aos outros métodos dela.',
     'Cast de uma classe não `final` para uma interface compila; se o objeto não a implementar, falha na execução.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a extrair uma interface de uma classe e a decidir entre interface e classe abstrata. Use-a para listar os modificadores implícitos de cada membro, um ponto em que ela costuma acertar, e confira compilando.',
+    pedido:
+      'Revise as interfaces deste código Java 21.\n<cole o código aqui>\n- Para cada membro, diga os modificadores implícitos.\n- Aponte interfaces só de constantes e proponha uma alternativa.\n- Diga se alguma interface deveria ser uma classe abstrata, por precisar de estado ou construtor.',
+    erros: [
+      'Implementa o método da interface sem `public`.',
+      'Cria interfaces só de constantes, para usar os nomes sem prefixo.',
+      'Chama um método `static` de interface pelo nome da classe que a implementa.',
+    ],
+    conferir: [
+      'Compile: acesso fechado e `static` de interface pelo nome errado aparecem na hora.',
+      'Teste cada classe por uma variável do tipo da interface.',
+      'Confira se cada campo da interface é mesmo uma constante, com valor fixo.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Interfaces',
@@ -183,6 +199,150 @@ public class Avisos {
     comentarios:
       'O comportamento comum, enviar para todos e registrar, está escrito uma vez, no `default`; cada classe só implementa o que é dela. O `private` esconde um detalhe que nenhuma classe precisa ver, e o `static` funciona como uma fábrica de canais prontos. Acrescentar um canal de WhatsApp seria só mais uma classe.',
   },
+  bugs: [
+    {
+      id: 'junior-t4-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: ligar() in MotorEletrico cannot implement ligar() in Motor`.',
+      codigo: `interface Motor {
+    String ligar();
+}
+
+class MotorEletrico implements Motor {
+    String ligar() {
+        return "zzz";
+    }
+}
+
+public class Oficina {
+    public static void main(String[] args) {
+        Motor m = new MotorEletrico();
+        System.out.println(m.ligar());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `interface Motor {
+    String ligar();
+}
+
+class MotorEletrico implements Motor {
+    public String ligar() {
+        return "zzz";
+    }
+}
+
+public class Oficina {
+    public static void main(String[] args) {
+        Motor m = new MotorEletrico();
+        System.out.println(m.ligar());
+    }
+}`,
+      saidaCorrigida: 'zzz',
+      dica: 'Que modificador de acesso o compilador põe sozinho nos métodos de uma interface?',
+      explicacao: 'Todo método abstrato de interface é `public`, mesmo sem a palavra escrita. Sem modificador, a implementação teria acesso de pacote, mais fechado, e isso não é permitido numa sobrescrita.',
+    },
+    {
+      id: 'junior-t4-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O cliente premium deveria pagar 5% de taxa, mas paga 10%: `220.0`.',
+      codigo: `interface Taxa {
+    double PERCENTUAL = 0.10;
+
+    default double aplicar(double valor) {
+        return valor + valor * PERCENTUAL;
+    }
+}
+
+class TaxaPremium implements Taxa {
+    static final double PERCENTUAL = 0.05;
+}
+
+public class Checkout {
+    public static void main(String[] args) {
+        Taxa t = new TaxaPremium();
+        System.out.println(t.aplicar(200));
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: '220.0' },
+      correcao: `interface Taxa {
+    double percentual();
+
+    default double aplicar(double valor) {
+        return valor + valor * percentual();
+    }
+}
+
+class TaxaPremium implements Taxa {
+    public double percentual() { return 0.05; }
+}
+
+public class Checkout {
+    public static void main(String[] args) {
+        Taxa t = new TaxaPremium();
+        System.out.println(t.aplicar(200));
+    }
+}`,
+      saidaCorrigida: '210.0',
+      dica: 'O `aplicar` foi escrito na interface. Quando ele lê `PERCENTUAL`, qual dos dois campos enxerga?',
+      explicacao: 'Campos de interface são constantes `static`, resolvidas pelo nome na compilação, e não se sobrescrevem: o `aplicar` lê `Taxa.PERCENTUAL`. O campo de `TaxaPremium` só esconde o nome dentro da própria classe. Um valor que cada implementação define é um método abstrato, não uma constante.',
+    },
+    {
+      id: 'junior-t4-e01-b03',
+      dificuldade: 3,
+      sintoma: 'A exportação lança `ClassCastException: class Relatorio cannot be cast to class Exportavel`, embora o código compile sem avisos.',
+      codigo: `interface Exportavel {
+    String exportar();
+}
+
+class Relatorio {
+    String titulo() { return "vendas"; }
+}
+
+class RelatorioCsv extends Relatorio implements Exportavel {
+    public String exportar() { return titulo() + ".csv"; }
+}
+
+public class Exportacao {
+    public static void main(String[] args) {
+        Relatorio[] relatorios = {new RelatorioCsv(), new Relatorio()};
+        String saida = "";
+        for (Relatorio r : relatorios) {
+            saida += ((Exportavel) r).exportar() + " ";
+        }
+        System.out.println(saida.trim());
+    }
+}`,
+      linha: 18,
+      efeito: { tipo: 'excecao', nome: 'ClassCastException' },
+      correcao: `interface Exportavel {
+    String exportar();
+}
+
+class Relatorio {
+    String titulo() { return "vendas"; }
+}
+
+class RelatorioCsv extends Relatorio implements Exportavel {
+    public String exportar() { return titulo() + ".csv"; }
+}
+
+public class Exportacao {
+    public static void main(String[] args) {
+        Relatorio[] relatorios = {new RelatorioCsv(), new Relatorio()};
+        String saida = "";
+        for (Relatorio r : relatorios) {
+            if (r instanceof Exportavel e) saida += e.exportar() + " ";
+        }
+        System.out.println(saida.trim());
+    }
+}`,
+      saidaCorrigida: 'vendas.csv',
+      dica: '`Relatorio` não implementa `Exportavel`. Por que o compilador aceitou o cast mesmo assim?',
+      explicacao: 'O cast de uma classe que não é `final` para uma interface sempre compila, porque alguma subclasse poderia implementá-la, como `RelatorioCsv` faz. Quem confere é a JVM, objeto por objeto. Teste com `instanceof` antes de converter.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t4-e01-q01',
@@ -192,6 +352,7 @@ public class Avisos {
       opcoes: ['`public abstract`', '`protected abstract`', '`public static`', 'Nenhum: ele fica com acesso de pacote'],
       resposta: 0,
       explicacao: 'Todo método abstrato de interface é `public abstract`, escrito ou não. Por isso a classe que o implementa precisa usar `public`.',
+      dica: 'Todo método abstrato de interface é visível para todos e não tem corpo.',
     },
     {
       id: 'junior-t4-e01-q02',
@@ -215,6 +376,7 @@ A a = c;
 System.out.println(c.quem() + c.nome() + a.quem());`,
       resposta: 'ACA',
       explicacao: '`C` herda o `default` de `A` e implementa o método abstrato de `B`. A referência `A` aponta para o mesmo objeto e chama o mesmo `quem()`.',
+      dica: '`C` herda o `default` de `A`; a referência `a` aponta para o mesmo objeto.',
     },
     {
       id: 'junior-t4-e01-q03',
@@ -234,6 +396,7 @@ class MotorEletrico implements Motor {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'O método da interface é implicitamente `public`. Sem modificador, a implementação teria acesso de pacote, mais restrito, e a sobrescrita não pode fechar o acesso.',
+      dica: 'O método da interface é `public`. E o da classe?',
     },
     {
       id: 'junior-t4-e01-q04',
@@ -250,6 +413,7 @@ class MotorEletrico implements Motor {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Constantes, métodos abstratos, `default`, `static` e `private` são permitidos. Um campo de interface é `final` e precisa de valor, e nada numa interface pode ser `protected`.',
+      dica: 'Campos de interface precisam de valor; `protected` não existe em interface.',
     },
     {
       id: 'junior-t4-e01-q05',
@@ -276,6 +440,7 @@ class Painel implements Conversor {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 9 },
       explicacao: 'Diferente dos métodos `static` de classes, os de interface só existem pelo nome da interface. `Conversor.paraKm` funciona; `Painel.paraKm` não.',
+      dica: 'Métodos `static` de interface são chamados só pelo nome da interface.',
     },
     {
       id: 'junior-t4-e01-q06',
@@ -301,6 +466,7 @@ public class Teste {
       respostas: ['implements'],
       saida: 'miau',
       explicacao: 'Classes implementam interfaces com `implements`. O `extends` liga uma classe a outra classe, ou uma interface a outras interfaces.',
+      dica: 'Classe estende classe; classe e interface usam outra palavra.',
     },
     {
       id: 'junior-t4-e01-q07',
@@ -319,6 +485,7 @@ class Validador implements Limites {
 }`,
       resposta: 7,
       explicacao: 'Campos de interface são `public static final`, mesmo sem os modificadores escritos. `MAXIMO` é uma constante e não aceita outra atribuição.',
+      dica: 'Campos de interface são `final`.',
     },
     {
       id: 'junior-t4-e01-q08',
@@ -342,6 +509,7 @@ System.out.println(new Cupom().aplicar(80));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `default` usa o método abstrato, que cada classe implementa: 80 × 0,75 = 60.0. É o mesmo padrão template das classes abstratas.',
+      dica: '25% de desconto sobre 80.',
     },
     {
       id: 'junior-t4-e01-q09',
@@ -358,6 +526,7 @@ t.fazer();`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Interfaces não podem ser instanciadas. Seria preciso uma classe que a implemente, ou uma classe anônima: `new Tarefa() { public void fazer() { } }`.',
+      dica: 'Interface pode ser instanciada com `new` sem corpo?',
     },
     {
       id: 'junior-t4-e01-q10',
@@ -383,6 +552,7 @@ System.out.println(obj.ambos() + soX.x() + (soX instanceof Y));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Base` é abstrata e pode deixar `y()` para `Final`. Pela referência `X`, só `x()` é visível, mas o objeto continua sendo um `Final`, que também é um `Y`.',
+      dica: '`Base` deixa `y()` para `Final`; o `default` junta os dois.',
     },
     {
       id: 'junior-t4-e01-q11',
@@ -392,6 +562,7 @@ System.out.println(obj.ambos() + soX.x() + (soX instanceof Y));`,
       opcoes: ['`public static final`', '`private final`', '`public` apenas', '`protected static`'],
       resposta: 0,
       explicacao: 'Interfaces não têm estado de instância: todo campo é uma constante pública e compartilhada.',
+      dica: 'Campo de interface é constante, de todos e da interface.',
     },
     {
       id: 'junior-t4-e01-q12',
@@ -421,6 +592,7 @@ System.out.println(Medida.de(2.6).formatar());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O método `static` cria a medida com uma classe anônima. O `default` usa o método `private` da interface, que arredonda 2,6 para 3.',
+      dica: '`Math.round` arredonda para o inteiro mais próximo.',
     },
     {
       id: 'junior-t4-e01-q13',
@@ -436,6 +608,7 @@ System.out.println(Medida.de(2.6).formatar());`,
       ],
       respostas: [0, 1],
       explicacao: 'Interfaces permitem herança múltipla de tipo. Não têm construtores nem estado de instância, e seus métodos `static` ficam presos ao nome da interface.',
+      dica: 'Interfaces não têm construtor nem estado de instância.',
     },
     {
       id: 'junior-t4-e01-q14',
@@ -458,6 +631,7 @@ Voador v = (Voador) c;`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ClassCastException', saida: 'false' },
       explicacao: '`Carro` não é `final`: uma subclasse dele poderia implementar `Voador`, então o compilador aceita o cast. Na execução, o objeto é um `Carro` comum, e o cast falha.',
+      dica: '`Carro` não é `final`: o cast compila. E na execução?',
     },
     {
       id: 'junior-t4-e01-q15',
@@ -467,6 +641,7 @@ Voador v = (Voador) c;`,
       opcoes: ['`invokeinterface`', '`invokevirtual`', '`invokestatic`', '`invokespecial`'],
       resposta: 0,
       explicacao: 'Métodos de interface não têm posição fixa na tabela virtual, porque cada classe implementa interfaces diferentes. A HotSpot usa uma tabela por interface, a *itable*, e os caches do JIT deixam o custo igual ao de uma chamada virtual.',
+      dica: 'Há uma instrução específica para chamadas por interface.',
     },
   ],
 };

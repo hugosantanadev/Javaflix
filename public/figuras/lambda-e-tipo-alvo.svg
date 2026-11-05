@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">A anatomia de uma lambda e o tipo-alvo: a lambda (a, b) -> a + b tem a lista de parâmetros, a seta e o corpo; embaixo, a mesma lambda () -> 42 vira um Supplier de Integer ou um Callable de Integer, conforme a variável que a recebe, mas não serve a um Runnable, cujo run é void; e var f = () -> 42 não compila, porque não há tipo-alvo</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <rect x="20" y="24" width="720" height="58" rx="8" fill="#1b1916" stroke="#2b2824"/>
+  <text x="40" y="62" font-family="Cascadia Code, Consolas, monospace" font-size="22" font-weight="700"><tspan fill="#ff7a1a">(a, b)</tspan><tspan fill="#8a8277"> -&gt; </tspan><tspan fill="#4fd68b">a + b</tspan></text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <rect x="300" y="38" width="12" height="12" rx="2" fill="#ff7a1a"/><text x="318" y="48" fill="#ff7a1a">parâmetros: um estilo só</text>
+    <rect x="300" y="58" width="12" height="12" rx="2" fill="#8a8277"/><text x="318" y="68" fill="#8a8277">seta</text>
+    <rect x="480" y="38" width="12" height="12" rx="2" fill="#4fd68b"/><text x="498" y="48" fill="#4fd68b">corpo: expressão ou bloco</text>
+  </g>
+  <text x="20" y="118" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">A mesma lambda, o tipo vem de quem a recebe</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="132" width="350" height="44" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="34" y="159" fill="#f3eee7">Supplier&lt;Integer&gt; s = () -&gt; 42;</text>
+    <rect x="390" y="132" width="350" height="44" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="404" y="159" fill="#f3eee7">Callable&lt;Integer&gt; c = () -&gt; 42;</text>
+    <rect x="20" y="190" width="350" height="44" rx="6" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="34" y="217" fill="#f3eee7">Runnable r = () -&gt; 42;</text>
+    <rect x="390" y="190" width="350" height="44" rx="6" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="404" y="217" fill="#f3eee7">var f = () -&gt; 42;</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#db5c5c">
+    <text x="20" y="252">run() é void: o 42 não tem para onde ir</text>
+    <text x="390" y="252">sem tipo-alvo: o compilador não sabe a interface</text>
+  </g>
+  <text x="20" y="294" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Atribuição, parâmetro, retorno ou cast: só esses contextos dizem qual interface funcional a lambda implementa.</text>
+</svg>

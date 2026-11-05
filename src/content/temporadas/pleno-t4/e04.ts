@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'No Brasil, a mudança era à meia-noite: `atStartOfDay(zona)` podia devolver 1h.',
     '`withLaterOffsetAtOverlap` só existe em `ZonedDateTime`; `LocalDateTime` não sabe nada de fusos.',
   ],
+  ia: {
+    uso:
+      'Com horário de verão, a IA ajuda a montar casos de teste e a explicar por que um horário mudou depois de uma soma. O risco é que ela raciocina com o relógio de parede: calcula durações com `LocalDateTime`, soma 24 horas como se fosse um dia e esquece que 2h30 de 10 de março, em Nova York, não existe.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código que agenda ou mede horários>\n- Para as datas de 10 de março e 3 de novembro de 2024 em America/New_York, mostre os resultados de cada linha, com o deslocamento.\n- Diga se cada soma mantém o horário de parede (plusDays) ou o tempo decorrido (Duration).\n- Aponte cálculos de duração feitos com LocalDateTime e reescreva com ZonedDateTime ou Instant.\n- Escreva os casos de teste com as duas datas de transição.',
+    erros: [
+      'Mede durações com `LocalDateTime`, que não conhece o horário de verão.',
+      'Usa `plus(Duration.ofHours(24))` num alarme diário, que muda de horário no dia da transição.',
+      'Diz que criar um horário na lacuna lança exceção, quando o Java o ajusta para a frente.',
+      'Testa só com `America/Sao_Paulo`, que não tem mais horário de verão.',
+    ],
+    conferir: [
+      'Rode os testes com `America/New_York` nas datas de transição.',
+      'Converta os resultados para `Instant` e confira a diferença em UTC.',
+      'Use `getValidOffsets` para saber se um horário cai na lacuna ou na sobreposição.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de ZonedDateTime: resolução de lacunas e sobreposições',
@@ -148,6 +165,115 @@ public class Plantoes {
     comentarios:
       'Pelo relógio de parede, os três plantões têm 8 horas. Na prática, quem trabalhou na noite em que o relógio adiantou trabalhou 7, e quem trabalhou na noite em que atrasou trabalhou 9. Um sistema de folha de pagamento que guardasse só `LocalDateTime` pagaria errado duas vezes por ano. A soma bate por coincidência: as duas mudanças se anulam.',
   },
+  bugs: [
+    {
+      id: 'pleno-t4-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O registro da abertura das seções eleitorais não compila: `incompatible types: ZonedDateTime cannot be converted to LocalDateTime`.',
+      codigo: `import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class Eleicao {
+    public static void main(String[] args) {
+        LocalDate dia = LocalDate.of(2018, 11, 4);
+        LocalDateTime abertura = dia.atStartOfDay(ZoneId.of("America/Sao_Paulo"));
+        System.out.println("o dia começou em " + abertura);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class Eleicao {
+    public static void main(String[] args) {
+        LocalDate dia = LocalDate.of(2018, 11, 4);
+        ZonedDateTime abertura = dia.atStartOfDay(ZoneId.of("America/Sao_Paulo"));
+        System.out.println("o dia começou em " + abertura);
+    }
+}`,
+      saidaCorrigida: 'o dia começou em 2018-11-04T01:00-02:00[America/Sao_Paulo]',
+      dica: 'Com o fuso como argumento, `atStartOfDay` devolve que tipo? Ele cabe numa variável `LocalDateTime`?',
+      explicacao:
+        '`atStartOfDay()` sem argumentos devolve um `LocalDateTime` à meia-noite; com um `ZoneId`, devolve um `ZonedDateTime` com o primeiro instante real do dia naquele fuso. Em 4 de novembro de 2018, em São Paulo, esse instante foi 1h da manhã, porque a meia-noite não existiu. Declare a variável como `ZonedDateTime`.',
+    },
+    {
+      id: 'pleno-t4-e04-b02',
+      dificuldade: 2,
+      sintoma: 'O alarme diário das 7h tocou às 8h no domingo do início do horário de verão: `próximo alarme: 2024-03-10 às 08:00`.',
+      codigo: `import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class Alarme {
+    public static void main(String[] args) {
+        ZonedDateTime sabado = ZonedDateTime.of(LocalDateTime.of(2024, 3, 9, 7, 0), ZoneId.of("America/New_York"));
+        ZonedDateTime domingo = sabado.plus(Duration.ofHours(24));
+        System.out.println("próximo alarme: " + domingo.toLocalDate() + " às " + domingo.toLocalTime());
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'próximo alarme: 2024-03-10 às 08:00' },
+      correcao: `import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class Alarme {
+    public static void main(String[] args) {
+        ZonedDateTime sabado = ZonedDateTime.of(LocalDateTime.of(2024, 3, 9, 7, 0), ZoneId.of("America/New_York"));
+        ZonedDateTime domingo = sabado.plusDays(1);
+        System.out.println("próximo alarme: " + domingo.toLocalDate() + " às " + domingo.toLocalTime());
+    }
+}`,
+      saidaCorrigida: 'próximo alarme: 2024-03-10 às 07:00',
+      dica: 'Somar 24 horas e somar um dia são a mesma coisa num domingo em que o relógio adianta?',
+      explicacao:
+        '`Duration.ofHours(24)` soma tempo decorrido: 24 horas reais depois das 7h de sábado, o relógio já marca 8h, porque o domingo teve 23 horas. Um alarme diário segue o relógio de parede, e por isso deve usar `plusDays(1)`, que mantém as 7h. `Duration` é para temporizadores, como "daqui a 24 horas".',
+    },
+    {
+      id: 'pleno-t4-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O vigia de Nova York trabalhou da meia-noite às 6h de 3 de novembro de 2024 e recebeu por menos horas do que ficou no posto: `horas pagas no plantão: 6`.',
+      codigo: `import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+public class Plantao {
+    public static void main(String[] args) {
+        ZoneId ny = ZoneId.of("America/New_York");
+        LocalDateTime inicio = LocalDateTime.of(2024, 11, 3, 0, 0);
+        LocalDateTime fim = LocalDateTime.of(2024, 11, 3, 6, 0);
+        long horas = Duration.between(inicio, fim).toHours();
+        System.out.println("horas pagas no plantão: " + horas);
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: 'horas pagas no plantão: 6' },
+      correcao: `import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+public class Plantao {
+    public static void main(String[] args) {
+        ZoneId ny = ZoneId.of("America/New_York");
+        LocalDateTime inicio = LocalDateTime.of(2024, 11, 3, 0, 0);
+        LocalDateTime fim = LocalDateTime.of(2024, 11, 3, 6, 0);
+        long horas = Duration.between(inicio.atZone(ny), fim.atZone(ny)).toHours();
+        System.out.println("horas pagas no plantão: " + horas);
+    }
+}`,
+      saidaCorrigida: 'horas pagas no plantão: 7',
+      dica: '`LocalDateTime` conhece o horário de verão? Quantas horas reais passaram, se naquela madrugada o relógio voltou da 2h para a 1h?',
+      explicacao:
+        '`Duration.between` com `LocalDateTime` conta a diferença dos relógios de parede, sem fuso: 6 horas. Naquela madrugada, a 1h aconteceu duas vezes, e passaram 7 horas de verdade. Para medir tempo real, coloque as duas pontas no fuso, com `atZone(ny)`, ou converta para `Instant`, antes de calcular.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t4-e04-q01',
@@ -171,6 +297,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '2h15 não existiu naquele dia. O Java não lança exceção: empurra o horário para a frente pelo tamanho da lacuna, uma hora, já no deslocamento de verão.',
+      dica: 'Na lacuna, o horário é empurrado para a frente pelo tamanho dela.',
     },
     {
       id: 'pleno-t4-e04-q02',
@@ -190,6 +317,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '1h45 aconteceu duas vezes. Por padrão, o Java fica com a primeira, ainda no horário de verão; `withLaterOffsetAtOverlap` escolhe a segunda.',
+      dica: 'Na sobreposição, o padrão é o deslocamento anterior.',
     },
     {
       id: 'pleno-t4-e04-q03',
@@ -206,6 +334,7 @@ public class Teste {
 }`,
       resposta: '12 11 PT25H',
       explicacao: 'O domingo em que o relógio volta tem 25 horas. `plusDays` mantém o meio-dia; 24 horas reais terminam às 11h; e entre os dois meios-dias passam 25 horas.',
+      dica: '`plusDays` mantém a hora de parede; o dia 3 de novembro teve 25 horas.',
     },
     {
       id: 'pleno-t4-e04-q04',
@@ -226,6 +355,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Em UTC, 1h `-05:00` são 6h, e 3h `-04:00` são 7h. Passou uma hora real, embora o relógio de parede tenha andado duas.',
+      dica: 'Converta para UTC: entre 1h e 3h daquele dia passou uma hora.',
     },
     {
       id: 'pleno-t4-e04-q05',
@@ -244,6 +374,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Às 2h, o relógio volta para 1h. Duas horas reais depois da 0h30 o relógio marca 1h30, pela segunda vez; três horas depois, 2h30.',
+      dica: 'A 1h acontece duas vezes naquela madrugada.',
     },
     {
       id: 'pleno-t4-e04-q06',
@@ -259,6 +390,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: '`plusDays` preserva a hora de parede, mesmo que o dia tenha 23 ou 25 horas, e `Duration.between` mede o tempo real, que é justamente o afetado pelo horário de verão.',
+      dica: 'Duas afirmações descrevem o comportamento padrão na lacuna e na sobreposição.',
     },
     {
       id: 'pleno-t4-e04-q07',
@@ -277,6 +409,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem fuso, o dia começa à meia-noite por definição. Em São Paulo, naquele dia, a meia-noite não existiu, e o primeiro instante foi 1h.',
+      dica: 'Sem fuso, meia-noite; com fuso, o primeiro instante real do dia.',
     },
     {
       id: 'pleno-t4-e04-q08',
@@ -294,6 +427,7 @@ public class Sobreposta {
       respostas: ['withLaterOffsetAtOverlap'],
       saida: '-05:00',
       explicacao: '`withLaterOffsetAtOverlap` só faz efeito numa sobreposição: escolhe o deslocamento posterior, já fora do horário de verão.',
+      dica: 'É o método que escolhe o deslocamento posterior na sobreposição.',
     },
     {
       id: 'pleno-t4-e04-q09',
@@ -315,6 +449,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O domingo em que o relógio adianta tem uma hora a menos. Entre as duas meias-noites passam 23 horas reais.',
+      dica: 'O dia 10 de março em Nova York teve 23 horas.',
     },
     {
       id: 'pleno-t4-e04-q10',
@@ -337,6 +472,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Em Lisboa, a lacuna é entre 1h e 2h. O horário inexistente é empurrado uma hora para a frente, já no deslocamento de verão, `+01:00`.',
+      dica: 'Em Lisboa, à 1h, o relógio pulou para as 2h.',
     },
     {
       id: 'pleno-t4-e04-q11',
@@ -356,6 +492,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem fuso, não existe horário de verão: um `LocalDateTime` mede pelo relógio de parede. A mesma conta com `ZonedDateTime` em Nova York daria uma hora.',
+      dica: '`LocalDateTime` não conhece o horário de verão.',
     },
     {
       id: 'pleno-t4-e04-q12',
@@ -376,6 +513,7 @@ public class Teste {
 }`,
       resposta: 9,
       explicacao: 'Sobreposição é um conceito de fuso. `LocalDateTime` não tem fuso, e portanto não tem esse método.',
+      dica: '`LocalDateTime` não tem deslocamento para escolher.',
     },
     {
       id: 'pleno-t4-e04-q13',
@@ -395,6 +533,7 @@ public class Teste {
 }`,
       resposta: '0 2 1',
       explicacao: 'Na lacuna, nenhum deslocamento torna o horário válido; na sobreposição, dois; num dia comum, um.',
+      dica: 'Lacuna: nenhum deslocamento válido; sobreposição: dois; horário normal: um.',
     },
     {
       id: 'pleno-t4-e04-q14',
@@ -409,6 +548,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O alarme segue o relógio de parede, então a quantidade é de calendário. Somar 24 horas reais faria o alarme tocar às 8h ou às 6h depois de uma mudança de horário.',
+      dica: 'Um alarme diário segue o relógio de parede.',
     },
     {
       id: 'pleno-t4-e04-q15',
@@ -428,6 +568,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'No hemisfério norte, o horário de verão vai de março a novembro. Em julho, Nova York está nele; em janeiro, não.',
+      dica: 'Em julho, Nova York está em horário de verão; em janeiro, não.',
     },
   ],
 };

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Árvore de dependências da loja: na profundidade 1, jackson-databind 2.17.2 e jackson-datatype-jsr310 2.19.2; na profundidade 2, o databind traz annotations e core 2.17.2, que são escolhidas, e o jsr310 traz annotations, core e databind 2.19.2, omitidas por conflito; o Maven escolhe a versão mais próxima da raiz</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">
+    <text x="20" y="44">profundidade 0</text>
+    <text x="20" y="124">profundidade 1</text>
+    <text x="20" y="214">profundidade 2</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.4" fill="none">
+    <path d="M380 54 L240 100"/>
+    <path d="M380 54 L540 100"/>
+    <path d="M240 132 L170 186"/>
+    <path d="M240 132 L300 186"/>
+  </g>
+  <g stroke="#43403a" stroke-width="1.4" stroke-dasharray="4 3" fill="none">
+    <path d="M540 132 L440 186"/>
+    <path d="M540 132 L560 186"/>
+    <path d="M540 132 L680 186"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" font-weight="700" text-anchor="middle">
+    <rect x="320" y="26" width="120" height="28" rx="4" fill="#1b1916" stroke="#bdb5aa"/>
+    <text x="380" y="44" fill="#f3eee7">loja</text>
+    <rect x="160" y="100" width="160" height="32" rx="4" fill="#13221a" stroke="#4fd68b"/>
+    <text x="240" y="120" fill="#4fd68b">databind 2.17.2</text>
+    <rect x="460" y="100" width="160" height="32" rx="4" fill="#13221a" stroke="#4fd68b"/>
+    <text x="540" y="120" fill="#4fd68b">jsr310 2.19.2</text>
+    <rect x="100" y="186" width="140" height="32" rx="4" fill="#13221a" stroke="#4fd68b"/>
+    <text x="170" y="206" fill="#4fd68b">annotations 2.17.2</text>
+    <rect x="250" y="186" width="100" height="32" rx="4" fill="#13221a" stroke="#4fd68b"/>
+    <text x="300" y="206" fill="#4fd68b">core 2.17.2</text>
+    <rect x="370" y="186" width="140" height="32" rx="4" fill="#13110f" stroke="#43403a" stroke-dasharray="3 3"/>
+    <text x="440" y="206" fill="#6b645b">annotations 2.19.2</text>
+    <rect x="515" y="186" width="90" height="32" rx="4" fill="#13110f" stroke="#43403a" stroke-dasharray="3 3"/>
+    <text x="560" y="206" fill="#6b645b">core 2.19.2</text>
+    <rect x="615" y="186" width="130" height="32" rx="4" fill="#13110f" stroke="#ff7a1a" stroke-dasharray="3 3"/>
+    <text x="680" y="206" fill="#ff7a1a">databind 2.19.2</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="560" y="244" fill="#6b645b" text-anchor="middle">omitidas: já havia uma versão mais perto da raiz</text>
+    <text x="20" y="282" fill="#bdb5aa">O jsr310 foi feito para o databind 2.19.2, mas vai rodar com o 2.17.2 que você declarou.</text>
+    <text x="20" y="302" fill="#8a8277">No Gradle, venceria a mais alta, 2.19.2, em toda a árvore.</text>
+  </g>
+</svg>

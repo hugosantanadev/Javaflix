@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Java 9: `try (r)` só aceita variáveis `final` ou efetivamente final.',
     'Se um recurso falha ao abrir, só os já abertos são fechados; recursos `null` não são fechados.',
   ],
+  ia: {
+    uso:
+      'Para recursos, a IA ajuda a converter um `try`/`finally` antigo em try-with-resources e a explicar a ordem de fechamento de um exemplo. Ela costuma errar em dois pontos: aninhar construtores num único recurso, o que deixa o de dentro aberto se o de fora falhar, e confundir exceção suprimida com causa.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código com try/finally que fecha recursos>\n- Reescreva com try-with-resources, declarando cada recurso na sua própria variável do cabeçalho.\n- Diga em que ordem os recursos abrem e fecham, e o que acontece se o segundo falhar ao abrir.\n- Mostre o que getSuppressed() devolve se o corpo e o close() falharem.\n- Não mude a lógica do corpo nem engula exceções do close() com catch vazio.',
+    erros: [
+      'Declara um recurso só com o construtor aninhado, como `new BufferedReader(new FileReader(nome))`, e o `FileReader` fica aberto se o de fora falhar.',
+      'Diz que a exceção do `close()` substitui a do corpo, como acontece com o `finally`.',
+      'Procura a falha do fechamento em `getCause()`, e não em `getSuppressed()`.',
+      'Usa a variável do recurso no `catch` ou no `finally`, onde ela não existe.',
+    ],
+    conferir: [
+      'Rode um exemplo com recursos cujo `close()` imprime, e confira a ordem na saída.',
+      'Force uma falha no corpo e outra no `close()`, e imprima `getSuppressed()`.',
+      'Compile: usar a variável do recurso fora do `try` é erro de compilação.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: The try-with-resources Statement',
@@ -172,6 +189,195 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Com `finally`, a falha ao fechar teria substituído a de leitura, e o log mostraria só o sintoma menos importante. O try-with-resources mantém a causa real como principal e guarda a outra como suprimida. E repare que nenhum `if (origem != null)` foi necessário: o fechamento dos dois recursos, na ordem certa, é automático.',
   },
+  bugs: [
+    {
+      id: 'pleno-t1-e04-b01',
+      dificuldade: 1,
+      sintoma: 'Para deixar o código mais genérico, alguém trocou o tipo da variável do recurso, e a consulta parou de compilar: `unreported exception Exception; must be caught or declared to be thrown`, por causa do `close()` implícito.',
+      codigo: `public class Consulta {
+    static class Conexao implements AutoCloseable {
+        final String banco;
+
+        Conexao(String banco) {
+            this.banco = banco;
+        }
+
+        @Override
+        public void close() {
+            System.out.println("conexão com " + banco + " devolvida");
+        }
+    }
+
+    static Conexao abrir() {
+        return new Conexao("vendas");
+    }
+
+    public static void main(String[] args) {
+        try (AutoCloseable conexao = abrir()) {
+            System.out.println("consultando");
+        }
+    }
+}`,
+      linha: 20,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Consulta {
+    static class Conexao implements AutoCloseable {
+        final String banco;
+
+        Conexao(String banco) {
+            this.banco = banco;
+        }
+
+        @Override
+        public void close() {
+            System.out.println("conexão com " + banco + " devolvida");
+        }
+    }
+
+    static Conexao abrir() {
+        return new Conexao("vendas");
+    }
+
+    public static void main(String[] args) {
+        try (Conexao conexao = abrir()) {
+            System.out.println("consultando");
+        }
+    }
+}`,
+      saidaCorrigida: 'consultando\nconexão com vendas devolvida',
+      dica: 'O que o `close()` de `AutoCloseable` declara na assinatura? E o de `Conexao`?',
+      explicacao:
+        'O try-with-resources chama o `close()` do tipo **declarado** da variável. O de `AutoCloseable` declara `throws Exception`, e essa checked precisa ser tratada ou declarada. O `close()` de `Conexao` não lança nada: declare o recurso com o tipo concreto, ou com uma interface sua cujo `close()` não declare exceções.',
+    },
+    {
+      id: 'pleno-t1-e04-b02',
+      dificuldade: 2,
+      sintoma: 'As conexões estão sumindo do pool, mas o monitor jura que nenhum fechamento falhou: `erro: consulta expirou; fechamento falhou: false`.',
+      codigo: `public class Monitor {
+    static class Conexao implements AutoCloseable {
+        @Override
+        public void close() {
+            throw new IllegalStateException("falha ao devolver a conexão ao pool");
+        }
+    }
+
+    public static void main(String[] args) {
+        try (Conexao c = new Conexao()) {
+            throw new RuntimeException("consulta expirou");
+        } catch (RuntimeException e) {
+            boolean fechamentoFalhou = e.getCause() != null;
+            System.out.println("erro: " + e.getMessage() + "; fechamento falhou: " + fechamentoFalhou);
+        }
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'saida', saida: 'erro: consulta expirou; fechamento falhou: false' },
+      correcao: `public class Monitor {
+    static class Conexao implements AutoCloseable {
+        @Override
+        public void close() {
+            throw new IllegalStateException("falha ao devolver a conexão ao pool");
+        }
+    }
+
+    public static void main(String[] args) {
+        try (Conexao c = new Conexao()) {
+            throw new RuntimeException("consulta expirou");
+        } catch (RuntimeException e) {
+            boolean fechamentoFalhou = e.getSuppressed().length > 0;
+            System.out.println("erro: " + e.getMessage() + "; fechamento falhou: " + fechamentoFalhou);
+        }
+    }
+}`,
+      saidaCorrigida: 'erro: consulta expirou; fechamento falhou: true',
+      dica: 'Quando o corpo e o `close()` falham, onde a exceção do fechamento fica guardada?',
+      explicacao:
+        'A exceção do `close()` não é a causa da principal: é anexada a ela como **suprimida**. A causa é a exceção que provocou esta, e aqui é `null`. Para saber se o fechamento falhou, olhe `getSuppressed()`; no log, ela aparece na seção `Suppressed:` do stack trace.',
+    },
+    {
+      id: 'pleno-t1-e04-b03',
+      dificuldade: 3,
+      sintoma: 'Depois de um erro de configuração no tamanho do buffer, o arquivo de vendas continua aberto, e o sistema acumula arquivos abertos: `abriu vendas.csv; falha: buffer inválido; arquivos abertos: 1`.',
+      codigo: `public class Vazamento {
+    static int abertos = 0;
+
+    static class Arquivo implements AutoCloseable {
+        Arquivo(String nome) {
+            abertos++;
+            System.out.print("abriu " + nome + "; ");
+        }
+
+        @Override
+        public void close() {
+            abertos--;
+            System.out.print("fechou arquivo; ");
+        }
+    }
+
+    static class Leitor implements AutoCloseable {
+        Leitor(Arquivo arquivo, int tamanhoDoBuffer) {
+            if (tamanhoDoBuffer <= 0) throw new IllegalArgumentException("buffer inválido");
+        }
+
+        @Override
+        public void close() {
+            System.out.print("fechou leitor; ");
+        }
+    }
+
+    public static void main(String[] args) {
+        try (Leitor leitor = new Leitor(new Arquivo("vendas.csv"), 0)) {
+            System.out.print("lendo; ");
+        } catch (IllegalArgumentException e) {
+            System.out.print("falha: " + e.getMessage() + "; ");
+        }
+        System.out.println("arquivos abertos: " + abertos);
+    }
+}`,
+      linha: 29,
+      efeito: { tipo: 'saida', saida: 'abriu vendas.csv; falha: buffer inválido; arquivos abertos: 1' },
+      correcao: `public class Vazamento {
+    static int abertos = 0;
+
+    static class Arquivo implements AutoCloseable {
+        Arquivo(String nome) {
+            abertos++;
+            System.out.print("abriu " + nome + "; ");
+        }
+
+        @Override
+        public void close() {
+            abertos--;
+            System.out.print("fechou arquivo; ");
+        }
+    }
+
+    static class Leitor implements AutoCloseable {
+        Leitor(Arquivo arquivo, int tamanhoDoBuffer) {
+            if (tamanhoDoBuffer <= 0) throw new IllegalArgumentException("buffer inválido");
+        }
+
+        @Override
+        public void close() {
+            System.out.print("fechou leitor; ");
+        }
+    }
+
+    public static void main(String[] args) {
+        try (Arquivo arquivo = new Arquivo("vendas.csv"); Leitor leitor = new Leitor(arquivo, 0)) {
+            System.out.print("lendo; ");
+        } catch (IllegalArgumentException e) {
+            System.out.print("falha: " + e.getMessage() + "; ");
+        }
+        System.out.println("arquivos abertos: " + abertos);
+    }
+}`,
+      saidaCorrigida: 'abriu vendas.csv; fechou arquivo; falha: buffer inválido; arquivos abertos: 0',
+      dica: 'Quais variáveis estão declaradas no cabeçalho do `try`? Quem fecha o `Arquivo` se o construtor do `Leitor` falhar?',
+      explicacao:
+        'Só os recursos declarados no cabeçalho são fechados. O `Arquivo` foi criado dentro da expressão do `Leitor`, e quando o construtor do `Leitor` lançou, não havia nenhum recurso declarado para fechar. Declare cada recurso na sua própria variável, `try (Arquivo arquivo = ...; Leitor leitor = new Leitor(arquivo, 0))`: se o segundo falhar ao abrir, o primeiro ainda é fechado.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t1-e04-q01',
@@ -186,6 +392,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'O compilador gera a chamada a `close()` pela interface. Um método com o mesmo nome numa classe que não implementa a interface não serve.',
+      dica: 'Ter um método para fechar não basta: o tipo precisa de um contrato.',
     },
     {
       id: 'pleno-t1-e04-q02',
@@ -212,6 +419,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: '+a+b corpo -b-a catch finally',
       explicacao: 'Abertura na ordem, fechamento na ordem inversa, e só então o `catch` e o `finally`.',
+      dica: 'Os recursos fecham antes do `catch`, na ordem inversa.',
     },
     {
       id: 'pleno-t1-e04-q03',
@@ -238,6 +446,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 7 },
       explicacao: 'O try-with-resources só aceita `AutoCloseable`. A falta de `catch` não é problema: ele pode ficar sozinho.',
+      dica: '`fechar()` não é o `close()` de nenhuma interface.',
     },
     {
       id: 'pleno-t1-e04-q04',
@@ -270,6 +479,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A exceção do corpo é a principal. As dos fechamentos são anexadas como suprimidas, na ordem em que acontecem: `b` fecha antes de `a`.',
+      dica: 'As suprimidas entram na ordem em que os recursos fecham.',
     },
     {
       id: 'pleno-t1-e04-q05',
@@ -286,6 +496,7 @@ const episodio: EpisodioConteudo = {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'O `close()` de `StringReader` não declara exceções, então não há o que tratar ao fechar. As variáveis de recurso são `final`, e a forma do Java 9 exige uma variável efetivamente final.',
+      dica: 'Confira quem lança `IOException` e se a variável do recurso é reatribuída.',
     },
     {
       id: 'pleno-t1-e04-q06',
@@ -309,6 +520,7 @@ const episodio: EpisodioConteudo = {
       respostas: ['AutoCloseable', 'java.io.Closeable'],
       saida: 'logado\nsessão encerrada',
       explicacao: 'Qualquer uma das duas interfaces serve. Como o `close()` sobrescrito não declara exceções, nada precisa ser tratado.',
+      dica: 'É a interface que tem só o método `close()`.',
     },
     {
       id: 'pleno-t1-e04-q07',
@@ -329,6 +541,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: 9,
       explicacao: 'Variáveis declaradas no cabeçalho do try-with-resources são implicitamente `final`. Se pudessem mudar, o recurso original nunca seria fechado.',
+      dica: 'As variáveis do cabeçalho são implicitamente `final`.',
     },
     {
       id: 'pleno-t1-e04-q08',
@@ -352,6 +565,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O corpo terminou sem erro, então não há exceção principal para receber a do fechamento: ela mesma se torna a principal, sem suprimidas.',
+      dica: 'Sem exceção no corpo, a do `close()` é a principal.',
     },
     {
       id: 'pleno-t1-e04-q09',
@@ -375,6 +589,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 4 },
       explicacao: 'O tipo declarado é `AutoCloseable`, cujo `close()` declara `throws Exception`. A chamada implícita ao fechar entra na regra de tratar ou declarar, e o erro aponta para o `try`.',
+      dica: 'O `close()` de `AutoCloseable` declara `throws Exception`.',
     },
     {
       id: 'pleno-t1-e04-q10',
@@ -397,6 +612,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Para um recurso `null`, o `close()` simplesmente não é chamado. O recurso `a` é fechado normalmente.',
+      dica: 'O que acontece com um recurso `null` no fim do bloco?',
     },
     {
       id: 'pleno-t1-e04-q11',
@@ -411,6 +627,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'O último aberto é o primeiro fechado, como uma pilha. Faz sentido: um recurso aberto depois pode depender dos anteriores.',
+      dica: 'O último a abrir é o primeiro a fechar.',
     },
     {
       id: 'pleno-t1-e04-q12',
@@ -439,6 +656,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 10 },
       explicacao: 'O escopo da variável de recurso é só o bloco `try`. Quando o `catch` roda, o recurso já foi fechado.',
+      dica: 'Onde a variável do recurso existe?',
     },
     {
       id: 'pleno-t1-e04-q13',
@@ -454,6 +672,7 @@ const episodio: EpisodioConteudo = {
       ],
       respostas: [0, 1],
       explicacao: 'Suprimir é anexar, não descartar: a principal continua sendo a do corpo, e o `printStackTrace` mostra as outras numa seção própria.',
+      dica: 'A exceção do corpo continua sendo a principal.',
     },
     {
       id: 'pleno-t1-e04-q14',
@@ -489,6 +708,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O segundo recurso falha ao ser criado, então o corpo nem roda. Só os recursos que chegaram a abrir são fechados, e então o `catch` trata a exceção.',
+      dica: 'Só os recursos que chegaram a abrir são fechados.',
     },
     {
       id: 'pleno-t1-e04-q15',
@@ -503,6 +723,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'É açúcar sintático. O código gerado também confere se o recurso é `null` antes de fechar, e recursos aninhados viram blocos aninhados, o que dá a ordem inversa.',
+      dica: 'O try-with-resources é açúcar sintático.',
     },
   ],
 };

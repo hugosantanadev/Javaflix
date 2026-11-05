@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Cinco interfaces funcionais desenhadas como caixas com entradas e saídas. Supplier não recebe nada e devolve um T pelo get. Consumer recebe um T e não devolve nada pelo accept. Predicate recebe um T e devolve boolean pelo test. Function recebe T e devolve R pelo apply. BinaryOperator recebe dois T e devolve um T pelo apply</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <g fill="#bdb5aa" text-anchor="end">
+      <text x="200" y="50">(nada)</text><text x="200" y="110">T</text><text x="200" y="170">T</text><text x="200" y="230">T</text><text x="200" y="290">T, T</text>
+    </g>
+    <g fill="#1b1916" stroke="#ff7a1a">
+      <rect x="240" y="26" width="250" height="38" rx="6"/><rect x="240" y="86" width="250" height="38" rx="6"/><rect x="240" y="146" width="250" height="38" rx="6"/><rect x="240" y="206" width="250" height="38" rx="6"/><rect x="240" y="266" width="250" height="38" rx="6"/>
+    </g>
+    <g fill="#f3eee7" font-weight="700">
+      <text x="254" y="50">Supplier</text><text x="254" y="110">Consumer</text><text x="254" y="170">Predicate</text><text x="254" y="230">Function</text><text x="254" y="290">BinaryOperator</text>
+    </g>
+    <g fill="#ff7a1a" text-anchor="end">
+      <text x="480" y="50">get()</text><text x="480" y="110">accept</text><text x="480" y="170">test</text><text x="480" y="230">apply</text><text x="480" y="290">apply</text>
+    </g>
+    <g fill="#4fd68b">
+      <text x="530" y="50">T</text><text x="530" y="110" fill="#8a8277">(nada)</text><text x="530" y="170">boolean</text><text x="530" y="230">R</text><text x="530" y="290">T</text>
+    </g>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.4" fill="none">
+    <path d="M206 45 L236 45" marker-end="url(#s)"/><path d="M206 105 L236 105" marker-end="url(#s)"/><path d="M206 165 L236 165" marker-end="url(#s)"/><path d="M206 225 L236 225" marker-end="url(#s)"/><path d="M206 285 L236 285" marker-end="url(#s)"/>
+    <path d="M494 45 L524 45" marker-end="url(#s)"/><path d="M494 105 L524 105" marker-end="url(#s)"/><path d="M494 165 L524 165" marker-end="url(#s)"/><path d="M494 225 L524 225" marker-end="url(#s)"/><path d="M494 285 L524 285" marker-end="url(#s)"/>
+  </g>
+  <text x="40" y="324" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Pelo formato (o que entra, o que sai) você descobre a interface e, com ela, o nome do método.</text>
+</svg>

@@ -347,6 +347,7 @@ public class CarrinhoTeste {
       ],
       resposta: 0,
       explicacao: 'Os testes ficam numa árvore própria, no mesmo pacote, e não vão para o pacote final da aplicação. O mesmo pacote dá acesso ao que não é público.',
+      dica: 'Os testes ficam numa árvore paralela à do código, no mesmo pacote.',
     },
     {
       id: 'backend-junior-t6-e01-q02',
@@ -361,6 +362,7 @@ public class CarrinhoTeste {
       ],
       resposta: 0,
       explicacao: 'Separar as três partes com uma linha em branco deixa claro o que é cenário, o que é a ação testada e o que é a expectativa.',
+      dica: 'Primeiro o cenário, por último a verificação.',
     },
     {
       id: 'backend-junior-t6-e01-q03',
@@ -375,6 +377,7 @@ public class CarrinhoTeste {
       ],
       resposta: 0,
       explicacao: 'O primeiro argumento é o esperado. Invertidos, a mensagem "expected: <...> but was: <...>" engana quem for ler a falha.',
+      dica: 'O primeiro argumento do `assertEquals` é o esperado.',
     },
     {
       id: 'backend-junior-t6-e01-q04',
@@ -384,6 +387,7 @@ public class CarrinhoTeste {
       opcoes: ['Como erro (*error*)', 'Como falha (*failure*)', 'Como pulado (*skipped*)', 'Como sucesso, porque nenhuma asserção falhou'],
       resposta: 0,
       explicacao: 'Falha é uma asserção que não vale, um `AssertionError`. Qualquer outra exceção inesperada é erro: o teste nem chegou a verificar.',
+      dica: 'A exceção apareceu antes de qualquer asserção.',
     },
     {
       id: 'backend-junior-t6-e01-q05',
@@ -403,6 +407,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `equals` compara valor e escala; o `compareTo`, só o valor. Sem os zeros à direita, 259.80 vira 259.8, com a mesma escala de `a`.',
+      dica: '`equals` do `BigDecimal` compara também a escala; `compareTo`, só o valor.',
     },
     {
       id: 'backend-junior-t6-e01-q06',
@@ -434,6 +439,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O campo de instância recomeça em cada objeto novo; o estático é um só e acumula. Por isso estado estático em testes vaza de um teste para outro.',
+      dica: 'Cada teste ganha um objeto novo, mas o contador é estático.',
     },
     {
       id: 'backend-junior-t6-e01-q07',
@@ -448,6 +454,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Com o ciclo padrão, um objeto por método, não há instância para um método que roda uma vez antes de todos. O `PER_CLASS` muda para um objeto só.',
+      dica: 'Quando o `@BeforeAll` roda, ainda não existe objeto de teste.',
     },
     {
       id: 'backend-junior-t6-e01-q08',
@@ -462,6 +469,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Testes isolados não dependem de quem rodou antes. Sem estado estático mutável, e com o cenário montado no `@BeforeEach`, o problema some.',
+      dica: 'O que pode passar de um teste para outro, se cada um tem o seu objeto?',
     },
     {
       id: 'backend-junior-t6-e01-q09',
@@ -481,6 +489,7 @@ public class Teste {
 }`,
       resposta: '[SP paga 15.00 com total 199.99]',
       explicacao: 'Cada `{n}` é trocado pelo valor de índice n, em qualquer posição do modelo, e o `trim` tira os espaços das pontas de cada valor.',
+      dica: 'Os marcadores `{0}`, `{1}` e `{2}` são trocados pelos argumentos, na ordem.',
     },
     {
       id: 'backend-junior-t6-e01-q10',
@@ -490,6 +499,7 @@ public class Teste {
       opcoes: ['199.99 e 200.00', '50.00 e 500.00', '0.00 e 1000.00', '200.00 e 300.00'],
       resposta: 0,
       explicacao: 'Só o valor exatamente na fronteira distingue `>` de `>=`, e o vizinho de baixo confirma o outro lado. São os valores-limite.',
+      dica: 'O erro só aparece exatamente na fronteira.',
     },
     {
       id: 'backend-junior-t6-e01-q11',
@@ -499,6 +509,7 @@ public class Teste {
       opcoes: ['`@BeforeEach`', '`@ParameterizedTest`', '`@Nested`', '`@Before`', '`@TestCase`'],
       respostas: [0, 1, 2],
       explicacao: '`@Before` é do JUnit 4, substituída por `@BeforeEach`. `@TestCase` não existe; no JUnit 3, testes eram classes que estendiam `TestCase`.',
+      dica: 'Duas das opções vêm do JUnit 4 ou não existem.',
     },
     {
       id: 'backend-junior-t6-e01-q12',
@@ -534,6 +545,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem `@Retention`, a anotação fica no `.class` mas não é carregada em tempo de execução, e a reflexão não a vê. As do JUnit são `RUNTIME`.',
+      dica: 'O executor só enxerga anotações que existem em tempo de execução.',
     },
     {
       id: 'backend-junior-t6-e01-q13',
@@ -548,6 +560,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `assertThrows` exige a exceção. Quando ela vem, é devolvida para conferir a mensagem; quando não vem, o teste falha.',
+      dica: 'O `assertThrows` exige que a exceção aconteça.',
     },
     {
       id: 'backend-junior-t6-e01-q14',
@@ -562,6 +575,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'No resumo do Surefire, ele entra em `Skipped`. É útil por pouco tempo; um teste desligado para sempre deveria ser apagado ou consertado.',
+      dica: 'O teste continua no código, mas não roda.',
     },
     {
       id: 'backend-junior-t6-e01-q15',
@@ -576,6 +590,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Trocar a lista por outra estrutura não muda nada para quem usa o carrinho, mas quebra esse teste. Teste o que o código entrega, não como ele guarda.',
+      dica: 'Procure o teste que depende de como o código guarda os dados, e não do que ele entrega.',
     },
   ],
 };

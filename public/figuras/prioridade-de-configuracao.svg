@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Fontes de configuração empilhadas da mais forte para a mais fraca: argumentos de linha de comando com 99, variáveis de ambiente com 150, application-prod.properties sem a propriedade, application.properties com 200.00 e o padrão no código; o Spring procura de cima para baixo e usa o primeiro valor encontrado, 99</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <text x="30" y="30" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#bdb5aa">loja.frete.gratis-a-partir</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <rect x="30" y="44" width="420" height="38" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="44" y="68" fill="#4fd68b" font-weight="700">Linha de comando</text>
+    <rect x="30" y="88" width="420" height="38" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="44" y="112" fill="#f3eee7">Variáveis de ambiente</text>
+    <rect x="30" y="132" width="420" height="38" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="44" y="156" fill="#f3eee7">application-prod.properties</text>
+    <rect x="30" y="176" width="420" height="38" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="44" y="200" fill="#f3eee7">application.properties</text>
+    <rect x="30" y="220" width="420" height="38" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="44" y="244" fill="#f3eee7">Padrão no código</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700">
+    <text x="300" y="68" fill="#4fd68b">99</text>
+    <text x="300" y="112" fill="#6b645b">150</text>
+    <text x="300" y="156" fill="#6b645b">(não tem)</text>
+    <text x="300" y="200" fill="#6b645b">200.00</text>
+    <text x="300" y="244" fill="#6b645b">(não tem)</text>
+  </g>
+  <path d="M470 250 L470 60" stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+  <text x="482" y="160" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">mais forte</text>
+  <text x="482" y="178" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">em cima</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">
+    <text x="560" y="62">A busca para no primeiro</text>
+    <text x="560" y="80">valor encontrado: 99.</text>
+    <text x="560" y="120">Os valores de baixo</text>
+    <text x="560" y="138">continuam lá, mas</text>
+    <text x="560" y="156">não são usados.</text>
+  </g>
+  <text x="30" y="288" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">O mesmo JAR serve a todos os ambientes porque cada um sobrepõe só o que precisa, pelas camadas de cima.</text>
+</svg>

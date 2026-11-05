@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`non-sealed` reabre a hierarquia: as subclasses dela não precisam estar no `permits`.',
     'Interfaces não podem ser `final`: uma subinterface de uma interface selada é `sealed` ou `non-sealed`.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a modelar um conjunto fechado de casos com interface selada e records, e a escolher o modificador de cada subclasse. Use-a para revisar se a hierarquia deveria mesmo ser fechada.',
+    pedido:
+      'Revise esta hierarquia selada Java 21.\n<cole o código aqui>\n- Confira se cada subclasse direta é final, sealed, non-sealed, record ou enum.\n- Diga se algum ramo non-sealed é intencional ou deveria ser final.\n- Aponte cadeias de if com instanceof sobre o tipo selado que poderiam virar um switch exaustivo.',
+    erros: [
+      'Deixa subclasses permitidas sem `final`, `sealed` ou `non-sealed`.',
+      'Marca uma subinterface como `final`, o que interfaces não aceitam.',
+      'Trata os casos com `if` e um `else` genérico, que não avisa quando surge um caso novo.',
+    ],
+    conferir: [
+      'Compile: subclasses fora do `permits` ou sem modificador são recusadas.',
+      'Acrescente um caso novo e veja quais lugares o compilador aponta.',
+      'Use `getPermittedSubclasses()` para conferir a lista real.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Oracle: Sealed Classes (Java Language Updates)',
@@ -144,6 +160,138 @@ public class Calculadora {
     comentarios:
       'É uma árvore sintática, como a que o compilador monta no episódio de compiladores: cada nó sabe se avaliar. Com a interface selada, ninguém de fora acrescenta um tipo de nó que a calculadora não conheça. No episódio 5, a mesma avaliação será escrita de fora dos records, com um `switch` sobre os tipos que o compilador garante ser completo.',
   },
+  bugs: [
+    {
+      id: 'junior-t5-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: sealed, non-sealed or final modifiers expected`.',
+      codigo: `sealed class Veiculo permits Carro, Moto { }
+
+final class Carro extends Veiculo { }
+
+class Moto extends Veiculo { }
+
+public class Frota {
+    public static void main(String[] args) {
+        Veiculo v = new Moto();
+        System.out.println(v.getClass().getSimpleName());
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `sealed class Veiculo permits Carro, Moto { }
+
+final class Carro extends Veiculo { }
+
+final class Moto extends Veiculo { }
+
+public class Frota {
+    public static void main(String[] args) {
+        Veiculo v = new Moto();
+        System.out.println(v.getClass().getSimpleName());
+    }
+}`,
+      saidaCorrigida: 'Moto',
+      dica: 'Cada filho direto de uma classe selada precisa dizer como a hierarquia continua. O que falta em `Moto`?',
+      explicacao: 'Toda subclasse direta de uma classe selada escolhe um entre `final`, `sealed` e `non-sealed`. O compilador não assume nenhum: a escolha fica explícita no código.',
+    },
+    {
+      id: 'junior-t5-e03-b02',
+      dificuldade: 2,
+      sintoma: 'Pagamentos com cartão de débito aparecem no relatório como `outro`.',
+      codigo: `sealed interface Pagamento permits Pix, Cartao { }
+
+record Pix(String chave) implements Pagamento { }
+
+non-sealed class Cartao implements Pagamento { }
+
+class CartaoDebito extends Cartao { }
+
+public class Relatorio {
+    static String tipo(Pagamento p) {
+        if (p.getClass() == Pix.class) return "pix";
+        if (p.getClass() == Cartao.class) return "cartão";
+        return "outro";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(tipo(new CartaoDebito()));
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'saida', saida: 'outro' },
+      correcao: `sealed interface Pagamento permits Pix, Cartao { }
+
+record Pix(String chave) implements Pagamento { }
+
+non-sealed class Cartao implements Pagamento { }
+
+class CartaoDebito extends Cartao { }
+
+public class Relatorio {
+    static String tipo(Pagamento p) {
+        if (p.getClass() == Pix.class) return "pix";
+        if (p instanceof Cartao) return "cartão";
+        return "outro";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(tipo(new CartaoDebito()));
+    }
+}`,
+      saidaCorrigida: 'cartão',
+      dica: '`Cartao` é `non-sealed`. Um `CartaoDebito` tem a classe exata `Cartao`?',
+      explicacao: 'O ramo `non-sealed` aceita subclasses livres, e `getClass()` compara a classe exata. Para tratar o cartão e todos os seus descendentes, use `instanceof`, que olha a hierarquia.',
+    },
+    {
+      id: 'junior-t5-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O caixa lança `IllegalStateException: tipo desconhecido` ao receber um pagamento em dinheiro, que é um tipo permitido.',
+      codigo: `sealed interface Pagamento permits Pix, Cartao, Dinheiro { }
+
+record Pix(String chave) implements Pagamento { }
+
+record Cartao(int parcelas) implements Pagamento { }
+
+record Dinheiro(double valor) implements Pagamento { }
+
+public class Caixa {
+    static String descrever(Pagamento p) {
+        if (p instanceof Pix pix) return "Pix para " + pix.chave();
+        if (p instanceof Cartao c) return "Cartão em " + c.parcelas() + "x";
+        throw new IllegalStateException("tipo desconhecido: " + p);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(descrever(new Dinheiro(50)));
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'excecao', nome: 'IllegalStateException' },
+      correcao: `sealed interface Pagamento permits Pix, Cartao, Dinheiro { }
+
+record Pix(String chave) implements Pagamento { }
+
+record Cartao(int parcelas) implements Pagamento { }
+
+record Dinheiro(double valor) implements Pagamento { }
+
+public class Caixa {
+    static String descrever(Pagamento p) {
+        if (p instanceof Pix pix) return "Pix para " + pix.chave();
+        if (p instanceof Cartao c) return "Cartão em " + c.parcelas() + "x";
+        if (p instanceof Dinheiro d) return "Dinheiro: " + d.valor(); throw new IllegalStateException("tipo desconhecido: " + p);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(descrever(new Dinheiro(50)));
+    }
+}`,
+      saidaCorrigida: 'Dinheiro: 50.0',
+      dica: 'Quantos tipos o `permits` lista? Quantos o método trata?',
+      explicacao: 'Uma cadeia de `if` não é conferida pelo compilador: o tipo `Dinheiro` foi esquecido e caiu no `throw`. Com a interface selada, um `switch` com padrões (Java 21) aponta na compilação o caso que falta.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t5-e03-q01',
@@ -158,6 +306,7 @@ public class Calculadora {
       ],
       resposta: 0,
       explicacao: 'É o meio-termo entre uma classe aberta e uma `final`: só as subclasses do `permits` podem estendê-la.',
+      dica: 'Selada não é o mesmo que `final`: alguém ainda pode estender.',
     },
     {
       id: 'junior-t5-e03-q02',
@@ -177,6 +326,7 @@ public class Abrigo {
 }`,
       resposta: 'true false Labrador',
       explicacao: '`Cao` é `non-sealed`, então `Labrador` pode estendê-lo sem estar no `permits` de `Animal`. Um labrador é um `Cao` e um `Animal`, mas não um `Gato`.',
+      dica: '`Cao` é `non-sealed`, então `Labrador` pode estendê-la.',
     },
     {
       id: 'junior-t5-e03-q03',
@@ -195,6 +345,7 @@ class Circulo implements Forma { }`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 3 },
       explicacao: 'A subclasse permitida precisa declarar como a hierarquia continua. Só records e enums dispensam o modificador, por já serem implicitamente `final`.',
+      dica: 'Cada implementação direta precisa de um dos três modificadores, a menos que seja record ou enum.',
     },
     {
       id: 'junior-t5-e03-q04',
@@ -211,6 +362,7 @@ class Circulo implements Forma { }`,
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Um record serve como subclasse sem modificador, e no mesmo arquivo o `permits` pode ser omitido. Uma subclasse sem modificador, ou uma classe do `permits` que não estende a selada, não compilam.',
+      dica: 'No mesmo arquivo, o `permits` pode ser omitido; records já são `final`.',
     },
     {
       id: 'junior-t5-e03-q05',
@@ -230,6 +382,7 @@ final class Euro extends Moeda { }`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 4 },
       explicacao: 'Com o `permits` escrito, só as classes listadas podem estender `Moeda`. Para aceitar `Euro`, seria preciso incluí-la na lista.',
+      dica: 'Quem não está no `permits` pode estender a selada?',
     },
     {
       id: 'junior-t5-e03-q06',
@@ -248,6 +401,7 @@ public class Frota {
       respostas: ['sealed'],
       saida: 'true 2',
       explicacao: 'O `permits` só é aceito numa classe `sealed`. A reflexão confirma a selagem e as duas subclasses permitidas.',
+      dica: 'Qual modificador restringe as subclasses a uma lista?',
     },
     {
       id: 'junior-t5-e03-q07',
@@ -261,6 +415,7 @@ class PoupancaKids extends Poupanca { }
 class CorrenteVip extends Corrente { }`,
       resposta: 5,
       explicacao: '`Poupanca` é `non-sealed` e aceita subclasses livremente. `Corrente` é `final`, e nada pode estendê-la.',
+      dica: '`Corrente` é `final`.',
     },
     {
       id: 'junior-t5-e03-q08',
@@ -287,6 +442,7 @@ public class Bar {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Records já são `final`, então implementam a interface selada sem modificador. 7,5 + 8 + 5 = 20,5.',
+      dica: 'Some o preço de cada bebida, conforme o tamanho e a fruta.',
     },
     {
       id: 'junior-t5-e03-q09',
@@ -296,6 +452,7 @@ public class Bar {
       opcoes: ['`final`', '`sealed`', '`non-sealed`', 'Só `abstract`', '`static`'],
       respostas: [0, 1, 2],
       explicacao: 'A subclasse precisa dizer se fecha, continua selando ou reabre a hierarquia. `abstract` pode acompanhar `sealed` ou `non-sealed`, mas sozinho não basta.',
+      dica: 'As três formas de dizer como a hierarquia continua.',
     },
     {
       id: 'junior-t5-e03-q10',
@@ -314,6 +471,7 @@ final class Quadrado { }`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 1 },
       explicacao: 'O `permits` precisa listar subclasses diretas de verdade. O erro aparece na própria cláusula `permits`, que fica inválida.',
+      dica: 'Toda classe listada no `permits` precisa estender a selada.',
     },
     {
       id: 'junior-t5-e03-q11',
@@ -328,6 +486,7 @@ final class Quadrado { }`,
       ],
       resposta: 0,
       explicacao: 'No mesmo arquivo, o compilador conhece todas as subclasses e as considera permitidas. Em arquivos separados, a lista precisa ser explícita.',
+      dica: 'O compilador só encontra sozinho as subclasses de um lugar.',
     },
     {
       id: 'junior-t5-e03-q12',
@@ -354,6 +513,7 @@ public class Cadastro {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Records e enums servem como implementações de uma interface selada. São três tipos permitidos, e a constante `DOCUMENTOS` é um `Pendente`.',
+      dica: 'Records e enums podem implementar interfaces seladas.',
     },
     {
       id: 'junior-t5-e03-q13',
@@ -363,6 +523,7 @@ public class Cadastro {
       opcoes: ['Records', 'Enums', 'Classes comuns', 'Interfaces', 'Classes abstratas'],
       respostas: [0, 1],
       explicacao: 'Records são sempre `final`, e enums são `final` (ou selados, quando têm constantes com corpo). Classes e interfaces precisam declarar o modificador.',
+      dica: 'Quais tipos já são implicitamente `final`?',
     },
     {
       id: 'junior-t5-e03-q14',
@@ -385,6 +546,7 @@ public class Empresa {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Abaixo de `Funcionario`, que é `non-sealed`, a hierarquia é aberta como qualquer outra. A selagem só restringe os filhos diretos de `Pessoa`.',
+      dica: 'A selagem vale só para os filhos diretos; `Funcionario` reabriu o ramo.',
     },
     {
       id: 'junior-t5-e03-q15',
@@ -399,6 +561,7 @@ public class Empresa {
       ],
       resposta: 0,
       explicacao: 'A lista de subclasses permitidas vai para o arquivo `.class`, e a JVM a confere ao carregar cada subclasse. A garantia vale mesmo para código que não passou pelo `javac`.',
+      dica: 'A JVM também confere a lista de permitidas na carga.',
     },
   ],
 };

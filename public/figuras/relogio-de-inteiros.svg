@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Os 8 valores de 3 bits em complemento de dois dispostos num relógio: 000 é 0 no topo, e no sentido horário vêm 1, 2 e 3; depois de 011, que é 3, vem 100, que é −4, seguido de −3, −2 e −1, até voltar ao 0. A passagem de 3 para −4 é o overflow</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <circle cx="240" cy="160" r="110" fill="none" stroke="#43403a" stroke-width="2"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" text-anchor="middle">
+    <circle cx="240" cy="50" r="24" fill="#1b1916" stroke="#bdb5aa"/><text x="240" y="47" fill="#8a8277" font-size="10">000</text><text x="240" y="61" fill="#f3eee7">0</text>
+    <circle cx="318" cy="82" r="24" fill="#1b1916" stroke="#4fd68b"/><text x="318" y="79" fill="#8a8277" font-size="10">001</text><text x="318" y="93" fill="#4fd68b">1</text>
+    <circle cx="350" cy="160" r="24" fill="#1b1916" stroke="#4fd68b"/><text x="350" y="157" fill="#8a8277" font-size="10">010</text><text x="350" y="171" fill="#4fd68b">2</text>
+    <circle cx="318" cy="238" r="24" fill="#1b1916" stroke="#4fd68b"/><text x="318" y="235" fill="#8a8277" font-size="10">011</text><text x="318" y="249" fill="#4fd68b">3</text>
+    <circle cx="240" cy="270" r="24" fill="#1b1916" stroke="#ff7a1a"/><text x="240" y="267" fill="#8a8277" font-size="10">100</text><text x="240" y="281" fill="#ff7a1a">−4</text>
+    <circle cx="162" cy="238" r="24" fill="#1b1916" stroke="#ff7a1a"/><text x="162" y="235" fill="#8a8277" font-size="10">101</text><text x="162" y="249" fill="#ff7a1a">−3</text>
+    <circle cx="130" cy="160" r="24" fill="#1b1916" stroke="#ff7a1a"/><text x="130" y="157" fill="#8a8277" font-size="10">110</text><text x="130" y="171" fill="#ff7a1a">−2</text>
+    <circle cx="162" cy="82" r="24" fill="#1b1916" stroke="#ff7a1a"/><text x="162" y="79" fill="#8a8277" font-size="10">111</text><text x="162" y="93" fill="#ff7a1a">−1</text>
+  </g>
+  <path d="M296 268 Q 275 292 262 280" stroke="#f2c75c" stroke-width="2.5" fill="none"/>
+  <text x="300" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#f2c75c">overflow: 3 + 1 = −4</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#bdb5aa">
+    <text x="430" y="90">Somar 1 anda uma casa no sentido horário.</text>
+    <text x="430" y="122">O bit mais alto ligado (laranja) vale −4.</text>
+    <text x="430" y="154">Há 4 negativos e só 3 positivos:</text>
+    <text x="430" y="172">o zero ocupa uma das casas.</text>
+    <text x="430" y="210">Com 32 bits é igual, com 2³² casas:</text>
+    <text x="430" y="228" font-family="Cascadia Code, Consolas, monospace" fill="#f3eee7">MAX_VALUE + 1 = MIN_VALUE</text>
+  </g>
+</svg>

@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Lambdas não podem lançar checked se o método da interface funcional não as declarar.',
     'Exceções unchecked ficam fora de todas essas regras.',
   ],
+  ia: {
+    uso:
+      'Neste assunto, a IA serve bem para explicar uma mensagem como `overridden method does not throw Exception` e para listar o que uma sobrescrita pode declarar. Ela erra ao aplicar aos construtores a regra dos métodos, que ali é a inversa, e ao propor lambdas que lançam checked em interfaces de `java.util.function`.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui as classes e a mensagem do javac>\n- Para cada método sobrescrito e cada construtor, diga quais exceções checked ele pode declarar e por quê.\n- Explique qual cláusula throws o compilador usa em cada chamada, pelo tipo da referência.\n- Corrija sem trocar tudo por RuntimeException e sem acrescentar throws Exception no main.\n- Termine com dois trechos parecidos, um de sobrescrita e um de construtor, para eu dizer se compilam.',
+    erros: [
+      'Diz que o construtor da subclasse pode declarar menos exceções que o da superclasse, como acontece com métodos.',
+      'Escreve uma lambda de `Function` ou `Consumer` que lança uma checked, o que não compila.',
+      'Afirma que a chamada pela referência da superclasse dispensa o `try` quando o objeto é de uma subclasse que não lança nada.',
+      'Sugere `@SneakyThrows` ou o truque de genéricos para fugir da regra, sem avisar que o `catch` de quem chama deixa de funcionar.',
+    ],
+    conferir: [
+      'Compile cada versão: todas as regras desta aula são de compilação.',
+      'Use `Ctrl+U` no IntelliJ para ver o `throws` do método original.',
+      'Para lambdas, abra a interface funcional e leia a assinatura do método abstrato dela.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Overriding and Hiding Methods',
@@ -167,6 +184,187 @@ public class Repositorios {
     comentarios:
       'As três implementações usam as três liberdades da regra: não declarar nada, declarar uma subclasse e tratar internamente. Quem usa a interface precisa tratar `RepositorioException`; quem tem a referência concreta de `EmMemoria`, não. É o mesmo raciocínio do polimorfismo: o compilador confia no tipo da variável.',
   },
+  bugs: [
+    {
+      id: 'pleno-t1-e06-b01',
+      dificuldade: 1,
+      sintoma: 'A nova exportação em PDF não compila: `exportar(String) in ExportadorPdf cannot override exportar(String) in Exportador`, com a observação `overridden method does not throw Exception`.',
+      codigo: `import java.io.IOException;
+
+public class Exportacao {
+    static class Exportador {
+        String exportar(String relatorio) throws IOException {
+            return relatorio + ".csv";
+        }
+    }
+
+    static class ExportadorPdf extends Exportador {
+        @Override
+        String exportar(String relatorio) throws Exception {
+            return relatorio + ".pdf";
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        Exportador e = new ExportadorPdf();
+        System.out.println(e.exportar("vendas-outubro"));
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.io.IOException;
+
+public class Exportacao {
+    static class Exportador {
+        String exportar(String relatorio) throws IOException {
+            return relatorio + ".csv";
+        }
+    }
+
+    static class ExportadorPdf extends Exportador {
+        @Override
+        String exportar(String relatorio) throws IOException {
+            return relatorio + ".pdf";
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        Exportador e = new ExportadorPdf();
+        System.out.println(e.exportar("vendas-outubro"));
+    }
+}`,
+      saidaCorrigida: 'vendas-outubro.pdf',
+      dica: 'O que o método original promete lançar? A versão sobrescrita pode prometer mais que isso?',
+      explicacao:
+        'Um método sobrescrito não pode declarar uma checked mais ampla que a do original. O código que usa um `Exportador` se preparou só para `IOException`; um `ExportadorPdf` que lançasse qualquer `Exception` quebraria essa promessa. Declare `IOException`, uma subclasse dela, ou nada.',
+    },
+    {
+      id: 'pleno-t1-e06-b02',
+      dificuldade: 2,
+      sintoma: 'A classe `Planilha` não compila, e o `javac` aponta a chamada ao construtor da superclasse: `unreported exception IOException; must be caught or declared to be thrown`.',
+      codigo: `import java.io.IOException;
+
+public class Planilhas {
+    static class Arquivo {
+        final String nome;
+
+        Arquivo(String nome) throws IOException {
+            if (nome.isBlank()) throw new IOException("nome de arquivo vazio");
+            this.nome = nome;
+        }
+    }
+
+    static class Planilha extends Arquivo {
+        Planilha(String nome) { super(nome); }
+
+        String completo() {
+            return nome + ".xlsx";
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            System.out.println(new Planilha("notas").completo());
+            System.out.println(new Planilha(" ").completo());
+        } catch (Exception e) {
+            System.out.println("não criou: " + e.getMessage());
+        }
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.io.IOException;
+
+public class Planilhas {
+    static class Arquivo {
+        final String nome;
+
+        Arquivo(String nome) throws IOException {
+            if (nome.isBlank()) throw new IOException("nome de arquivo vazio");
+            this.nome = nome;
+        }
+    }
+
+    static class Planilha extends Arquivo {
+        Planilha(String nome) throws IOException { super(nome); }
+
+        String completo() {
+            return nome + ".xlsx";
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            System.out.println(new Planilha("notas").completo());
+            System.out.println(new Planilha(" ").completo());
+        } catch (Exception e) {
+            System.out.println("não criou: " + e.getMessage());
+        }
+    }
+}`,
+      saidaCorrigida: 'notas.xlsx\nnão criou: nome de arquivo vazio',
+      dica: 'Quem chama o construtor de `Arquivo`? Dá para pôr essa chamada dentro de um `try`?',
+      explicacao:
+        'Com construtores, a regra se inverte: o da subclasse chama o da superclasse com `super(...)`, que precisa ser a primeira instrução e não pode ficar num `try`. Por isso ele precisa declarar as checked do construtor da superclasse, ou uma mais ampla. Num método sobrescrito, ao contrário, declarar menos é sempre permitido.',
+    },
+    {
+      id: 'pleno-t1-e06-b03',
+      dificuldade: 3,
+      sintoma: 'A importação deveria pular os arquivos com problema e seguir com os outros, mas para no segundo com `IOException: formato não suportado: vendas.xls`, saindo de um método sem nenhum `throws`.',
+      codigo: `import java.io.IOException;
+
+public class Importacao {
+    @SuppressWarnings("unchecked")
+    static <E extends Throwable> void lancar(Throwable t) throws E {
+        throw (E) t;
+    }
+
+    static void importar(String arquivo) {
+        if (arquivo.endsWith(".xls")) Importacao.<RuntimeException>lancar(new IOException("formato não suportado: " + arquivo));
+        System.out.println("importado " + arquivo);
+    }
+
+    public static void main(String[] args) {
+        for (String arquivo : new String[] {"clientes.csv", "vendas.xls", "estoque.csv"}) {
+            try {
+                importar(arquivo);
+            } catch (RuntimeException e) {
+                System.out.println("pulando " + arquivo + ": " + e.getMessage());
+            }
+        }
+    }
+}`,
+      linha: 18,
+      efeito: { tipo: 'excecao', nome: 'IOException' },
+      correcao: `import java.io.IOException;
+
+public class Importacao {
+    @SuppressWarnings("unchecked")
+    static <E extends Throwable> void lancar(Throwable t) throws E {
+        throw (E) t;
+    }
+
+    static void importar(String arquivo) {
+        if (arquivo.endsWith(".xls")) Importacao.<RuntimeException>lancar(new IOException("formato não suportado: " + arquivo));
+        System.out.println("importado " + arquivo);
+    }
+
+    public static void main(String[] args) {
+        for (String arquivo : new String[] {"clientes.csv", "vendas.xls", "estoque.csv"}) {
+            try {
+                importar(arquivo);
+            } catch (Exception e) {
+                System.out.println("pulando " + arquivo + ": " + e.getMessage());
+            }
+        }
+    }
+}`,
+      saidaCorrigida: 'importado clientes.csv\npulando vendas.xls: formato não suportado: vendas.xls\nimportado estoque.csv',
+      dica: '`importar` não declara exceções checked, mas usa um truque de genéricos para lançar. Uma `IOException` é uma `RuntimeException`?',
+      explicacao:
+        'O método genérico `lancar` engana o compilador, o *sneaky throw*: para o `javac`, ele lança `RuntimeException`, mas na execução sai a `IOException` intacta, porque a regra das checked não existe na JVM. Como `IOException` não é `RuntimeException`, o `catch` não a pega. Bibliotecas que escondem checked assim, como o `@SneakyThrows` do Lombok, exigem `catch (Exception e)` de quem chama, ou melhor, que não escondam.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t1-e06-q01',
@@ -181,6 +379,7 @@ public class Repositorios {
       ],
       resposta: 0,
       explicacao: 'A subclasse pode prometer menos problemas, nunca mais. Unchecked não entram na conta.',
+      dica: 'Pense no que o código que usa o tipo mais geral se preparou para tratar.',
     },
     {
       id: 'pleno-t1-e06-q02',
@@ -205,6 +404,7 @@ public class T {
 }`,
       resposta: 'sub sub',
       explicacao: 'Os dois objetos são `Sub`, e a versão sobrescrita roda nos dois casos. O `throws` do `main` cobre a chamada pela referência `Base`.',
+      dica: 'Qual versão de `f` roda em cada chamada, se o objeto é o mesmo tipo?',
     },
     {
       id: 'pleno-t1-e06-q03',
@@ -231,6 +431,7 @@ class Sub extends Base {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Quem chama `Base.abrir()` só se preparou para `FileNotFoundException`. A subclasse não pode ampliar o que a superclasse prometeu.',
+      dica: '`IOException` é mais ampla que `FileNotFoundException`.',
     },
     {
       id: 'pleno-t1-e06-q04',
@@ -247,6 +448,7 @@ class Sub extends Base {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Restringir a checked e trocá-la por unchecked são permitidos, assim como acrescentar unchecked. Acrescentar ou ampliar checked não.',
+      dica: 'Procure as sobrescritas que ampliam ou acrescentam uma checked.',
     },
     {
       id: 'pleno-t1-e06-q05',
@@ -277,6 +479,7 @@ class Sub extends Base {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 13 },
       explicacao: 'O compilador olha o `throws` do tipo da referência. Pela `ConexaoLocal`, não há exceção; pela `Conexao`, há, mesmo sendo o mesmo objeto.',
+      dica: 'O compilador olha o `throws` do tipo da referência.',
     },
     {
       id: 'pleno-t1-e06-q06',
@@ -309,6 +512,7 @@ public class Leitura {
       respostas: ['FileNotFoundException', 'IOException', 'Exception'],
       saida: 'não achou dados.txt',
       explicacao: 'Pela referência `Arquivo`, basta tratar `FileNotFoundException`, a exceção que essa versão declara. Tipos mais amplos também servem.',
+      dica: 'O `catch` aceita a exceção lançada ou qualquer superclasse dela.',
     },
     {
       id: 'pleno-t1-e06-q07',
@@ -330,6 +534,7 @@ class ConexaoSegura extends Conexao {
 }`,
       resposta: 10,
       explicacao: 'O construtor de `ConexaoSegura` chama `super()` implicitamente, e esse construtor pode lançar `IOException`. Como não dá para tratar a chamada ao `super`, o construtor precisa declarar a exceção.',
+      dica: 'O construtor da subclasse chama o da superclasse, que declara uma checked.',
     },
     {
       id: 'pleno-t1-e06-q08',
@@ -358,6 +563,7 @@ class ConexaoSegura extends Conexao {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O método da interface declara `throws Exception`, então a lambda pode lançar uma checked. Quem chama `executar()` precisa tratar.',
+      dica: '`Tarefa.executar()` declara `throws Exception`.',
     },
     {
       id: 'pleno-t1-e06-q09',
@@ -381,6 +587,7 @@ class ConexaoSegura extends Conexao {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 4 },
       explicacao: 'A lambda é a implementação de `run()`, e um método que implementa outro não pode lançar checked que o original não declara. Uma `RuntimeException` seria aceita.',
+      dica: '`Runnable.run()` não declara nenhuma exceção.',
     },
     {
       id: 'pleno-t1-e06-q10',
@@ -395,6 +602,7 @@ class ConexaoSegura extends Conexao {
       ],
       resposta: 0,
       explicacao: 'Quem usa o tipo mais geral só está preparado para as exceções que ele declara. Ampliar seria uma surpresa; restringir, não.',
+      dica: 'A regra protege quem usa o tipo mais geral.',
     },
     {
       id: 'pleno-t1-e06-q11',
@@ -425,6 +633,7 @@ public class T {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Construtores não são sobrescritos. O da subclasse precisa cobrir as exceções do `super()`, e `Exception` cobre `IOException`.',
+      dica: 'No construtor, declarar uma exceção mais ampla é permitido.',
     },
     {
       id: 'pleno-t1-e06-q12',
@@ -439,6 +648,7 @@ public class T {
       ],
       resposta: 0,
       explicacao: 'É o princípio da substituição: um objeto da subclasse precisa funcionar em qualquer lugar onde o da superclasse funcionaria, sem surpresas.',
+      dica: 'Pense no código que só conhece a superclasse.',
     },
     {
       id: 'pleno-t1-e06-q13',
@@ -469,6 +679,7 @@ public class T {
 }`,
       resposta: '5\ndivisor zero',
       explicacao: 'Declarar uma unchecked na sobrescrita é sempre permitido, mesmo que o original não declare nada. A mensagem é a da exceção lançada pela subclasse.',
+      dica: 'Acrescentar uma unchecked ao `throws` é sempre permitido.',
     },
     {
       id: 'pleno-t1-e06-q14',
@@ -484,6 +695,7 @@ public class T {
       ],
       respostas: [0, 1, 2],
       explicacao: '`SQLException` é uma checked sem relação com `IOException`, portanto nova. `Exception` é mais ampla. As outras três restringem ou só acrescentam unchecked.',
+      dica: 'Menos exceções, exceções mais estreitas ou unchecked: tudo isso cabe.',
     },
     {
       id: 'pleno-t1-e06-q15',
@@ -498,6 +710,7 @@ public class T {
       ],
       resposta: 0,
       explicacao: 'Para a JVM, todas as exceções são iguais. É por isso que o truque do *sneaky throw* funciona e que linguagens como Kotlin dispensam exceções checked.',
+      dica: 'A cláusula `throws` vira um atributo de documentação no `.class`.',
     },
   ],
 };

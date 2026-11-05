@@ -6,12 +6,12 @@ import type { Progresso } from './store';
 
 /*
  * Sistema de notas (docs/NOTAS.md): cada questão vale de 0 a 1, cada episódio tem
- * média de 0 a 10 e a temporada é aprovada com média 7. Por enquanto vale só no
- * cargo Estagiário; os outros cargos seguem as regras antigas.
+ * média de 0 a 10 e a temporada é aprovada com média 7. Vale do Aprendiz ao Júnior;
+ * os outros cargos seguem as regras antigas.
  */
 
 export const MEDIA_APROVACAO = 7;
-export const CARGOS_COM_NOTA = new Set(['estagiario']);
+export const CARGOS_COM_NOTA = new Set(['aprendiz', 'estagiario', 'junior']);
 
 /** Peso de cada bug da aba Depuração na média do episódio, contra 1 de uma questão comum. */
 export const PESO_BUG = 0.5;

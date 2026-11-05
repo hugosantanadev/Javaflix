@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'A lambda só lança as exceções checked que o método da interface declara.',
     '`this` numa lambda é o objeto externo, e um parâmetro não pode repetir o nome de uma variável local.',
   ],
+  ia: {
+    uso:
+      'Para a sintaxe de lambdas, a IA é útil para converter classes anônimas e explicar um erro como `invalid lambda parameter declaration` ou `reference to ... is ambiguous`. Mas ela mistura estilos de parâmetro, esquece que a lambda precisa de um tipo-alvo e não percebe sobrecargas que tornam uma chamada ambígua.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui as lambdas e a mensagem do javac>\n- Diga se cada lambda compila e, se não, qual regra de sintaxe ou de tipo-alvo foi violada.\n- Para cada chamada com sobrecargas, diga qual versão o compilador escolhe ou por que é ambígua.\n- Mostre a correção mínima, sem trocar a lambda por uma classe anônima.\n- Termine com três lambdas parecidas para eu dizer se compilam, com as respostas no fim.',
+    erros: [
+      'Mistura estilos de parâmetro, como `(Integer a, b) -> a + b`, que não compila.',
+      'Usa `var` para guardar uma lambda, sem tipo-alvo.',
+      'Escreve `x -> return x * 2`, com `return` num corpo sem chaves.',
+      'Cria sobrecargas com `Supplier` e `Callable` e não percebe que `() -> 1` fica ambígua.',
+    ],
+    conferir: [
+      'Compile cada lambda: os erros desta aula são todos de compilação.',
+      'Use `Ctrl+Shift+P` para ver a interface funcional escolhida.',
+      'Para sobrecargas, teste uma lambda com valor e outra sem, e veja qual método roda.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Writing Your First Lambda Expression',
@@ -184,6 +201,113 @@ public class Calculadora {
     comentarios:
       'Cada operação virou um dado, guardado num mapa e escolhido em tempo de execução: é o padrão *strategy* sem nenhuma classe. As lambdas da divisão e da potência mostram o corpo de bloco, com `throw` num caminho e `return` no outro. Como `ArithmeticException` é unchecked, ela pode sair de um `BinaryOperator`, cujo `apply` não declara exceções.',
   },
+  bugs: [
+    {
+      id: 'pleno-t5-e01-b01',
+      dificuldade: 1,
+      sintoma: 'A lambda que calcula o frete não compila: `invalid lambda parameter declaration`, com a observação `cannot mix implicitly-typed and explicitly-typed parameters`.',
+      codigo: `import java.util.function.BiFunction;
+
+public class Frete {
+    public static void main(String[] args) {
+        BiFunction<Double, Integer, Double> calcular = (Double peso, distancia) -> peso * 0.5 + distancia * 0.1;
+        System.out.println("frete: " + calcular.apply(4.0, 120));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.function.BiFunction;
+
+public class Frete {
+    public static void main(String[] args) {
+        BiFunction<Double, Integer, Double> calcular = (peso, distancia) -> peso * 0.5 + distancia * 0.1;
+        System.out.println("frete: " + calcular.apply(4.0, 120));
+    }
+}`,
+      saidaCorrigida: 'frete: 14.0',
+      dica: 'Os dois parâmetros seguem o mesmo estilo de declaração?',
+      explicacao:
+        'Os parâmetros de uma lambda seguem um único estilo: todos sem tipo, todos com tipo ou todos com `var`. Aqui, `peso` tem tipo e `distancia` não. Como o tipo-alvo, `BiFunction<Double, Integer, Double>`, já diz os tipos, o mais simples é tirar os dois: `(peso, distancia) -> ...`.',
+    },
+    {
+      id: 'pleno-t5-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O comprovante, que deveria mostrar os itens no momento do pedido, saiu com um item acrescentado depois: `comprovante emitido na hora do pedido -> itens no pedido: [café, pão de queijo]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+public class Pedido {
+    public static void main(String[] args) {
+        List<String> itens = new ArrayList<>(List.of("café"));
+        Supplier<String> comprovante = () -> "itens no pedido: " + itens;
+        itens.add("pão de queijo");
+        System.out.println("comprovante emitido na hora do pedido -> " + comprovante.get());
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'comprovante emitido na hora do pedido -> itens no pedido: [café, pão de queijo]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+public class Pedido {
+    public static void main(String[] args) {
+        List<String> itens = new ArrayList<>(List.of("café"));
+        String fotografia = "itens no pedido: " + itens; Supplier<String> comprovante = () -> fotografia;
+        itens.add("pão de queijo");
+        System.out.println("comprovante emitido na hora do pedido -> " + comprovante.get());
+    }
+}`,
+      saidaCorrigida: 'comprovante emitido na hora do pedido -> itens no pedido: [café]',
+      dica: 'Quando o corpo da lambda roda: na linha em que ela é criada ou quando alguém chama `get()`?',
+      explicacao:
+        'Uma lambda guarda o código, não o resultado: o corpo só roda no `get()`, e a essa altura a lista já tinha o pão de queijo. A variável `itens` foi capturada, mas o objeto que ela aponta continuou mudando. Para registrar o estado de um momento, calcule o valor antes e capture o resultado, como faz a correção.',
+    },
+    {
+      id: 'pleno-t5-e01-b03',
+      dificuldade: 3,
+      sintoma: 'Depois que alguém acrescentou uma versão de `agendar` que recebe um `Callable`, a chamada antiga parou de compilar: `reference to agendar is ambiguous`.',
+      codigo: `import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+
+public class Relatorios {
+    static void agendar(Supplier<Integer> tarefa) {
+        System.out.println("supplier: " + tarefa.get());
+    }
+
+    static void agendar(Callable<Integer> tarefa) throws Exception {
+        System.out.println("callable: " + tarefa.call());
+    }
+
+    public static void main(String[] args) throws Exception {
+        agendar(() -> 42);
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+
+public class Relatorios {
+    static void agendar(Supplier<Integer> tarefa) {
+        System.out.println("supplier: " + tarefa.get());
+    }
+
+    static void agendar(Callable<Integer> tarefa) throws Exception {
+        System.out.println("callable: " + tarefa.call());
+    }
+
+    public static void main(String[] args) throws Exception {
+        agendar((Supplier<Integer>) () -> 42);
+    }
+}`,
+      saidaCorrigida: 'supplier: 42',
+      dica: 'A lambda `() -> 42` serve a quantas das duas sobrecargas? O compilador tem como preferir uma delas?',
+      explicacao:
+        'A lambda não tem tipo próprio, e `() -> 42` é compatível com `Supplier<Integer>` e com `Callable<Integer>`: as duas sobrecargas servem, e nenhuma é mais específica, então a chamada é ambígua. Um cast fornece o tipo-alvo, `(Supplier<Integer>) () -> 42`. Numa API sua, evite sobrecargas que recebem interfaces funcionais com a mesma forma: dê nomes diferentes aos métodos.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t5-e01-q01',
@@ -201,6 +325,7 @@ public class Calculadora {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Os parâmetros não podem misturar estilos, um tipo declarado exige parênteses, e um corpo entre chaves precisa de `return` e de ponto e vírgula.',
+      dica: 'Um estilo só para os parâmetros, e tipo declarado exige parênteses.',
     },
     {
       id: 'pleno-t5-e01-q02',
@@ -225,6 +350,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'O compilador deduz o tipo de `var` a partir do lado direito, e a lambda só ganha tipo a partir do lado esquerdo. Um espera o outro, e nada se resolve.',
+      dica: '`var` não fornece um tipo-alvo.',
     },
     {
       id: 'pleno-t5-e01-q03',
@@ -253,6 +379,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`() -> "ok"` devolve um valor e só serve ao `Callable`. A chamada a `print` e o bloco vazio não devolvem nada e só servem ao `Runnable`.',
+      dica: 'Quem devolve valor só serve a `Callable`; quem é `void`, só a `Runnable`.',
     },
     {
       id: 'pleno-t5-e01-q04',
@@ -271,6 +398,7 @@ public class Teste {
 }`,
       resposta: 7,
       explicacao: 'Os parâmetros de uma lambda vivem no mesmo escopo do método. Um parâmetro chamado `base` colide com a variável local de mesmo nome.',
+      dica: 'Um parâmetro de lambda não pode repetir o nome de uma variável local.',
     },
     {
       id: 'pleno-t5-e01-q05',
@@ -302,6 +430,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A lambda não é um objeto com escopo próprio para `this`, que continua sendo o `Teste`. A classe anônima é uma instância nova, com o próprio campo `id`.',
+      dica: '`this` numa lambda é o objeto de fora.',
     },
     {
       id: 'pleno-t5-e01-q06',
@@ -325,6 +454,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'O corpo da lambda é o corpo de `call()` ou de `run()`. `call()` declara `throws Exception`; `run()` não. O `throws` do `main` não vale para dentro da lambda.',
+      dica: '`run()` não declara exceções checked.',
     },
     {
       id: 'pleno-t5-e01-q07',
@@ -346,6 +476,7 @@ public class Teste {
 }`,
       resposta: '21fim',
       explicacao: 'Os dois resultados `Integer` são somados (12 + 9) antes de a concatenação com a `String` começar.',
+      dica: 'Cada lambda devolve um número, e a soma acontece antes de virar texto.',
     },
     {
       id: 'pleno-t5-e01-q08',
@@ -363,6 +494,7 @@ public class Tamanho {
       respostas: ['var', 'String'],
       saida: '5',
       explicacao: 'Um modificador como `final` exige que o parâmetro tenha tipo declarado, e desde o Java 11 o `var` serve para isso.',
+      dica: 'Com `final`, o parâmetro precisa de um tipo ou de `var`.',
     },
     {
       id: 'pleno-t5-e01-q09',
@@ -390,6 +522,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Uma chamada de método como corpo serve aos dois tipos: no `Consumer`, o `boolean` é descartado; no `Predicate`, é o resultado.',
+      dica: 'Uma chamada de método serve a `void` e a quem devolve valor.',
     },
     {
       id: 'pleno-t5-e01-q10',
@@ -411,6 +544,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 3 },
       explicacao: '`5` não é uma instrução, é só um valor, e um método `void` não tem o que fazer com ele. Uma chamada de método seria aceita, mesmo que devolvesse algo.',
+      dica: '`run()` é `void`.',
     },
     {
       id: 'pleno-t5-e01-q11',
@@ -426,6 +560,7 @@ public class Teste {
       ],
       respostas: [0, 1, 2],
       explicacao: 'O tipo-alvo precisa ser uma interface funcional conhecida no ponto da lambda. `var` não tem tipo próprio, e `Object` não é interface funcional.',
+      dica: 'Três contextos dizem qual interface funcional se espera.',
     },
     {
       id: 'pleno-t5-e01-q12',
@@ -453,6 +588,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 10 },
       explicacao: 'As duas interfaces têm a mesma forma: nada entra, um `Integer` sai. A diferença no `throws` não desempata, e o compilador recusa a chamada.',
+      dica: 'As duas sobrecargas aceitam a mesma lambda.',
     },
     {
       id: 'pleno-t5-e01-q13',
@@ -471,6 +607,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O cast dá à lambda o tipo-alvo `Supplier<String>`. Depois, o objeto pode ser guardado como `Object` e convertido de volta.',
+      dica: 'O cast fornece o tipo-alvo.',
     },
     {
       id: 'pleno-t5-e01-q14',
@@ -500,6 +637,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'O corpo de bloco segue as regras de um método: se devolve valor, todo caminho que termina normalmente precisa de `return`.',
+      dica: 'Todo caminho de um corpo de bloco que devolve valor precisa de `return`.',
     },
     {
       id: 'pleno-t5-e01-q15',
@@ -514,6 +652,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A classe que implementa a interface só é criada na execução, em memória, pelo `LambdaMetafactory`. Por isso lambdas não deixam arquivos `$1.class`.',
+      dica: 'O corpo da lambda vira um método na própria classe.',
     },
   ],
 };

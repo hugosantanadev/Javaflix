@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     'Um `byte` negativo promovido a `int` ganha 24 bits 1 à esquerda. Use `b & 0xFF` para ler de 0 a 255.',
     '`>>` preserva o sinal e arredonda para baixo; `/` arredonda para zero. `-7 >> 1` é −4 e `-7 / 2` é −3.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a converter números para complemento de dois, explicar um overflow e encontrar contas em `int` que deveriam ser `long`. Confira as conversões com `Integer.toBinaryString` e as contas com `Math.*Exact`.',
+    pedido:
+      'Revise este código Java procurando overflow de inteiros.\n<cole o código aqui>\n- Aponte cada conta feita em int que pode passar de 2.147.483.647, com um exemplo de entrada que estoura.\n- Diga onde usar long, Math.addExact ou BigInteger.\n- Aponte usos de Math.abs em hashCode e meios de busca binária com (a + b) / 2.',
+    erros: [
+      'Usa `int` para milissegundos, contadores e IDs que crescem.',
+      'Escreve `(inicio + fim) / 2` para o meio da busca binária.',
+      'Usa `Math.abs(hashCode) % n` para calcular índices.',
+    ],
+    conferir: [
+      'Teste com `Integer.MAX_VALUE` e `Integer.MIN_VALUE` como entrada.',
+      'Troque o `+` por `Math.addExact` nos testes para o estouro aparecer.',
+      'Confira os bits com `Integer.toBinaryString`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JLS 4.2.2: Integer Operations',
@@ -151,6 +167,100 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O método `bits` funciona para negativos sem nenhum caso especial: um `int` já está em complemento de dois, então basta ler os n bits de baixo. Isso é o mesmo que o cast para um tipo menor faz. E `valor` é a definição da aula escrita em Java: só o primeiro bit tem peso negativo. Teste `valor(bits(x, 8))` para x de −128 a 127 e confira que sempre volta x.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t3-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O byte lido do arquivo deveria valer 200, mas a soma do cabeçalho mostra `-56`.',
+      codigo: `public class Cabecalho {
+    public static void main(String[] args) {
+        byte[] lidos = {(byte) 200};
+        int total = 0;
+        for (byte b : lidos) {
+            total += b;
+        }
+        System.out.println(total);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: '-56' },
+      correcao: `public class Cabecalho {
+    public static void main(String[] args) {
+        byte[] lidos = {(byte) 200};
+        int total = 0;
+        for (byte b : lidos) {
+            total += b & 0xFF;
+        }
+        System.out.println(total);
+    }
+}`,
+      saidaCorrigida: '200',
+      dica: 'O `byte` do Java tem sinal. Quanto vale o bit mais alto de `1100 1000` num `byte`?',
+      explicacao: 'Num `byte`, o bit mais alto vale −128, e 200 vira −128 + 72 = −56. Ao somar, o `byte` é estendido com sinal para `int`. A máscara `b & 0xFF` zera os bits de cima e lê o byte como um número de 0 a 255.',
+    },
+    {
+      id: 'aprendiz-t3-e02-b02',
+      dificuldade: 2,
+      sintoma: 'A busca num índice enorme calcula o meio entre 1.500.000.000 e 2.000.000.000 como `-397483648`.',
+      codigo: `public class Busca {
+    static int meio(int inicio, int fim) {
+        return (inicio + fim) / 2;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(meio(1_500_000_000, 2_000_000_000));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '-397483648' },
+      correcao: `public class Busca {
+    static int meio(int inicio, int fim) {
+        return inicio + (fim - inicio) / 2;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(meio(1_500_000_000, 2_000_000_000));
+    }
+}`,
+      saidaCorrigida: '1750000000',
+      dica: 'Os dois números cabem num `int`. E a soma deles?',
+      explicacao: 'A soma passa de 2³¹ − 1 e dá a volta antes da divisão. Somando ao início metade da distância, nenhum valor intermediário passa de `fim`. É o bug que ficou nove anos na busca binária do JDK.',
+    },
+    {
+      id: 'aprendiz-t3-e02-b03',
+      dificuldade: 3,
+      sintoma: 'A tabela hash de brinquedo lança `ArrayIndexOutOfBoundsException: Index -8 out of bounds for length 10` para uma chave específica.',
+      codigo: `public class TabelaHash {
+    static int balde(String chave, int n) {
+        return Math.abs(chave.hashCode()) % n;
+    }
+
+    public static void main(String[] args) {
+        String[] baldes = new String[10];
+        String chave = "polygenelubricants";
+        baldes[balde(chave, baldes.length)] = chave;
+        System.out.println("guardado");
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
+      correcao: `public class TabelaHash {
+    static int balde(String chave, int n) {
+        return Math.floorMod(chave.hashCode(), n);
+    }
+
+    public static void main(String[] args) {
+        String[] baldes = new String[10];
+        String chave = "polygenelubricants";
+        baldes[balde(chave, baldes.length)] = chave;
+        System.out.println("guardado");
+    }
+}`,
+      saidaCorrigida: 'guardado',
+      dica: 'O `hashCode` desta chave é `Integer.MIN_VALUE`. O que `Math.abs` devolve para ele?',
+      explicacao: 'O valor absoluto de `Integer.MIN_VALUE` não cabe num `int`, e `Math.abs` devolve o próprio mínimo, negativo. O resto de um negativo também é negativo. `Math.floorMod` devolve sempre um resto entre 0 e n − 1.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t3-e02-q01',
@@ -160,6 +270,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['−3', '13', '−5', '−2', '3'],
       resposta: 0,
       explicacao: 'Os pesos são −8, 4, 2 e 1. Então `1101` = −8 + 4 + 1 = −3. O 13 é a leitura sem sinal; o −5 é a leitura em sinal e magnitude.',
+      dica: 'Pesos −8, 4, 2 e 1.',
     },
     {
       id: 'aprendiz-t3-e02-q02',
@@ -169,6 +280,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['−32.768 a 32.767', '−32.767 a 32.767', '0 a 65.535', '−65.536 a 65.535', '−32.768 a 32.768'],
       resposta: 0,
       explicacao: 'Com n bits, a faixa é −2ⁿ⁻¹ a 2ⁿ⁻¹ − 1, e 2¹⁵ = 32.768. O lado negativo tem um valor a mais porque o zero ocupa uma das combinações do lado não negativo. 0 a 65.535 é a faixa do `char`, que não tem sinal.',
+      dica: '16 bits: de −2¹⁵ a 2¹⁵ − 1.',
     },
     {
       id: 'aprendiz-t3-e02-q03',
@@ -180,6 +292,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '130 não cabe num `byte`, então o cast fica com os 8 bits de baixo, `1000 0010`. Com o bit de cima valendo −128: −128 + 2 = −126. Outra conta: 130 − 256 = −126.',
+      dica: '130 − 256.',
     },
     {
       id: 'aprendiz-t3-e02-q04',
@@ -191,6 +304,7 @@ System.out.println(~-1);
 System.out.println(-~5);`,
       resposta: '-8\n0\n6',
       explicacao: 'Como x + ~x = −1, ~x = −x − 1. Então ~7 = −8, ~(−1) = 0 e ~5 = −6, que negado dá 6.',
+      dica: '~x = −x − 1.',
     },
     {
       id: 'aprendiz-t3-e02-q05',
@@ -203,6 +317,7 @@ System.out.println(trintaDias);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A multiplicação é feita em `int`, que estoura antes de o resultado virar `long`. 2.592.000.000 − 2³² = 2.592.000.000 − 4.294.967.296 = −1.702.967.296. Com `1000L * ...` sairia o valor certo.',
+      dica: 'A conta é toda em `int` antes de virar `long`.',
     },
     {
       id: 'aprendiz-t3-e02-q06',
@@ -222,6 +337,7 @@ System.out.println(trintaDias);`,
 System.out.println((Integer.MAX_VALUE + 1 == m) + " " + (Math.abs(m) == m) + " " + (-m == m)
         + " " + (m - 1 == m) + " " + (Integer.MAX_VALUE * 2 == m));`,
       explicacao: 'MAX + 1 dá a volta para MIN. Como +2³¹ não cabe num `int`, negar MIN dá o próprio MIN, e `Math.abs` também. MIN − 1 dá a volta para MAX, e MAX × 2 dá −2 (`0111...1` deslocado vira `1111...10`).',
+      dica: 'A faixa é assimétrica: o positivo do mínimo não cabe.',
     },
     {
       id: 'aprendiz-t3-e02-q07',
@@ -236,6 +352,7 @@ System.out.println((Integer.MAX_VALUE + 1 == m) + " " + (Math.abs(m) == m) + " "
       ],
       resposta: 0,
       explicacao: 'Somando x e ~x, cada coluna tem um único 1, sem vai-um: o resultado é `111...1`. Em complemento de dois isso vale −1. De x + ~x = −1 vem ~x + 1 = −x. É álgebra, não convenção.',
+      dica: 'Some x com ~x e veja os bits.',
     },
     {
       id: 'aprendiz-t3-e02-q08',
@@ -253,6 +370,7 @@ System.out.println((Integer.MAX_VALUE + 1 == m) + " " + (Math.abs(m) == m) + " "
       respostas: ['>>>'],
       saida: '1750000000',
       explicacao: 'A soma estoura e vira negativa, mas os 32 bits ainda guardam 3.500.000.000 sem sinal. O `>>>` desloca pondo zero à esquerda, o que lê esses bits como positivos e divide por 2. Com `>>` o sinal seria mantido e o meio sairia negativo. É a linha que está no `Arrays.binarySearch` do JDK.',
+      dica: 'O deslocamento sem sinal lê os 32 bits como positivo.',
     },
     {
       id: 'aprendiz-t3-e02-q09',
@@ -269,6 +387,7 @@ System.out.println((Integer.MAX_VALUE + 1 == m) + " " + (Math.abs(m) == m) + " "
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ArithmeticException' },
       explicacao: '10¹⁰ não cabe num `int`. A multiplicação comum daria a volta e imprimiria 1.410.065.408 (10¹⁰ − 2 × 2³²), mas os métodos `Exact` lançam `ArithmeticException` justamente para isso não passar em silêncio.',
+      dica: 'Os métodos `Exact` não deixam a conta dar a volta.',
     },
     {
       id: 'aprendiz-t3-e02-q10',
@@ -281,6 +400,7 @@ System.out.println(-9 >> 1);
 System.out.println(-9 / 2);`,
       resposta: '15\n-1\n-5\n-4',
       explicacao: '−1 são 32 bits 1. Com `>>>`, entram zeros e sobram 4 uns: 15. Com `>>`, entram cópias do sinal e tudo continua 1: −1. `>> 1` divide por 2 arredondando para baixo (−4,5 vira −5), enquanto `/` arredonda para zero (−4).',
+      dica: '`>>>` enche de zeros; `>>` copia o sinal e arredonda para baixo; `/` arredonda para zero.',
     },
     {
       id: 'aprendiz-t3-e02-q11',
@@ -293,6 +413,7 @@ System.out.println(b & 0xFF);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `byte` −1 é `1111 1111`. No `&`, ele é promovido a `int` com extensão de sinal (32 uns), e a máscara `0xFF` mantém só os 8 bits de baixo: 255. É o jeito de ler um byte como número de 0 a 255.',
+      dica: 'A máscara zera os bits de cima.',
     },
     {
       id: 'aprendiz-t3-e02-q12',
@@ -310,6 +431,7 @@ System.out.println(b & 0xFF);`,
 }`,
       resposta: 6,
       explicacao: 'Uma constante inteira pode ser atribuída a um `byte` sem cast só se couber na faixa de −128 a 127. O 128 não cabe. Com o cast explícito, como na linha 5, o compilador aceita e descarta os bits de cima.',
+      dica: 'Um literal que não cabe num `byte` precisa de cast.',
     },
     {
       id: 'aprendiz-t3-e02-q13',
@@ -330,6 +452,7 @@ int r2 = -2_000_000_000 + -2_000_000_000;
 int r3 = Integer.MAX_VALUE + Integer.MIN_VALUE;
 System.out.println((r1 < 0) + " " + (r2 > 0) + " " + (r3 != -1));`,
       explicacao: 'O resultado de um positivo com um negativo fica sempre entre os dois, então cabe na faixa. Só sinais iguais podem passar do limite, e aí o resultado sai com o sinal trocado: é a regra que o `Math.addExact` testa.',
+      dica: 'Positivo com negativo nunca estoura.',
     },
     {
       id: 'aprendiz-t3-e02-q14',
@@ -339,6 +462,7 @@ System.out.println((r1 < 0) + " " + (r2 > 0) + " " + (r3 != -1));`,
       opcoes: ['Cerca de 248 dias', 'Cerca de 25 dias', 'Cerca de 68 anos', 'Cerca de 2 anos', 'Nunca, porque o `int` volta a zero'],
       resposta: 0,
       explicacao: '2³¹ centésimos são 21.474.836 segundos, e 21.474.836 ÷ 86.400 ≈ 248,5 dias. Foi o bug do Boeing 787. Em milissegundos, o mesmo `int` estoura em cerca de 25 dias; em segundos, em 68 anos (o problema de 2038).',
+      dica: '2³¹ centésimos, divididos por 100 e por 86.400.',
     },
     {
       id: 'aprendiz-t3-e02-q15',
@@ -350,6 +474,7 @@ System.out.println((r1 < 0) + " " + (r2 > 0) + " " + (r3 != -1));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '−2 é `1111...1110`. Lido sem sinal, o bit de cima vale +2³¹ em vez de −2³¹, o que soma 2³² ao valor: −2 + 4.294.967.296 = 4.294.967.294. O 4294967295 seria o −1.',
+      dica: 'Os mesmos 32 bits, lidos sem sinal: 2³² − 2.',
     },
   ],
 };

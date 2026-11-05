@@ -13,6 +13,22 @@ const episodio: EpisodioConteudo = {
     '`while (false)` não compila (corpo inalcançável), mas `if (false)` compila.',
     'O `javac` otimiza pouco; a otimização pesada é do JIT.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a ler mensagens do compilador e a dizer em que etapa cada erro nasce. Também é uma boa parceira para escrever um analisador léxico pequeno, desde que você teste com entradas difíceis.',
+    pedido:
+      'Estou estudando as etapas de um compilador.\n<cole a mensagem de erro do javac e o trecho de código aqui>\n- Diga em que etapa (léxica, sintática, semântica) o erro nasce e por quê.\n- Explique a correção sem reescrever o resto do código.\n- Se houver vários erros, diga qual é a causa e quais são consequência.',
+    erros: [
+      'Atribui o erro à etapa errada ou corrige outro problema.',
+      'Diz que `==` com Strings funciona sempre que o texto é igual.',
+      'Escreve analisadores léxicos que perdem o último token da entrada.',
+    ],
+    conferir: [
+      'Leia a linha e a coluna apontadas pelo `javac`; comece pelo primeiro erro.',
+      'Teste Strings com `equals`, e confira `==` só para entender o pool.',
+      'Teste o analisador com uma entrada que termina num número.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JLS 15.29: Constant Expressions',
@@ -147,6 +163,124 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'É exatamente o primeiro passo do `javac`, em miniatura. Repare que os espaços somem e que `12` vira um token só, não dois. O próximo passo seria um parser que consome esses tokens respeitando a precedência, como o do capítulo 6 do Crafting Interpreters.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t2-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: constant expression required`.',
+      codigo: `public class Rotulo {
+    public static void main(String[] args) {
+        int limite = 3;
+        int n = 3;
+        switch (n) {
+            case limite -> System.out.println("no limite");
+            default -> System.out.println("fora do limite");
+        }
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Rotulo {
+    public static void main(String[] args) {
+        int limite = 3;
+        int n = 3;
+        switch (n) {
+            case 3 -> System.out.println("no limite");
+            default -> System.out.println("fora do limite");
+        }
+    }
+}`,
+      saidaCorrigida: 'no limite',
+      dica: 'O valor de um rótulo de `case` precisa ser conhecido em que momento?',
+      explicacao: 'Os rótulos de `case` precisam ser expressões constantes, calculadas pelo compilador. Uma variável comum só tem valor na execução. Um literal resolve, e uma variável `final` inicializada com constante também serviria.',
+    },
+    {
+      id: 'aprendiz-t2-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O login compara o usuário digitado com "admin" e responde `negado`, embora o texto seja igual.',
+      codigo: `public class Login {
+    public static void main(String[] args) {
+        String prefixo = "ad";
+        String digitado = prefixo + "min";
+        if (digitado == "admin") {
+            System.out.println("liberado");
+        } else {
+            System.out.println("negado");
+        }
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'negado' },
+      correcao: `public class Login {
+    public static void main(String[] args) {
+        String prefixo = "ad";
+        String digitado = prefixo + "min";
+        if (digitado.equals("admin")) {
+            System.out.println("liberado");
+        } else {
+            System.out.println("negado");
+        }
+    }
+}`,
+      saidaCorrigida: 'liberado',
+      dica: '`prefixo` não é `final`. A concatenação acontece na compilação ou na execução? E o que `==` compara?',
+      explicacao: 'Como `prefixo` não é uma constante, a concatenação acontece na execução e cria um objeto novo, diferente do `"admin"` do pool. O `==` compara referências. Para comparar o texto, use `equals`.',
+    },
+    {
+      id: 'aprendiz-t2-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O analisador léxico de brinquedo devolve `[12, +]` para a entrada `12+34`, perdendo o último número.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Lexer {
+    static List<String> tokens(String s) {
+        List<String> r = new ArrayList<>();
+        String numero = "";
+        for (char c : s.toCharArray()) {
+            if (Character.isDigit(c)) {
+                numero += c;
+            } else {
+                if (!numero.isEmpty()) { r.add(numero); numero = ""; }
+                r.add(String.valueOf(c));
+            }
+        }
+        return r;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(tokens("12+34"));
+    }
+}`,
+      linha: 16,
+      efeito: { tipo: 'saida', saida: '[12, +]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Lexer {
+    static List<String> tokens(String s) {
+        List<String> r = new ArrayList<>();
+        String numero = "";
+        for (char c : s.toCharArray()) {
+            if (Character.isDigit(c)) {
+                numero += c;
+            } else {
+                if (!numero.isEmpty()) { r.add(numero); numero = ""; }
+                r.add(String.valueOf(c));
+            }
+        }
+        if (!numero.isEmpty()) r.add(numero); return r;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(tokens("12+34"));
+    }
+}`,
+      saidaCorrigida: '[12, +, 34]',
+      dica: 'Um número só é guardado na lista quando aparece um caractere que não é dígito. E se a entrada terminar num número?',
+      explicacao: 'O token acumulado em `numero` só é emitido quando chega um operador. No fim da entrada não chega mais nada, e o último número fica para trás. Todo laço que acumula precisa de um "descarrego" depois que termina.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t2-e03-q01',
@@ -161,6 +295,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Primeiro os caracteres viram tokens, depois os tokens viram árvore, a árvore é conferida, otimizada e por fim vira código.',
+      dica: 'Do texto cru até o código de destino, passando pela árvore.',
     },
     {
       id: 'aprendiz-t2-e03-q02',
@@ -170,6 +305,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['7', '5', '6', '8', '21'],
       resposta: 0,
       explicacao: '`int`, `total`, `=`, `preco`, `*`, `2` e `;`. Espaços não são tokens; servem só para separar.',
+      dica: 'Conte palavra-chave, identificadores, operadores, literal e pontuação.',
     },
     {
       id: 'aprendiz-t2-e03-q03',
@@ -185,6 +321,7 @@ const episodio: EpisodioConteudo = {
       ],
       respostas: [0, 1],
       explicacao: 'Tipo incompatível e nome desconhecido são semânticos: as frases são válidas, o significado não. `;` e chave sem fechar são sintáticos, e um char com dois caracteres é léxico.',
+      dica: 'Erro semântico: frase bem formada que não faz sentido.',
     },
     {
       id: 'aprendiz-t2-e03-q04',
@@ -199,6 +336,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`c` é `final` e inicializada com constante, então `c + "fé"` é uma expressão constante: o `javac` monta `"café"` e usa o mesmo objeto do pool. Com `d`, a concatenação acontece na execução e cria outro objeto, com o mesmo texto.',
+      dica: 'Só a concatenação com uma constante `final` é feita pelo compilador.',
     },
     {
       id: 'aprendiz-t2-e03-q05',
@@ -213,6 +351,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
       ],
       resposta: 0,
       explicacao: 'A operação que é feita por último fica na raiz. Como a multiplicação tem precedência, ela é calculada antes, mais fundo na árvore, e a soma usa o resultado dela.',
+      dica: 'A operação feita por último fica mais perto da raiz.',
     },
     {
       id: 'aprendiz-t2-e03-q06',
@@ -230,6 +369,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
 }`,
       resposta: 6,
       explicacao: '`quantidade * preco` é `double`, e não cabe num `int` sem cast. A linha está sintaticamente perfeita; o problema é de tipo, descoberto na análise semântica.',
+      dica: 'Procure a atribuição em que os tipos não combinam.',
     },
     {
       id: 'aprendiz-t2-e03-q07',
@@ -253,6 +393,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Com a condição constante `false`, o corpo do `while` nunca pode executar, e a especificação manda recusar código inalcançável. O `if (false)` é a exceção à regra.',
+      dica: 'O compilador recusa código que nunca executa, salvo uma exceção.',
     },
     {
       id: 'aprendiz-t2-e03-q08',
@@ -273,6 +414,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `if` com condição constante é permitido de propósito, para ligar e desligar trechos. Como `DEBUG` é constante, o `javac` nem gera o bytecode do `println("depurando")`.',
+      dica: 'O `if` com constante é a exceção permitida de propósito.',
     },
     {
       id: 'aprendiz-t2-e03-q09',
@@ -287,6 +429,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
       ],
       resposta: 0,
       explicacao: 'Se o resultado não depende de nada que só se sabe na execução, o compilador já calcula e grava o resultado. `60 * 60 * 24` vira `86400` no bytecode.',
+      dica: '*Folding* é dobrar: a conta vira o resultado.',
     },
     {
       id: 'aprendiz-t2-e03-q10',
@@ -303,6 +446,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'As três primeiras deixam o comportamento observável igual. Remover ou reordenar prints e trocar tipos mudaria o que o programa faz, e isso nenhum compilador correto pode fazer.',
+      dica: 'Otimizar nunca muda o que o programa imprime.',
     },
     {
       id: 'aprendiz-t2-e03-q11',
@@ -317,6 +461,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
       ],
       resposta: 0,
       explicacao: 'Com N linguagens e M processadores, seriam N × M compiladores. Com uma representação comum no meio, bastam N front-ends e M back-ends, e as otimizações do meio valem para todos.',
+      dica: 'N linguagens e M processadores: quantos compiladores seriam sem o meio?',
     },
     {
       id: 'aprendiz-t2-e03-q12',
@@ -326,6 +471,7 @@ System.out.println((a == c + "fé") + " " + (a == d + "fé"));`,
       opcoes: ["`char c = 'ab';`", '`int x = 10`', '`int y = "a";`', '`x = 5;` sem declarar `x`'],
       resposta: 0,
       explicacao: 'O analisador léxico espera um único caractere entre aspas simples e não consegue formar o token. As outras são sintática (falta `;`) e semânticas (tipo e nome).',
+      dica: 'Erro léxico é palavra mal escrita: um literal impossível.',
     },
     {
       id: 'aprendiz-t2-e03-q13',
@@ -341,6 +487,7 @@ switch (valor) {
 }`,
       resposta: 'dobro',
       explicacao: '`dobro` é `final` e inicializada com uma expressão constante, então é uma constante de compilação, que o `case` aceita. O `javac` já sabe que ela vale 20.',
+      dica: '`dobro` é `final` e inicializado com constante.',
     },
     {
       id: 'aprendiz-t2-e03-q14',
@@ -355,6 +502,7 @@ switch (valor) {
       ],
       resposta: 0,
       explicacao: 'É constant folding: o resultado não depende de nada da execução, então o compilador grava direto o 14. Você viu isso com o `javap -c` no primeiro episódio do cargo Estagiário.',
+      dica: '2 + 3 * 4 é calculado pelo compilador.',
     },
     {
       id: 'aprendiz-t2-e03-q15',
@@ -374,6 +522,7 @@ switch (valor) {
       respostas: ['final'],
       saida: 'no limite',
       explicacao: 'Sem `final`, `LIMITE` é uma variável comum e o `case` não compila: o rótulo precisa ser uma constante que o compilador conhece. Com `final` e um literal, ela vira constante de compilação.',
+      dica: 'Que modificador transforma a variável em constante de compilação?',
     },
   ],
 };

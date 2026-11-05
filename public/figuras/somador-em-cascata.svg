@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Quatro somadores completos em cascata somando 0110 (6) e 0111 (7). Cada caixa recebe um bit de cada número e o vai-um da caixa à direita, e passa o seu vai-um para a caixa à esquerda. Da direita para a esquerda, as somas são 1, 0, 1 e 1, e o resultado é 1101, que vale 13</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker>
+  <marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277" text-anchor="middle">
+    <text x="130" y="30">bit 3</text><text x="300" y="30">bit 2</text><text x="470" y="30">bit 1</text><text x="640" y="30">bit 0</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#bdb5aa" text-anchor="middle">
+    <text x="130" y="60">A=0 B=0</text><text x="300" y="60">A=1 B=1</text><text x="470" y="60">A=1 B=1</text><text x="640" y="60">A=0 B=1</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.4" fill="none">
+    <path d="M130 68 L130 96" marker-end="url(#c)"/><path d="M300 68 L300 96" marker-end="url(#c)"/><path d="M470 68 L470 96" marker-end="url(#c)"/><path d="M640 68 L640 96" marker-end="url(#c)"/>
+  </g>
+  <g fill="#1b1916" stroke="#43403a">
+    <rect x="80" y="100" width="100" height="70" rx="6"/><rect x="250" y="100" width="100" height="70" rx="6"/><rect x="420" y="100" width="100" height="70" rx="6"/><rect x="590" y="100" width="100" height="70" rx="6"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa" text-anchor="middle">
+    <text x="130" y="139">somador</text><text x="300" y="139">somador</text><text x="470" y="139">somador</text><text x="640" y="139">somador</text>
+  </g>
+  <g stroke="#ff7a1a" stroke-width="1.8" fill="none">
+    <path d="M588 135 L524 135" marker-end="url(#s)"/><path d="M418 135 L354 135" marker-end="url(#s)"/><path d="M248 135 L184 135" marker-end="url(#s)"/>
+    <path d="M730 135 L694 135" marker-end="url(#s)"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#ff7a1a" text-anchor="middle">
+    <text x="556" y="126">0</text><text x="386" y="126">1</text><text x="216" y="126">1</text><text x="716" y="126">0</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.4" fill="none">
+    <path d="M130 172 L130 200" marker-end="url(#c)"/><path d="M300 172 L300 200" marker-end="url(#c)"/><path d="M470 172 L470 200" marker-end="url(#c)"/><path d="M640 172 L640 200" marker-end="url(#c)"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="22" font-weight="700" fill="#4fd68b" text-anchor="middle">
+    <text x="130" y="226">1</text><text x="300" y="226">1</text><text x="470" y="226">0</text><text x="640" y="226">1</text>
+  </g>
+  <text x="40" y="270" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#f3eee7" xml:space="preserve">0110 + 0111 = 1101   (6 + 7 = 13)</text>
+  <text x="40" y="290" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">O vai-um (laranja) anda da direita para a esquerda; o bit 3 só fica pronto depois que ele atravessa todos.</text>
+</svg>

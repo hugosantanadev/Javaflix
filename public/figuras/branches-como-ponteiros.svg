@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Branches como ponteiros: uma linha de commits c8f5854, c3c13c8 e ff2da81 na main e um commit 34709a3 numa branch feature/desconto que sai de c3c13c8; o commit de merge 7447ff6 tem dois pais, ff2da81 e 34709a3; as etiquetas main e feature/desconto apontam para commits, e HEAD aponta para main</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M166 150 L118 150"/>
+    <path d="M326 150 L278 150"/>
+    <path d="M486 150 L438 150"/>
+    <path d="M490 140 C 460 110, 430 100, 410 100"/>
+    <path d="M330 100 C 300 100, 285 115, 278 138"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700" text-anchor="middle">
+    <circle cx="90" cy="150" r="26" fill="#1b1916" stroke="#8a8277"/>
+    <text x="90" y="154" fill="#bdb5aa">c8f58</text>
+    <circle cx="250" cy="150" r="26" fill="#1b1916" stroke="#8a8277"/>
+    <text x="250" y="154" fill="#bdb5aa">c3c13</text>
+    <circle cx="410" cy="150" r="26" fill="#1b1916" stroke="#8a8277"/>
+    <text x="410" y="154" fill="#bdb5aa">ff2da</text>
+    <circle cx="370" cy="100" r="26" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="370" y="104" fill="#ff7a1a">34709</text>
+    <circle cx="520" cy="150" r="30" fill="#13221a" stroke="#4fd68b"/>
+    <text x="520" y="154" fill="#4fd68b">7447f</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700">
+    <rect x="600" y="138" width="60" height="24" rx="4" fill="#13221a" stroke="#4fd68b"/>
+    <text x="630" y="155" fill="#4fd68b" text-anchor="middle">main</text>
+    <rect x="600" y="196" width="60" height="24" rx="4" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="630" y="213" fill="#ff7a1a" text-anchor="middle">HEAD</text>
+    <rect x="300" y="30" width="140" height="24" rx="4" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="370" y="47" fill="#ff7a1a" text-anchor="middle">feature/desconto</text>
+  </g>
+  <g stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M600 150 L553 150" stroke="#4fd68b"/>
+    <path d="M630 196 L630 165" stroke="#ff7a1a"/>
+    <path d="M370 54 L370 71" stroke="#ff7a1a"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <text x="470" y="200">commit de merge:</text>
+    <text x="470" y="216">dois pais</text>
+    <text x="20" y="262">Cada seta aponta para o pai. Uma branch é só uma etiqueta presa a um commit, e o HEAD diz em qual etiqueta você está.</text>
+  </g>
+</svg>

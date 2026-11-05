@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">O mesmo código antes e depois do apagamento de tipos: à esquerda, o que você escreve, com class Caixa de T, o campo T valor, o método T abrir e o uso String s igual a caixa.abrir; à direita, o que vai para o bytecode, com Object valor, Object abrir e um cast para String inserido no uso; embaixo, a classe Nome que implementa Comparable de Nome ganha um método-ponte compareTo de Object, que faz o cast e chama o compareTo de Nome</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700">
+    <text x="20" y="28" fill="#bdb5aa">O que você escreve</text>
+    <text x="410" y="28" fill="#f2c75c">O que vai para o bytecode</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="40" width="330" height="130" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="34" y="64" fill="#f3eee7">class Caixa&lt;<tspan fill="#ff7a1a">T</tspan>&gt; {</text>
+    <text x="50" y="86" fill="#bdb5aa"><tspan fill="#ff7a1a">T</tspan> valor;</text>
+    <text x="50" y="108" fill="#bdb5aa"><tspan fill="#ff7a1a">T</tspan> abrir() { return valor; }</text>
+    <text x="34" y="130" fill="#f3eee7">}</text>
+    <text x="34" y="156" fill="#4fd68b">String s = caixa.abrir();</text>
+
+    <rect x="410" y="40" width="330" height="130" rx="8" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="424" y="64" fill="#f3eee7">class Caixa {</text>
+    <text x="440" y="86" fill="#bdb5aa"><tspan fill="#f2c75c">Object</tspan> valor;</text>
+    <text x="440" y="108" fill="#bdb5aa"><tspan fill="#f2c75c">Object</tspan> abrir() { return valor; }</text>
+    <text x="424" y="130" fill="#f3eee7">}</text>
+    <text x="424" y="156" fill="#4fd68b">String s = <tspan fill="#f2c75c">(String)</tspan> caixa.abrir();</text>
+  </g>
+  <path d="M350 105 L407 105" stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <text x="356" y="96" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">javac</text>
+
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="198" width="330" height="76" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="34" y="222" fill="#f3eee7">record Nome(...)</text>
+    <text x="50" y="242" fill="#f3eee7">implements Comparable&lt;Nome&gt;</text>
+    <text x="34" y="262" fill="#bdb5aa">int compareTo(Nome o)</text>
+
+    <rect x="410" y="198" width="330" height="76" rx="8" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="424" y="222" fill="#bdb5aa">int compareTo(Nome o)</text>
+    <text x="424" y="242" fill="#f2c75c">int compareTo(Object o) // ponte</text>
+    <text x="440" y="262" fill="#f2c75c">{ return compareTo((Nome) o); }</text>
+  </g>
+  <path d="M350 236 L407 236" stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <text x="20" y="306" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">O compilador confere, apaga e põe os casts que você deixou de escrever; a ponte mantém a sobrescrita.</text>
+</svg>

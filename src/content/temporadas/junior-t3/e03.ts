@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Superclasse não vira subclasse sem cast: `Carro c = veiculo;` não compila.',
     'Sobrecarga é decidida pela referência; sobrescrita, pelo objeto. As duas podem se combinar na mesma chamada.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a trocar cadeias de `if` por tipo por métodos sobrescritos e a prever qual versão roda numa chamada. Use-a para explicar uma saída que surpreendeu, pedindo que separe o que o compilador decide e o que a JVM decide.',
+    pedido:
+      'Explique a saída deste programa Java 21, linha a linha.\n<cole o código aqui>\n- Para cada chamada, diga o tipo da referência e o tipo do objeto.\n- Diga se o membro chamado é método de instância, campo ou static, e qual dos dois tipos o escolhe.\n- Aponte construtores que chamam métodos sobrescrevíveis.',
+    erros: [
+      'Gera cadeias de `instanceof` onde um método sobrescrito resolveria.',
+      'Afirma que campos também são polimórficos.',
+      'Chama um método sobrescrevível dentro do construtor da superclasse.',
+    ],
+    conferir: [
+      'Rode o programa e compare com a explicação.',
+      'Troque o tipo da variável para o da subclasse e veja o que muda na compilação e na saída.',
+      'No depurador, confira o tipo do objeto no painel Variables.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Polymorphism',
@@ -176,6 +192,130 @@ public class Folha {
     comentarios:
       'O laço e o método `linha()` são escritos uma vez e funcionam para qualquer tipo de funcionário, inclusive os que ainda não existem. Um estagiário com bolsa fixa seria só mais uma subclasse, sem tocar no código da folha. É o princípio aberto/fechado: aberto para extensão, fechado para modificação.',
   },
+  bugs: [
+    {
+      id: 'junior-t3-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: cannot find symbol`, apontando `buscar()` numa variável do tipo `Animal`.',
+      codigo: `class Animal {
+    String som() { return "..."; }
+}
+
+class Cachorro extends Animal {
+    @Override String som() { return "au"; }
+    String buscar() { return "bolinha"; }
+}
+
+public class Parque {
+    public static void main(String[] args) {
+        Animal rex = new Cachorro();
+        System.out.println(rex.som() + " " + rex.buscar());
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `class Animal {
+    String som() { return "..."; }
+}
+
+class Cachorro extends Animal {
+    @Override String som() { return "au"; }
+    String buscar() { return "bolinha"; }
+}
+
+public class Parque {
+    public static void main(String[] args) {
+        Animal rex = new Cachorro();
+        System.out.println(rex.som() + " " + ((Cachorro) rex).buscar());
+    }
+}`,
+      saidaCorrigida: 'au bolinha',
+      dica: 'O compilador decide o que pode ser chamado olhando o objeto ou a variável?',
+      explicacao: 'O compilador só enxerga os membros do tipo da referência, e `Animal` não tem `buscar`. O cast `((Cachorro) rex)` muda o tipo da referência para a chamada; melhor ainda, quando o código sempre precisa do cachorro, declare a variável como `Cachorro`.',
+    },
+    {
+      id: 'junior-t3-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O frete expresso deveria custar 30, mas o total mostra o frete comum: `110.0`.',
+      codigo: `class Frete {
+    static double valor() { return 10; }
+}
+
+class FreteExpresso extends Frete {
+    static double valor() { return 30; }
+}
+
+public class Pedido {
+    static double total(Frete f, double itens) {
+        return itens + f.valor();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(total(new FreteExpresso(), 100));
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'saida', saida: '110.0' },
+      correcao: `class Frete {
+    double valor() { return 10; }
+}
+
+class FreteExpresso extends Frete {
+    double valor() { return 30; }
+}
+
+public class Pedido {
+    static double total(Frete f, double itens) {
+        return itens + f.valor();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(total(new FreteExpresso(), 100));
+    }
+}`,
+      saidaCorrigida: '130.0',
+      dica: 'Métodos `static` seguem o objeto ou o tipo declarado da variável?',
+      explicacao: 'Métodos `static` não são polimórficos: `f.valor()` vira `Frete.valor()` na compilação, pelo tipo do parâmetro. Para cada frete calcular o seu valor, `valor` precisa ser um método de instância sobrescrito.',
+    },
+    {
+      id: 'junior-t3-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O programa lança `ArrayStoreException: Retangulo` ao guardar um retângulo num array de `Forma`.',
+      codigo: `class Forma { }
+
+class Circulo extends Forma { }
+
+class Retangulo extends Forma { }
+
+public class Desenho {
+    public static void main(String[] args) {
+        Forma[] formas = new Circulo[2];
+        formas[0] = new Circulo();
+        formas[1] = new Retangulo();
+        System.out.println(formas.length + " formas");
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'excecao', nome: 'ArrayStoreException' },
+      correcao: `class Forma { }
+
+class Circulo extends Forma { }
+
+class Retangulo extends Forma { }
+
+public class Desenho {
+    public static void main(String[] args) {
+        Forma[] formas = new Forma[2];
+        formas[0] = new Circulo();
+        formas[1] = new Retangulo();
+        System.out.println(formas.length + " formas");
+    }
+}`,
+      saidaCorrigida: '2 formas',
+      dica: 'A variável é `Forma[]`. E o array criado no heap, de que tipo é?',
+      explicacao: 'Arrays em Java são covariantes: um `Circulo[]` pode ser apontado por uma variável `Forma[]`. Mas o array guarda o próprio tipo e confere cada gravação na execução, e um `Retangulo` não cabe num array de círculos. Crie o array com o tipo que deve aceitar.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t3-e03-q01',
@@ -190,6 +330,7 @@ public class Folha {
       ],
       resposta: 0,
       explicacao: 'A referência permite a chamada, porque `Animal` declara `som()`. Na execução, a JVM consulta a classe real do objeto e encontra a versão de `Cachorro`.',
+      dica: 'Método de instância sobrescrito: quem decide é o objeto real.',
     },
     {
       id: 'junior-t3-e03-q02',
@@ -214,6 +355,7 @@ for (Instrumento i : banda) som += i.tocar() + " ";
 System.out.println(som.trim());`,
       resposta: 'dlim tum ? dlim',
       explicacao: 'O array é de `Instrumento`, mas cada posição guarda um objeto diferente, e cada um executa a sua versão de `tocar()`.',
+      dica: 'Cada objeto do array toca a sua versão; o `Instrumento` puro usa a da superclasse.',
     },
     {
       id: 'junior-t3-e03-q03',
@@ -235,6 +377,7 @@ System.out.println(c.rendimento());`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 11 },
       explicacao: 'O objeto tem `rendimento()`, mas a variável é `Conta`, e o compilador só aceita os métodos que `Conta` declara.',
+      dica: 'Pela variável `Conta`, o compilador enxerga `rendimento()`?',
     },
     {
       id: 'junior-t3-e03-q04',
@@ -258,6 +401,7 @@ System.out.println(a.x + " " + a.getX() + " " + b.x + " " + ((A) b).x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Campos seguem a referência: por `A`, o `x` de `A` (1); por `B`, o de `B` (2). O método sobrescrito segue o objeto, um `B` nos dois casos.',
+      dica: 'Campo segue a referência; método sobrescrito segue o objeto. O cast muda só a referência.',
     },
     {
       id: 'junior-t3-e03-q05',
@@ -273,6 +417,7 @@ System.out.println(a.x + " " + a.getX() + " " + b.x + " " + ((A) b).x);`,
       ],
       respostas: [0, 1],
       explicacao: 'O objeto continua sendo um `Circulo` completo; só a "visão" pela variável é limitada. O compilador não deixa usar `raio` por uma referência `Forma`.',
+      dica: 'Separe o que o compilador deixa usar do que roda na execução.',
     },
     {
       id: 'junior-t3-e03-q06',
@@ -303,6 +448,7 @@ public class Fazenda {
       respostas: ['Animal'],
       saida: 'miau muu',
       explicacao: 'Com o parâmetro do tipo da superclasse, o método aceita qualquer subclasse, e cada objeto responde com a sua versão. `Object` aceitaria os objetos, mas não deixaria chamar `som()`.',
+      dica: 'Use o tipo mais geral que tem `som()`.',
     },
     {
       id: 'junior-t3-e03-q07',
@@ -325,6 +471,7 @@ public class Garagem {
 }`,
       resposta: 12,
       explicacao: 'Todo `Carro` é um `Veiculo`, então guardar um carro numa variável `Veiculo` é automático. O contrário não: o compilador não sabe que `v` aponta para um carro, e exige um cast.',
+      dica: 'Atribuir um tipo mais geral a um mais específico sem cast compila?',
     },
     {
       id: 'junior-t3-e03-q08',
@@ -355,6 +502,7 @@ new Sub();`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O construtor de `Base` roda antes dos inicializadores de `Sub`, mas o objeto já é um `Sub`: a chamada vai para a versão sobrescrita, que lê `msg` ainda com o valor padrão. Imprimir `null` não lança exceção.',
+      dica: 'O construtor de `Base` roda antes do inicializador de `msg`.',
     },
     {
       id: 'junior-t3-e03-q09',
@@ -379,6 +527,7 @@ System.out.println(f.bonus());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O objeto é um `Diretor`, cuja versão chama a de `Gerente` (300) e soma 1000. Cada `super` sobe exatamente um nível.',
+      dica: 'Siga a cadeia de `super.bonus()`: Diretor chama Gerente, que chama Funcionario.',
     },
     {
       id: 'junior-t3-e03-q10',
@@ -403,6 +552,7 @@ System.out.println(r);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`x` é declarada `A`, e o método `static` é escolhido por ela, nos dois casos. O método de instância segue cada objeto.',
+      dica: '`tipo()` é `static`, escolhido pela referência `A`; `nome()` segue o objeto.',
     },
     {
       id: 'junior-t3-e03-q11',
@@ -417,6 +567,7 @@ System.out.println(r);`,
       ],
       resposta: 0,
       explicacao: 'Programar para o tipo mais geral que oferece o que o método precisa deixa o código aberto a extensões, sem alterações.',
+      dica: 'Pense no que acontece quando surgir uma forma nova.',
     },
     {
       id: 'junior-t3-e03-q12',
@@ -446,6 +597,7 @@ public class Caixa {
 }`,
       resposta: '206.0 202.5 200.0',
       explicacao: '`total` recebe um `Pagamento` e chama `taxa`, que cada objeto implementa do seu jeito: 3% no cartão, 2,50 fixos no boleto e nada no pagamento comum.',
+      dica: 'Cartão cobra 3% de 200; boleto, 2,5 fixos; a forma base, zero.',
     },
     {
       id: 'junior-t3-e03-q13',
@@ -461,6 +613,7 @@ public class Caixa {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Tudo o que é resolvido na compilação depende da referência. Só a escolha do método de instância sobrescrito, e o que depende do objeto em si, como `getClass()`, é decidido na execução.',
+      dica: 'O que é resolvido na compilação, olhando a variável?',
     },
     {
       id: 'junior-t3-e03-q14',
@@ -482,6 +635,7 @@ System.out.println(p.f("x"));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'São dois passos. Na compilação, pela referência `Pai`, a única assinatura é `f(Object)`. Na execução, o objeto é um `Filho`, que sobrescreve `f(Object)`. A sobrecarga com `String` nem é considerada.',
+      dica: 'A sobrecarga é escolhida pelo tipo declarado `Pai`, que só tem `f(Object)`; depois, a sobrescrita segue o objeto.',
     },
     {
       id: 'junior-t3-e03-q15',
@@ -496,6 +650,7 @@ System.out.println(p.f("x"));`,
       ],
       resposta: 0,
       explicacao: 'O JIT registra os tipos vistos em cada chamada. Com um só, gera uma checagem barata seguida do método embutido (*inlining*). Se outro tipo aparecer depois, a otimização é desfeita.',
+      dica: 'Só um tipo passa por aquele ponto: o JIT pode apostar nele.',
     },
   ],
 };

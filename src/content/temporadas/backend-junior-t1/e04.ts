@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Para ajustar um pull request, faça commits novos na mesma branch e envie: não abra outro pull request.',
     '`Closes #12` só fecha a issue quando o pull request é mesclado na branch padrão do repositório.',
   ],
+  ia: {
+    uso:
+      'No fluxo do pull request, a IA rende em três pontos: rascunhar a descrição a partir do diff, fazer uma primeira revisão antes de você pedir a de um colega e explicar comentários de revisão que você não entendeu. Ela não sabe o motivo de negócio da mudança nem as convenções do seu time, e é aí que precisa de você.',
+    pedido:
+      'Escreva a descrição deste pull request de uma API Spring Boot 4.1.\n<cole aqui o git diff main... e a issue que ele resolve>\n- Use as seções O que muda, Por quê e Como testar, e termine com Closes #<número da issue>.\n- No Por quê, use só o que está na issue; se faltar informação, escreva [preencher].\n- Aponte qualquer arquivo no diff que pareça não ter relação com a issue.\n- Não inclua tokens, senhas nem URLs internas.',
+    erros: [
+      'Inventa um motivo plausível para a mudança, que não está na issue.',
+      'Escreve `Closes #12` para issues só relacionadas, que ficariam fechadas por engano.',
+      'Revisa estilo e nomes, e deixa passar o caso de borda que quebra em produção.',
+      'Sugere configurar o push colando o token no comando ou num arquivo do projeto.',
+    ],
+    conferir: [
+      'Leia a descrição como o revisor: o porquê está certo e o teste descrito funciona?',
+      'Confira os números das issues em `Closes` contra as que o PR resolve de verdade.',
+      'Rode você mesmo os passos de "Como testar" antes de pedir revisão.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Pro Git: Trabalhando com Repositórios Remotos',
@@ -200,6 +217,133 @@ public class DiffRevisao {
     comentarios:
       'A LCS encontra o maior conjunto de linhas que pode ficar no lugar; tudo o que sobra é remoção ou inclusão. A tabela custa `n × m` de memória, o que basta para arquivos de código, mas o Git usa o algoritmo de Myers, que acha o diff mínimo sem a tabela inteira, e mostra só três linhas de contexto em volta de cada trecho alterado, nos blocos que começam com `@@`. Num pull request grande, cada linha deste diff é uma linha que alguém precisa ler: é o argumento mais concreto para manter os pull requests pequenos.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t1-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O bot que fecha issues quando um pull request é mesclado não fechou nenhuma, embora a descrição tivesse `Closes #12 e fixes #7`. O log diz `issues fechadas: []`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Fechamento {
+    static final Pattern FECHA = Pattern.compile("(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?[ ]+#([0-9]+)", Pattern.CASE_INSENSITIVE);
+
+    public static void main(String[] args) {
+        String descricao = "Calcula o frete por peso. Closes #12 e fixes #7.";
+        List<Integer> issues = new ArrayList<>();
+        Matcher m = FECHA.matcher(descricao);
+        if (m.matches()) {
+            issues.add(Integer.parseInt(m.group(1)));
+        }
+        System.out.println("issues fechadas: " + issues);
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'saida', saida: 'issues fechadas: []' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Fechamento {
+    static final Pattern FECHA = Pattern.compile("(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?[ ]+#([0-9]+)", Pattern.CASE_INSENSITIVE);
+
+    public static void main(String[] args) {
+        String descricao = "Calcula o frete por peso. Closes #12 e fixes #7.";
+        List<Integer> issues = new ArrayList<>();
+        Matcher m = FECHA.matcher(descricao);
+        while (m.find()) {
+            issues.add(Integer.parseInt(m.group(1)));
+        }
+        System.out.println("issues fechadas: " + issues);
+    }
+}`,
+      saidaCorrigida: 'issues fechadas: [12, 7]',
+      dica: '`matches` confere o texto inteiro ou procura um trecho dentro dele?',
+      explicacao:
+        '`matches` exige que a descrição **inteira** seja um único `Closes #12`, e ela tem mais texto. `find` procura cada ocorrência dentro do texto, e o `while` pega as duas. Trocar só o `matches` por `find` num `if` acharia a primeira e perderia a `#7`.',
+    },
+    {
+      id: 'backend-junior-t1-e04-b02',
+      dificuldade: 2,
+      sintoma: 'Uma mudança em `src/pagamento/Pix.java` foi aprovada só pelo time de backend, sem passar pelo time de pagamentos, embora o `CODEOWNERS` tenha uma regra para essa pasta. O script mostra `src/pagamento/Pix.java -> @empresa/backend`.',
+      codigo: `import java.util.List;
+
+public class Donos {
+    record Regra(String prefixo, String dono) {}
+
+    static String dono(List<Regra> regras, String caminho) {
+        for (int i = 0; i < regras.size(); i++) {
+            Regra r = regras.get(i);
+            if (r.prefixo().equals("*") || caminho.startsWith(r.prefixo())) return r.dono();
+        }
+        return "ninguém";
+    }
+
+    public static void main(String[] args) {
+        List<Regra> codeowners = List.of(new Regra("*", "@empresa/backend"), new Regra("src/pagamento/", "@empresa/time-pagamentos"));
+        System.out.println("src/pagamento/Pix.java -> " + dono(codeowners, "src/pagamento/Pix.java"));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'src/pagamento/Pix.java -> @empresa/backend' },
+      correcao: `import java.util.List;
+
+public class Donos {
+    record Regra(String prefixo, String dono) {}
+
+    static String dono(List<Regra> regras, String caminho) {
+        for (int i = regras.size() - 1; i >= 0; i--) {
+            Regra r = regras.get(i);
+            if (r.prefixo().equals("*") || caminho.startsWith(r.prefixo())) return r.dono();
+        }
+        return "ninguém";
+    }
+
+    public static void main(String[] args) {
+        List<Regra> codeowners = List.of(new Regra("*", "@empresa/backend"), new Regra("src/pagamento/", "@empresa/time-pagamentos"));
+        System.out.println("src/pagamento/Pix.java -> " + dono(codeowners, "src/pagamento/Pix.java"));
+    }
+}`,
+      saidaCorrigida: 'src/pagamento/Pix.java -> @empresa/time-pagamentos',
+      dica: 'No `CODEOWNERS`, quando duas regras casam com o mesmo arquivo, qual delas vale?',
+      explicacao:
+        'No `CODEOWNERS`, vale a **última** regra que casa, e por isso o `*` geral vem primeiro e as específicas depois. Percorrendo do começo, o `*` ganha sempre. Percorrer de trás para frente reproduz a regra do GitHub.',
+    },
+    {
+      id: 'backend-junior-t1-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O prompt do terminal da equipe diz que a branch está em dia com o servidor, mas há dois commits locais que nunca foram enviados: `Your branch is ahead of \'origin/main\' by 0 commits.`',
+      codigo: `import java.util.List;
+
+public class Adiante {
+    public static void main(String[] args) {
+        List<String> local = List.of("31ee9ad", "579b99f", "90cd9d3", "a4c1e02");
+        List<String> remoto = List.of("31ee9ad", "579b99f");
+        long adiante = remoto.stream().filter(c -> !local.contains(c)).count();
+        System.out.println("Your branch is ahead of 'origin/main' by " + adiante + " commits.");
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: "Your branch is ahead of 'origin/main' by 0 commits." },
+      correcao: `import java.util.List;
+
+public class Adiante {
+    public static void main(String[] args) {
+        List<String> local = List.of("31ee9ad", "579b99f", "90cd9d3", "a4c1e02");
+        List<String> remoto = List.of("31ee9ad", "579b99f");
+        long adiante = local.stream().filter(c -> !remoto.contains(c)).count();
+        System.out.println("Your branch is ahead of 'origin/main' by " + adiante + " commits.");
+    }
+}`,
+      saidaCorrigida: "Your branch is ahead of 'origin/main' by 2 commits.",
+      dica: '"À frente" são os commits que existem onde e não existem onde?',
+      explicacao:
+        'Estar à frente é ter commits locais que o `origin/main` não tem. O código contava o contrário: os commits do remoto que faltam no local, que é o "atrás" (*behind*). Os dois números juntos dizem se é preciso `push`, `pull` ou os dois.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t1-e04-q01',
@@ -214,6 +358,7 @@ public class DiffRevisao {
       ],
       resposta: 0,
       explicacao: 'As branches remotas só avançam com `fetch`, `pull` ou `push`. Por isso, o `git status` pode dizer que você está atualizado quando o servidor já tem commits novos.',
+      dica: 'É uma branch na sua máquina, mas sobre o servidor. Quando ela se atualiza?',
     },
     {
       id: 'backend-junior-t1-e04-q02',
@@ -228,6 +373,7 @@ public class DiffRevisao {
       ],
       resposta: 0,
       explicacao: 'O `pull` é um `fetch` seguido de merge, ou de rebase com `--rebase`. O `fetch` é seguro a qualquer momento, porque não toca no seu trabalho.',
+      dica: 'Um deles só baixa; o outro baixa e junta na sua branch.',
     },
     {
       id: 'backend-junior-t1-e04-q03',
@@ -242,6 +388,7 @@ public class DiffRevisao {
       ],
       resposta: 0,
       explicacao: 'O servidor tem commits que você não tem. O `--force` os apagaria; integrá-los primeiro mantém o trabalho de todos.',
+      dica: 'O servidor tem commits que você não tem: traga-os antes de enviar de novo.',
     },
     {
       id: 'backend-junior-t1-e04-q04',
@@ -256,6 +403,7 @@ public class DiffRevisao {
       ],
       resposta: 0,
       explicacao: 'É o `--set-upstream`. Depois dele, o `git status` também passa a comparar a branch com a remota.',
+      dica: 'O `-u` liga a branch local a uma remota, para os próximos push e pull.',
     },
     {
       id: 'backend-junior-t1-e04-q05',
@@ -270,6 +418,7 @@ public class DiffRevisao {
       ],
       resposta: 0,
       explicacao: 'A senha da conta deixou de valer para o Git em 2021. O `user.email` só identifica o autor dos commits, não autentica nada.',
+      dica: 'O GitHub não aceita a senha da conta no Git desde 2021.',
     },
     {
       id: 'backend-junior-t1-e04-q06',
@@ -285,6 +434,7 @@ public class DiffRevisao {
       ],
       respostas: [0, 1],
       explicacao: 'Token e chave privada são credenciais. A chave **pública** pode ser compartilhada, e é ela que se cadastra no GitHub.',
+      dica: 'Tudo o que dá acesso a sistemas é uma senha, mesmo que não se chame assim.',
     },
     {
       id: 'backend-junior-t1-e04-q07',
@@ -299,6 +449,7 @@ public class DiffRevisao {
       ],
       resposta: 0,
       explicacao: 'O pull request aponta para a branch, não para commits fixos. Cada push novo aparece no pull request, e o revisor vê só o que mudou desde a última revisão.',
+      dica: 'O pull request acompanha a branch: o que você envia para ela aparece nele.',
     },
     {
       id: 'backend-junior-t1-e04-q08',
@@ -313,6 +464,7 @@ public class DiffRevisao {
       ],
       resposta: 0,
       explicacao: 'O fork é uma cópia na sua conta, onde você pode enviar à vontade. Um remoto `upstream` apontando para o original ajuda a manter o fork atualizado.',
+      dica: 'Sem permissão de escrita, você trabalha numa cópia sua do repositório.',
     },
     {
       id: 'backend-junior-t1-e04-q09',
@@ -335,6 +487,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `(?i)` ignora maiúsculas, e `fix(?:e[sd])?` aceita `fix`, `fixes` e `fixed`. O `#6` só vem depois de "Ver", que não é palavra de fechamento.',
+      dica: 'A expressão aceita close, fix e resolve em várias formas, seguidas de `#` e um número.',
     },
     {
       id: 'backend-junior-t1-e04-q10',
@@ -349,6 +502,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O GitHub ignora as palavras-chave quando o destino não é a branch padrão. Em times com `develop`, a issue costuma ser fechada à mão, ou quando a `develop` chega na `main`.',
+      dica: 'As palavras de fechamento só valem quando o PR entra na branch padrão.',
     },
     {
       id: 'backend-junior-t1-e04-q11',
@@ -364,6 +518,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'Pull requests pequenos são lidos de verdade. Discordar de um comentário é válido, mas respondendo com argumentos, não ignorando.',
+      dica: 'Tamanho e revisão própria são as duas coisas que dependem só de você.',
     },
     {
       id: 'backend-junior-t1-e04-q12',
@@ -378,6 +533,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Vem de *nitpick*, "implicância". Separar o essencial do detalhe ajuda o autor a priorizar.',
+      dica: 'É a abreviação de *nitpick*: um detalhe.',
     },
     {
       id: 'backend-junior-t1-e04-q13',
@@ -392,6 +548,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Por isso o squash é popular: cada pull request vira um commit na `main`, e o histórico da branch fica no próprio pull request.',
+      dica: 'O squash junta tudo num só commit.',
     },
     {
       id: 'backend-junior-t1-e04-q14',
@@ -416,6 +573,7 @@ public class Teste {
 }`,
       resposta: '+3 -1',
       explicacao: 'A troca do tipo de `total` aparece como uma remoção e uma inclusão. As linhas que começam com espaço são contexto, e não contam.',
+      dica: 'Conte as linhas que começam com `+` e com `-`, sem as de cabeçalho `+++` e `---`.',
     },
     {
       id: 'backend-junior-t1-e04-q15',
@@ -430,6 +588,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `CODEOWNERS` define os revisores de cada parte do código, e a proteção da branch transforma a revisão deles em requisito para o merge.',
+      dica: 'Com a regra de donos ligada, quem precisa aprovar mudanças nessa pasta?',
     },
   ],
 };

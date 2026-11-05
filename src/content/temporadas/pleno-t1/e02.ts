@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Um `return` no `finally` substitui o retorno do `try` e engole exceções pendentes.',
     'Uma exceção lançada no `finally` substitui a original, que se perde.',
   ],
+  ia: {
+    uso:
+      'Com `try`, `catch` e `finally`, a IA ajuda a montar o passo a passo de um programa e a gerar variações para treinar a ordem de execução. Mas ela erra justamente os casos que a prova cobra: `return` no `finally`, valor de retorno fixado antes do `finally` e exceção substituída. Rode o programa antes de acreditar na saída que ela descreve.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o programa com try, catch e finally>\n- Mostre a ordem em que cada linha roda, bloco por bloco, e o valor de cada variável no fim do try, do catch e do finally.\n- Diga o que o método devolve e por quê, citando a regra.\n- Não altere o programa; se ele não compilar, aponte a linha e a mensagem do javac.\n- Crie dois programas parecidos, um com return no finally e outro com exceção no finally, e me dê as saídas só no fim.',
+    erros: [
+      'Diz que o `finally` não roda quando o `try` tem `return`.',
+      'Afirma que mudar uma variável primitiva no `finally` altera o valor já devolvido.',
+      'Esquece que uma exceção lançada no `finally` substitui a original.',
+      'Afirma que o `finally` roda mesmo depois de um `System.exit` no `try`.',
+    ],
+    conferir: [
+      'Rode o programa e compare a saída, linha por linha, com o passo a passo da IA.',
+      'Siga o fluxo no depurador do IntelliJ, avançando com F8 entre os blocos.',
+      'Compile com `javac -Xlint:finally` para ver o aviso de `finally` que não termina normalmente.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Catching and Handling Exceptions',
@@ -133,6 +150,177 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'O `finally` é o lugar de tudo o que precisa acontecer em qualquer cenário: registrar, liberar uma trava, fechar uma conexão. Repare que o método decide quais erros sabe tratar (valor inválido vira uma resposta) e deixa subir os que não sabe (saldo insuficiente fica para quem chamou). Nenhum `return` ou `throw` no `finally`, para não esconder nada.',
   },
+  bugs: [
+    {
+      id: 'pleno-t1-e02-b01',
+      dificuldade: 1,
+      sintoma: 'Depois de acrescentar uma mensagem própria para texto que não é número, o leitor de quantidades parou de compilar: `exception NumberFormatException has already been caught`.',
+      codigo: `public class Leitura {
+    static String ler(String texto) {
+        try {
+            return "lido " + Integer.parseInt(texto);
+        } catch (IllegalArgumentException e) {
+            return "argumento inválido";
+        } catch (NumberFormatException e) {
+            return "não é número: " + texto;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(ler("42") + "; " + ler("4,2"));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Leitura {
+    static String ler(String texto) {
+        try {
+            return "lido " + Integer.parseInt(texto);
+        } catch (NumberFormatException e) {
+            return "não é número: " + texto;
+        } catch (IllegalArgumentException e) {
+            return "argumento inválido";
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(ler("42") + "; " + ler("4,2"));
+    }
+}`,
+      saidaCorrigida: 'lido 42; não é número: 4,2',
+      dica: 'Os `catch` são testados de cima para baixo. Uma `NumberFormatException` chegaria ao segundo?',
+      explicacao:
+        '`NumberFormatException` é subclasse de `IllegalArgumentException`, então o primeiro `catch` já pega todas elas, e o segundo nunca rodaria. O compilador recusa o `catch` inalcançável. Coloque sempre o mais específico antes do mais geral; a correção troca a ordem dos dois blocos.',
+    },
+    {
+      id: 'pleno-t1-e02-b02',
+      dificuldade: 2,
+      sintoma: 'A tela de lançamento de notas mostra `ok` para as três notas, inclusive a vazia, que não foi gravada: `ok ok ok | gravadas: 2, chamadas: 0`.',
+      codigo: `public class Gravacao {
+    static int gravadas = 0;
+    static int chamadas = 0;
+
+    static String gravar(String nota) {
+        try {
+            if (nota.isBlank()) throw new IllegalArgumentException("nota vazia");
+            gravadas++;
+            return "gravada";
+        } finally {
+            return "ok";
+        }
+    }
+
+    public static void main(String[] args) {
+        for (String nota : new String[] {"9,5", " ", "7,0"}) {
+            try {
+                System.out.print(gravar(nota) + " ");
+            } catch (IllegalArgumentException e) {
+                System.out.print("erro (" + e.getMessage() + ") ");
+            }
+        }
+        System.out.println("| gravadas: " + gravadas + ", chamadas: " + chamadas);
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'ok ok ok | gravadas: 2, chamadas: 0' },
+      correcao: `public class Gravacao {
+    static int gravadas = 0;
+    static int chamadas = 0;
+
+    static String gravar(String nota) {
+        try {
+            if (nota.isBlank()) throw new IllegalArgumentException("nota vazia");
+            gravadas++;
+            return "gravada";
+        } finally {
+            chamadas++;
+        }
+    }
+
+    public static void main(String[] args) {
+        for (String nota : new String[] {"9,5", " ", "7,0"}) {
+            try {
+                System.out.print(gravar(nota) + " ");
+            } catch (IllegalArgumentException e) {
+                System.out.print("erro (" + e.getMessage() + ") ");
+            }
+        }
+        System.out.println("| gravadas: " + gravadas + ", chamadas: " + chamadas);
+    }
+}`,
+      saidaCorrigida: 'gravada erro (nota vazia) gravada | gravadas: 2, chamadas: 3',
+      dica: 'O que acontece com um `return` do `try`, ou com uma exceção que está subindo, quando o `finally` também tem um `return`?',
+      explicacao:
+        'Um `return` no `finally` substitui o retorno do `try` e engole a exceção pendente: a nota vazia lançou `IllegalArgumentException`, e quem chamou recebeu `ok`. O `javac -Xlint:finally` avisa com `finally clause cannot complete normally`. Use o `finally` só para limpeza, sem `return` nem `throw`.',
+    },
+    {
+      id: 'pleno-t1-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O relatório de vendas falha, e o log só diz `NullPointerException`, sem nenhuma pista do problema real: `falhou: NullPointerException`.',
+      codigo: `public class Relatorio {
+    static class Arquivo {
+        final String nome;
+
+        Arquivo(String nome) {
+            if (nome.startsWith("/restrito")) throw new IllegalStateException("sem permissão para " + nome);
+            this.nome = nome;
+        }
+
+        void fechar() {
+            System.out.println("fechou " + nome);
+        }
+    }
+
+    public static void main(String[] args) {
+        Arquivo arquivo = null;
+        try {
+            try {
+                arquivo = new Arquivo("/restrito/vendas.csv");
+                System.out.println("gerando relatório");
+            } finally {
+                arquivo.fechar();
+            }
+        } catch (RuntimeException e) {
+            System.out.println("falhou: " + e.getClass().getSimpleName());
+        }
+    }
+}`,
+      linha: 22,
+      efeito: { tipo: 'saida', saida: 'falhou: NullPointerException' },
+      correcao: `public class Relatorio {
+    static class Arquivo {
+        final String nome;
+
+        Arquivo(String nome) {
+            if (nome.startsWith("/restrito")) throw new IllegalStateException("sem permissão para " + nome);
+            this.nome = nome;
+        }
+
+        void fechar() {
+            System.out.println("fechou " + nome);
+        }
+    }
+
+    public static void main(String[] args) {
+        Arquivo arquivo = null;
+        try {
+            try {
+                arquivo = new Arquivo("/restrito/vendas.csv");
+                System.out.println("gerando relatório");
+            } finally {
+                if (arquivo != null) arquivo.fechar();
+            }
+        } catch (RuntimeException e) {
+            System.out.println("falhou: " + e.getClass().getSimpleName());
+        }
+    }
+}`,
+      saidaCorrigida: 'falhou: IllegalStateException',
+      dica: 'Se o construtor de `Arquivo` lançar, que valor tem `arquivo` quando o `finally` roda? E o que acontece com a exceção original?',
+      explicacao:
+        'O construtor lançou `IllegalStateException` antes da atribuição, e `arquivo` continuou `null`. No `finally`, `arquivo.fechar()` lançou uma `NullPointerException`, que **substituiu** a exceção original, perdida para sempre. Confira `null` antes de fechar, ou use o try com recursos, que guarda a exceção do fechamento como suprimida.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t1-e02-q01',
@@ -147,6 +335,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Ele roda depois do `try` normal, depois de um `catch`, depois de um `return` e até quando a exceção não é tratada. `System.exit` é a exceção prática à regra.',
+      dica: 'Pense no único jeito comum de impedir o `finally`.',
     },
     {
       id: 'pleno-t1-e02-q02',
@@ -171,6 +360,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: '1345',
       explicacao: 'A divisão por zero abandona o `try` antes do "2". O `catch` trata a exceção, o `finally` roda e o programa segue normalmente.',
+      dica: 'Siga o fluxo: o `try` para na divisão. O que roda depois?',
     },
     {
       id: 'pleno-t1-e02-q03',
@@ -198,6 +388,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 8 },
       explicacao: 'Toda `ClassCastException` é uma `RuntimeException` e já seria pega pelo primeiro `catch`. O mais específico precisa vir antes.',
+      dica: '`ClassCastException` é uma `RuntimeException`.',
     },
     {
       id: 'pleno-t1-e02-q04',
@@ -223,6 +414,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O valor do `return` (15) é guardado antes de o `finally` rodar. Dobrar `x` depois não muda o que já foi decidido.',
+      dica: 'O valor do `return` é fixado antes do `finally`.',
     },
     {
       id: 'pleno-t1-e02-q05',
@@ -252,6 +444,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `return` no `finally` encerra o método normalmente, e a exceção pendente é descartada. É por isso que não se escreve `return` no `finally`.',
+      dica: 'Um `return` no `finally` vence qualquer outra saída, inclusive uma exceção.',
     },
     {
       id: 'pleno-t1-e02-q06',
@@ -270,6 +463,7 @@ const episodio: EpisodioConteudo = {
       respostas: ['finally'],
       saida: 'usando\nliberando',
       explicacao: 'Um `try` com `finally` e sem `catch` é válido: não trata nada, mas garante que a liberação aconteça.',
+      dica: 'É o bloco que roda com ou sem exceção.',
     },
     {
       id: 'pleno-t1-e02-q07',
@@ -287,6 +481,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: 4,
       explicacao: 'Um `try` sozinho não faz sentido: ele precisa de um `catch`, de um `finally` ou de recursos. O erro é acusado no próprio `try`.',
+      dica: 'Um `try` sozinho, sem `catch` nem `finally`, é aceito?',
     },
     {
       id: 'pleno-t1-e02-q08',
@@ -303,6 +498,7 @@ const episodio: EpisodioConteudo = {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'O `finally` vem sempre por último. E um `catch` de `RuntimeException` depois de um de `Exception` é inalcançável.',
+      dica: 'Os `catch` vêm antes do `finally` e vão do específico para o geral.',
     },
     {
       id: 'pleno-t1-e02-q09',
@@ -323,6 +519,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`System.exit` encerra a JVM na hora, e o `finally` nunca chega a rodar.',
+      dica: 'O que `System.exit` faz com a JVM?',
     },
     {
       id: 'pleno-t1-e02-q10',
@@ -348,6 +545,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException' },
       explicacao: 'A exceção do `finally` substitui a que estava subindo. A `IllegalArgumentException` se perde, sem nem aparecer como suprimida.',
+      dica: 'Uma exceção lançada no `finally` substitui a que estava subindo.',
     },
     {
       id: 'pleno-t1-e02-q11',
@@ -357,6 +555,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['Depois de todos os `catch`', 'Antes dos `catch`', 'Entre quaisquer dois `catch`', 'Dentro do último `catch`'],
       resposta: 0,
       explicacao: 'A sequência é fixa: `try`, os `catch` na ordem do mais específico ao mais geral, e o `finally` no fim.',
+      dica: 'A ordem dos blocos é fixa.',
     },
     {
       id: 'pleno-t1-e02-q12',
@@ -382,6 +581,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: 'abcde',
       explicacao: 'O `try` interno não trata a exceção, mas o `finally` dele roda antes de ela subir. O `catch` externo trata, o `finally` externo roda, e o programa segue.',
+      dica: 'O `finally` de dentro roda antes de a exceção chegar ao `catch` de fora.',
     },
     {
       id: 'pleno-t1-e02-q13',
@@ -406,6 +606,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `return` guarda a referência do array antes do `finally`. O `finally` altera o conteúdo desse mesmo array, e quem chamou vê a mudança.',
+      dica: 'O `return` guardou a referência para o array, e não uma cópia dele.',
     },
     {
       id: 'pleno-t1-e02-q14',
@@ -421,6 +622,7 @@ const episodio: EpisodioConteudo = {
       ],
       respostas: [0, 1],
       explicacao: '`return`, `break`, `continue` e exceções não tratadas passam pelo `finally` antes de sair. Só o encerramento da JVM o impede.',
+      dica: 'Em quais casos a JVM deixa de existir antes do `finally`?',
     },
     {
       id: 'pleno-t1-e02-q15',
@@ -435,6 +637,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'A duplicação substituiu o antigo `jsr`/`ret`, proibido nos arquivos de classe desde o Java 7 por complicar a verificação do bytecode.',
+      dica: 'A JVM não tem uma instrução própria para o `finally`.',
     },
   ],
 };

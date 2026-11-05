@@ -13,6 +13,22 @@ const episodio: EpisodioConteudo = {
     'O `ByteBuffer` do Java é big-endian por padrão.',
     '`cmp` só liga flags; quem decide o desvio é o salto condicional seguinte.',
   ],
+  ia: {
+    uso:
+      'A IA explica bem trechos de assembly linha a linha e traduz entre C e assembly. Use-a como tutora, mas confira cada tradução compilando no Compiler Explorer, onde o assembly é o real.',
+    pedido:
+      'Estou aprendendo a ler assembly x86-64 (sintaxe Intel, Linux).\n<cole o código C aqui>\n- Explique o assembly que o gcc -O0 gera para esta função, linha a linha.\n- Diga em que registrador chega cada argumento e onde fica o retorno.\n- Depois compare com a versão -O2 e explique o que a otimização mudou.',
+    erros: [
+      'Mistura a convenção de chamada do Windows com a do Linux.',
+      'Inverte a ordem dos operandos entre as sintaxes Intel e AT&T.',
+      'Inventa bytes de instruções que não correspondem ao código real.',
+    ],
+    conferir: [
+      'Compile o mesmo código no Compiler Explorer, com o mesmo compilador e opção.',
+      'Confira o processador e a sintaxe escolhidos (x86-64 Intel ou AT&T, ARM64).',
+      'Para a ordem dos bytes, teste com `ByteBuffer` em Java.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JVMS 4: The class File Format',
@@ -130,6 +146,94 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Deslocar 8 × i bits e mascarar com `0xFF` extrai cada byte, do menos para o mais significativo, que é exatamente a ordem little-endian. É assim que um montador gera os bytes de uma instrução, e você acabou de escrever um montador de uma instrução só.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t2-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O leitor de arquivo binário devolve `2018915346` para os bytes `12 34 56 78`, gravados em big-endian, quando deveria devolver `305419896` (0x12345678).',
+      codigo: `public class Leitor {
+    static int lerInt(byte[] b) {
+        return (b[3] & 0xFF) << 24 | (b[2] & 0xFF) << 16 | (b[1] & 0xFF) << 8 | (b[0] & 0xFF);
+    }
+
+    public static void main(String[] args) {
+        byte[] gravado = {0x12, 0x34, 0x56, 0x78};
+        System.out.println(lerInt(gravado));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '2018915346' },
+      correcao: `public class Leitor {
+    static int lerInt(byte[] b) {
+        return (b[0] & 0xFF) << 24 | (b[1] & 0xFF) << 16 | (b[2] & 0xFF) << 8 | (b[3] & 0xFF);
+    }
+
+    public static void main(String[] args) {
+        byte[] gravado = {0x12, 0x34, 0x56, 0x78};
+        System.out.println(lerInt(gravado));
+    }
+}`,
+      saidaCorrigida: '305419896',
+      dica: 'Em big-endian, o primeiro byte do arquivo é o mais significativo ou o menos?',
+      explicacao: 'O método monta o número como little-endian, com o primeiro byte na posição menos significativa, mas os bytes foram gravados em big-endian. O resultado é 0x78563412. Quem lê precisa usar a mesma ordem de quem gravou.',
+    },
+    {
+      id: 'aprendiz-t2-e01-b02',
+      dificuldade: 2,
+      sintoma: 'A "otimização" trocou `/ 2` por `>> 1`, e a metade de -7 passou a sair `-4` em vez de `-3`.',
+      codigo: `public class Metade {
+    static int metade(int x) {
+        return x >> 1;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(metade(10) + " " + metade(7) + " " + metade(-7));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '5 3 -4' },
+      correcao: `public class Metade {
+    static int metade(int x) {
+        return x / 2;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(metade(10) + " " + metade(7) + " " + metade(-7));
+    }
+}`,
+      saidaCorrigida: '5 3 -3',
+      dica: 'Para números positivos, `x >> 1` e `x / 2` dão o mesmo. E para negativos ímpares? Para que lado cada um arredonda?',
+      explicacao: 'A divisão inteira do Java arredonda em direção a zero, e o deslocamento aritmético arredonda para baixo (em direção a menos infinito). Com negativos ímpares, os dois diferem em 1. Compiladores sabem disso e acrescentam uma correção; escreva `/ 2` e deixe a otimização com eles.',
+    },
+    {
+      id: 'aprendiz-t2-e01-b03',
+      dificuldade: 3,
+      sintoma: 'O somatório de 1 a 100.000 pela fórmula sai `705082704`, mas o laço, que está certo, dá 5.000.050.000.',
+      codigo: `public class Somatorio {
+    static long formula(int n) {
+        return n * (n + 1) / 2;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(formula(100_000));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '705082704' },
+      correcao: `public class Somatorio {
+    static long formula(int n) {
+        return (long) n * (n + 1) / 2;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(formula(100_000));
+    }
+}`,
+      saidaCorrigida: '5000050000',
+      dica: 'O método devolve `long`, mas em que tipo a multiplicação `n * (n + 1)` é feita?',
+      explicacao: 'Os dois fatores são `int`, então a multiplicação acontece em 32 bits e estoura (100.000 × 100.001 passa de 2,1 bilhões) antes de virar `long`. Convertendo um dos fatores, a conta inteira é feita em 64 bits.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t2-e01-q01',
@@ -145,6 +249,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'Cada mnemônico corresponde a uma instrução de máquina, então o montador faz uma tradução direta. C para assembly é trabalho do compilador, juntar objetos é do ligador, e bytecode para nativo é do JIT.',
+      dica: 'O montador trabalha entre o assembly e os bytes.',
     },
     {
       id: 'aprendiz-t2-e01-q02',
@@ -154,6 +259,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['`rdi` (ou `edi`, para 32 bits)', '`rax`', '`rsp`', '`rcx`', '`rip`'],
       resposta: 0,
       explicacao: 'A convenção System V usa `rdi`, `rsi`, `rdx`, `rcx`, `r8` e `r9`, nessa ordem. `rax` é o retorno, `rsp` é o topo da pilha e `rip` é o contador de programa. No Windows, o primeiro argumento vai em `rcx`.',
+      dica: 'System V: rdi, rsi, rdx, rcx, r8, r9.',
     },
     {
       id: 'aprendiz-t2-e01-q03',
@@ -163,6 +269,7 @@ const episodio: EpisodioConteudo = {
       opcoes: ['Em `rax` (ou `eax`)', 'Em `rdi`', 'No topo da pilha', 'Em `rsp`', 'Num arquivo temporário'],
       resposta: 0,
       explicacao: 'Por isso o `lea eax, [rdi+rsi]` da versão otimizada não precisa de mais nada antes do `ret`: o resultado já está onde quem chamou vai procurar.',
+      dica: 'O retorno sempre volta no mesmo registrador.',
     },
     {
       id: 'aprendiz-t2-e01-q04',
@@ -178,6 +285,7 @@ const episodio: EpisodioConteudo = {
       ],
       respostas: [0, 1],
       explicacao: 'Assembly é só código de máquina com nomes, então está preso à ISA do processador. C é que é portátil: o mesmo código é recompilado para cada processador. E registradores são o centro de qualquer programa em assembly.',
+      dica: 'Assembly é preso à ISA do processador.',
     },
     {
       id: 'aprendiz-t2-e01-q05',
@@ -192,6 +300,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: '`cmp` faz a subtração i − n só para ligar as flags. `jg` ("jump if greater") salta para `fim` quando o resultado indica i > n. É o teste do `for (...; i <= n; ...)` invertido: sai quando a condição de continuar falha.',
+      dica: '`cmp` liga as flags; `jg` salta se for maior.',
     },
     {
       id: 'aprendiz-t2-e01-q06',
@@ -216,6 +325,7 @@ public class Bytes {
 }`,
       resposta: '0a 0b 0c 0d\n0d 0c 0b 0a',
       explicacao: 'O `ByteBuffer` começa big-endian: o byte mais significativo (`0a`) vem primeiro. Com `LITTLE_ENDIAN`, a ordem se inverte, que é como um processador x86 guardaria esse número na memória.',
+      dica: 'O padrão do `ByteBuffer` é big-endian; o segundo inverte a ordem.',
     },
     {
       id: 'aprendiz-t2-e01-q07',
@@ -225,6 +335,7 @@ public class Bytes {
       opcoes: ['`0x78`', '`0x12`', '`0x34`', '`0x56`', 'Depende do sistema operacional'],
       resposta: 0,
       explicacao: 'Little-endian começa pelo byte menos significativo: o endereço 100 guarda `0x78`, o 101 guarda `0x56`, o 102 `0x34` e o 103 `0x12`. Quem decide a ordem é o processador, não o sistema operacional.',
+      dica: 'Little-endian: o byte menos significativo primeiro.',
     },
     {
       id: 'aprendiz-t2-e01-q08',
@@ -239,6 +350,7 @@ public class Bytes {
       ],
       resposta: 0,
       explicacao: 'No `-O0`, o compilador prioriza fidelidade ao código-fonte: um depurador consegue mostrar e alterar cada variável no seu endereço. Com `-O2`, as variáveis vivem em registradores e algumas nem existem mais, o que deixa o código rápido e a depuração difícil.',
+      dica: 'Sem otimização, pense no que o depurador precisa.',
     },
     {
       id: 'aprendiz-t2-e01-q09',
@@ -252,6 +364,7 @@ System.out.println(x == Integer.MIN_VALUE);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`0x7FFFFFFF` é o maior `int`. Somando 1, o bit de sinal liga e o valor vira `0x80000000`, o menor `int`. A especificação do Java define esse comportamento, que coincide com o da instrução `add` do processador.',
+      dica: 'Passou do máximo, deu a volta para o mínimo.',
     },
     {
       id: 'aprendiz-t2-e01-q10',
@@ -266,6 +379,7 @@ System.out.println(x == Integer.MIN_VALUE);`,
       ],
       resposta: 0,
       explicacao: 'ISA (instruction set architecture) é o "idioma" da máquina: x86-64, ARM64, RISC-V. Dois processadores com a mesma ISA rodam o mesmo código de máquina, mesmo sendo de fabricantes diferentes.',
+      dica: '*Instruction set architecture*.',
     },
     {
       id: 'aprendiz-t2-e01-q11',
@@ -278,6 +392,7 @@ System.out.println(-40 >> 2);
 System.out.println(-40 >>> 28);`,
       resposta: '40\n10\n-10\n15',
       explicacao: '`<< 3` multiplica por 8 e `>> 2` divide por 4, preservando o sinal (o `>>` copia o bit de sinal). Já o `>>>` empurra zeros pela esquerda: os 4 bits de cima de -40 (`0xFFFFFFD8`) são `1111`, que vale 15.',
+      dica: '`<< 3` multiplica por 8; `>> 2` divide por 4 mantendo o sinal; `>>>` enche de zeros à esquerda.',
     },
     {
       id: 'aprendiz-t2-e01-q12',
@@ -287,6 +402,7 @@ System.out.println(-40 >>> 28);`,
       opcoes: ['O endereço do topo da pilha', 'O resultado das funções', 'O endereço da próxima instrução', 'O primeiro argumento', 'O número de núcleos'],
       resposta: 0,
       explicacao: '`rsp` é o *stack pointer*. Instruções como `push`, `pop`, `call` e `ret` o atualizam sozinhas. O endereço da próxima instrução fica em `rip`.',
+      dica: '*Stack pointer*.',
     },
     {
       id: 'aprendiz-t2-e01-q13',
@@ -302,6 +418,7 @@ System.out.println(-40 >>> 28);`,
       ],
       respostas: [0, 1],
       explicacao: 'Assembly aparece onde é preciso controle total do hardware ou de cada ciclo. Para aplicações comuns, linguagens de alto nível e compiladores otimizadores fazem um trabalho igual ou melhor, com muito menos esforço.',
+      dica: 'Onde cada ciclo de processador conta, e onde o sistema começa.',
     },
     {
       id: 'aprendiz-t2-e01-q14',
@@ -311,6 +428,7 @@ System.out.println(-40 >>> 28);`,
       opcoes: ['1 byte (`C3`)', '4 bytes', '8 bytes', '15 bytes', 'Depende do sistema operacional'],
       resposta: 0,
       explicacao: 'x86 tem instruções de tamanho variável: `ret` e `nop` usam 1 byte, `mov eax, 1` usa 5, e o máximo é 15. Em ARM64, toda instrução tem 4 bytes.',
+      dica: 'É uma das instruções mais curtas do x86.',
     },
     {
       id: 'aprendiz-t2-e01-q15',
@@ -326,6 +444,7 @@ System.out.println(-40 >>> 28);`,
       respostas: ['<<'],
       saida: '56',
       explicacao: 'Deslocar 3 bits para a esquerda multiplica por 2³ = 8. É uma das trocas que compiladores fazem por conta própria, porque o deslocamento é mais barato que a multiplicação em muitos processadores.',
+      dica: 'Multiplicar por 8 é deslocar 3 posições para a esquerda.',
     },
   ],
 };

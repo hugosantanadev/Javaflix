@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Anatomia de uma troca HTTP/1.1: a requisição tem a linha GET /produtos/42 HTTP/1.1, os cabeçalhos Host e Accept, uma linha em branco e nenhum corpo; a resposta tem a linha HTTP/1.1 200 OK, os cabeçalhos Content-Type e Content-Length 26, uma linha em branco e o corpo JSON de 26 bytes</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <text x="30" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="700" fill="#f3eee7">Requisição</text>
+  <text x="400" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="700" fill="#f3eee7">Resposta</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="30" y="50" width="330" height="30" rx="4" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="42" y="70" fill="#ff7a1a" font-weight="700">GET /produtos/42 HTTP/1.1</text>
+    <rect x="30" y="86" width="330" height="56" rx="4" fill="#1b1916" stroke="#8a8277"/>
+    <text x="42" y="108" fill="#bdb5aa">Host: loja.exemplo</text>
+    <text x="42" y="128" fill="#bdb5aa">Accept: application/json</text>
+    <rect x="30" y="148" width="330" height="24" rx="4" fill="#13110f" stroke="#f2c75c" stroke-dasharray="4 3"/>
+    <text x="42" y="165" fill="#f2c75c">\r\n</text>
+    <rect x="30" y="178" width="330" height="40" rx="4" fill="#13110f" stroke="#43403a" stroke-dasharray="3 3"/>
+    <text x="42" y="203" fill="#6b645b">(sem corpo)</text>
+
+    <rect x="400" y="50" width="330" height="30" rx="4" fill="#13221a" stroke="#4fd68b"/>
+    <text x="412" y="70" fill="#4fd68b" font-weight="700">HTTP/1.1 200 OK</text>
+    <rect x="400" y="86" width="330" height="56" rx="4" fill="#1b1916" stroke="#8a8277"/>
+    <text x="412" y="108" fill="#bdb5aa">Content-Type: application/json</text>
+    <text x="412" y="128" fill="#bdb5aa">Content-Length: 26</text>
+    <rect x="400" y="148" width="330" height="24" rx="4" fill="#13110f" stroke="#f2c75c" stroke-dasharray="4 3"/>
+    <text x="412" y="165" fill="#f2c75c">\r\n</text>
+    <rect x="400" y="178" width="330" height="40" rx="4" fill="#1b1916" stroke="#8a8277"/>
+    <text x="412" y="203" fill="#f3eee7">{"id":42,"nome":"Teclado"}</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <text x="30" y="242">1. linha inicial: o que fazer (método e alvo) ou como foi (status)</text>
+    <text x="30" y="260">2. cabeçalhos, um por linha</text>
+    <text x="30" y="278">3. linha em branco: fim dos cabeçalhos</text>
+    <text x="30" y="296">4. corpo, com exatamente Content-Length bytes</text>
+  </g>
+  <text x="400" y="316" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#f2c75c">26 bytes: o cliente sabe onde a resposta termina</text>
+</svg>

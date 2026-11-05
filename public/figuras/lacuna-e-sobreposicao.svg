@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">O horário de verão em Nova York em 2024, em duas linhas: em 10 de março, a lacuna, o relógio vai de 01:59 direto para 03:00, e as horas de 02:00 a 02:59 não existem; em 3 de novembro, a sobreposição, o relógio passa por 01:00 e 01:30 em menos 4 horas e depois de novo em menos 5 horas, e cada horário entre 1h e 2h acontece duas vezes; embaixo de cada linha, os mesmos momentos em UTC andam sempre para a frente</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <text x="20" y="28" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ff7a1a">10 de março: a lacuna</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="40" width="120" height="40" rx="6" fill="#1b1916" stroke="#8a8277"/><text x="34" y="65" fill="#f3eee7">01:00 -05</text>
+    <rect x="150" y="40" width="120" height="40" rx="6" fill="#1b1916" stroke="#8a8277"/><text x="164" y="65" fill="#f3eee7">01:30 -05</text>
+    <rect x="280" y="40" width="200" height="40" rx="6" fill="#2a1414" stroke="#db5c5c" stroke-dasharray="5 4"/><text x="294" y="65" fill="#db5c5c">02:00 a 02:59 não existem</text>
+    <rect x="490" y="40" width="120" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="504" y="65" fill="#f3eee7">03:00 -04</text>
+    <rect x="620" y="40" width="120" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/><text x="634" y="65" fill="#f3eee7">03:30 -04</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#6b645b">
+    <text x="34" y="100">06:00Z</text><text x="164" y="100">06:30Z</text><text x="504" y="100">07:00Z</text><text x="634" y="100">07:30Z</text>
+  </g>
+  <text x="20" y="124" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">Um horário pedido na lacuna, como 02:30, é empurrado para 03:30. Da 01:00 às 03:00 passa uma hora.</text>
+
+  <text x="20" y="176" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#f2c75c">3 de novembro: a sobreposição</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="188" width="135" height="40" rx="6" fill="#1b1916" stroke="#f2c75c"/><text x="34" y="213" fill="#f3eee7">01:00 -04</text>
+    <rect x="165" y="188" width="135" height="40" rx="6" fill="#1b1916" stroke="#f2c75c"/><text x="179" y="213" fill="#f3eee7">01:30 -04</text>
+    <rect x="310" y="188" width="135" height="40" rx="6" fill="#1b1916" stroke="#f2c75c"/><text x="324" y="213" fill="#f3eee7">01:00 -05</text>
+    <rect x="455" y="188" width="135" height="40" rx="6" fill="#1b1916" stroke="#f2c75c"/><text x="469" y="213" fill="#f3eee7">01:30 -05</text>
+    <rect x="600" y="188" width="140" height="40" rx="6" fill="#1b1916" stroke="#8a8277"/><text x="614" y="213" fill="#f3eee7">02:00 -05</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#6b645b">
+    <text x="34" y="248">05:00Z</text><text x="179" y="248">05:30Z</text><text x="324" y="248">06:00Z</text><text x="469" y="248">06:30Z</text><text x="614" y="248">07:00Z</text>
+  </g>
+  <text x="20" y="272" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">01:30 acontece duas vezes; por padrão, o Java escolhe a primeira, em -04:00.</text>
+  <text x="20" y="310" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">O relógio de parede pula e repete; a linha do tempo em UTC só anda para a frente.</text>
+</svg>

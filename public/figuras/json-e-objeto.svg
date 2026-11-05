@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">O ObjectMapper no meio: à esquerda, o texto JSON com id, cliente e total; à direita, o record Pedido com os componentes id, cliente e total; writeValueAsString vai do objeto para o texto e readValue do texto para o objeto; os nomes dos campos casam com os nomes dos componentes, e o total 150.00 vira BigDecimal</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker>
+  </defs>
+  <text x="30" y="40" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#f3eee7">Texto JSON (no fio)</text>
+  <rect x="30" y="52" width="250" height="140" rx="8" fill="#1b1916" stroke="#8a8277"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <text x="44" y="78" fill="#bdb5aa">{</text>
+    <text x="60" y="102" fill="#f2c75c">"id": 42,</text>
+    <text x="60" y="126" fill="#f2c75c">"cliente": "Ana",</text>
+    <text x="60" y="150" fill="#f2c75c">"total": 150.00</text>
+    <text x="44" y="174" fill="#bdb5aa">}</text>
+  </g>
+  <rect x="320" y="96" width="120" height="52" rx="8" fill="#26170c" stroke="#ff7a1a"/>
+  <text x="380" y="118" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#ff7a1a" text-anchor="middle">ObjectMapper</text>
+  <text x="380" y="136" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#bdb5aa" text-anchor="middle">um só, reaproveitado</text>
+  <text x="480" y="40" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#f3eee7">Objeto Java (na memória)</text>
+  <rect x="480" y="52" width="250" height="140" rx="8" fill="#13221a" stroke="#4fd68b"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <text x="494" y="78" fill="#4fd68b">record Pedido(</text>
+    <text x="510" y="102" fill="#bdb5aa">long id,</text>
+    <text x="510" y="126" fill="#bdb5aa">String cliente,</text>
+    <text x="510" y="150" fill="#bdb5aa">BigDecimal total)</text>
+  </g>
+  <path d="M280 108 L317 112" stroke="#4fd68b" stroke-width="1.6" fill="none" marker-end="url(#v)"/>
+  <path d="M440 112 L477 108" stroke="#4fd68b" stroke-width="1.6" fill="none" marker-end="url(#v)"/>
+  <path d="M477 140 L443 136" stroke="#ff7a1a" stroke-width="1.6" fill="none" marker-end="url(#l)"/>
+  <path d="M317 136 L283 140" stroke="#ff7a1a" stroke-width="1.6" fill="none" marker-end="url(#l)"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700">
+    <text x="320" y="84" fill="#4fd68b">readValue</text>
+    <text x="300" y="176" fill="#ff7a1a">writeValueAsString</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <text x="30" y="232">Os nomes casam: o campo "total" do JSON vai para o componente total do record.</text>
+    <text x="30" y="254">O número 150.00 vira BigDecimal sem passar por double, e a escala de duas casas é mantida.</text>
+    <text x="30" y="276">Campo sem par, tipo errado ou JSON inválido viram exceções do Jackson, e o Spring responde 400.</text>
+  </g>
+</svg>

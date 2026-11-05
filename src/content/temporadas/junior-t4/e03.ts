@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Um `default` numa interface e um abstrato com a mesma assinatura em outra também obrigam a sobrescrever.',
     'Mesma assinatura com retornos incompatíveis em duas interfaces: nenhuma classe pode implementar as duas.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a explicar por que uma classe não compila depois de implementar mais uma interface e a escrever a sobrescrita que resolve o conflito. Peça sempre que ela diga qual das três regras se aplica.',
+    pedido:
+      'Explique qual versão de cada método esta classe Java 21 herda.\n<cole o código aqui>\n- Para cada método vindo de interfaces, diga qual regra decide: classe, interface mais específica ou sobrescrita obrigatória.\n- Escreva a sobrescrita necessária usando Interface.super.metodo().\n- Aponte métodos da superclasse que precisariam ser public para implementar a interface.',
+    erros: [
+      'Usa `super.metodo()` para chamar um `default`, como se a interface fosse superclasse.',
+      'Chama `A.super.f()` com uma interface que a classe não implementa diretamente.',
+      'Diz que a primeira interface do `implements` vence o conflito.',
+    ],
+    conferir: [
+      'Compile: conflitos aparecem como "inherits unrelated defaults".',
+      'Imprima o resultado de cada método para confirmar a versão escolhida.',
+      'Troque a ordem das interfaces no `implements` e confirme que nada muda.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Extending Interfaces That Contain Default Methods',
@@ -163,6 +179,154 @@ public class Casa {
     comentarios:
       'As três classes mostram as três regras: `Lampada` resolve um conflito entre interfaces sem relação, `Tomada` deixa a superclasse vencer, e `Caixa` usa ao mesmo tempo `super` (a classe mãe) e `Conectado.super` (a interface). O `status()` de `Caixa` vem da interface, porque nenhuma classe o declara.',
   },
+  bugs: [
+    {
+      id: 'junior-t4-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: types Voa and Nada are incompatible;`.',
+      codigo: `interface Voa {
+    default String mover() { return "voando"; }
+}
+
+interface Nada {
+    default String mover() { return "nadando"; }
+}
+
+class Pato implements Voa, Nada { }
+
+public class Lago {
+    public static void main(String[] args) {
+        System.out.println(new Pato().mover());
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `interface Voa {
+    default String mover() { return "voando"; }
+}
+
+interface Nada {
+    default String mover() { return "nadando"; }
+}
+
+class Pato implements Voa, Nada { public String mover() { return Nada.super.mover(); } }
+
+public class Lago {
+    public static void main(String[] args) {
+        System.out.println(new Pato().mover());
+    }
+}`,
+      saidaCorrigida: 'nadando',
+      dica: 'Leia a segunda linha da mensagem: "inherits unrelated defaults". Quem precisa decidir qual versão vale?',
+      explicacao: 'Duas interfaces sem relação trazem o mesmo `default`, e o compilador não escolhe por ninguém. A classe precisa sobrescrever o método, e pode reaproveitar uma das versões com `Interface.super.metodo()`.',
+    },
+    {
+      id: 'junior-t4-e03-b02',
+      dificuldade: 2,
+      sintoma: 'Livros deveriam ter o desconto de 10% da interface `Descontavel`, mas o sistema aplica `0.05`.',
+      codigo: `interface Descontavel {
+    default double desconto() { return 0.10; }
+}
+
+class Produto {
+    public double desconto() { return 0.05; }
+}
+
+class Livro extends Produto implements Descontavel { }
+
+public class Livraria {
+    public static void main(String[] args) {
+        Descontavel d = new Livro();
+        System.out.println(d.desconto());
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: '0.05' },
+      correcao: `interface Descontavel {
+    default double desconto() { return 0.10; }
+}
+
+class Produto {
+    public double desconto() { return 0.05; }
+}
+
+class Livro extends Produto implements Descontavel { public double desconto() { return Descontavel.super.desconto(); } }
+
+public class Livraria {
+    public static void main(String[] args) {
+        Descontavel d = new Livro();
+        System.out.println(d.desconto());
+    }
+}`,
+      saidaCorrigida: '0.1',
+      dica: 'Entre um método herdado da superclasse e um `default` de interface, qual vence?',
+      explicacao: 'Pela primeira regra, o método da classe ou da superclasse sempre vence o `default`, mesmo que a variável seja do tipo da interface. Para usar a versão da interface, a classe precisa sobrescrever e chamar `Descontavel.super.desconto()`.',
+    },
+    {
+      id: 'junior-t4-e03-b03',
+      dificuldade: 3,
+      sintoma: 'Apagar um cliente do repositório em memória lança `UnsupportedOperationException: apagar`, embora a classe implemente `apagar`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+interface Repositorio {
+    void salvar(String id);
+
+    default void apagar(String id) {
+        throw new UnsupportedOperationException("apagar");
+    }
+}
+
+class RepositorioMemoria implements Repositorio {
+    final List<String> ids = new ArrayList<>();
+
+    public void salvar(String id) { ids.add(id); }
+
+    public void apagar(Object id) { ids.remove(id); }
+}
+
+public class Clientes {
+    public static void main(String[] args) {
+        RepositorioMemoria repo = new RepositorioMemoria();
+        repo.salvar("7");
+        repo.apagar("7");
+        System.out.println(repo.ids);
+    }
+}`,
+      linha: 17,
+      efeito: { tipo: 'excecao', nome: 'UnsupportedOperationException' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+interface Repositorio {
+    void salvar(String id);
+
+    default void apagar(String id) {
+        throw new UnsupportedOperationException("apagar");
+    }
+}
+
+class RepositorioMemoria implements Repositorio {
+    final List<String> ids = new ArrayList<>();
+
+    public void salvar(String id) { ids.add(id); }
+
+    public void apagar(String id) { ids.remove(id); }
+}
+
+public class Clientes {
+    public static void main(String[] args) {
+        RepositorioMemoria repo = new RepositorioMemoria();
+        repo.salvar("7");
+        repo.apagar("7");
+        System.out.println(repo.ids);
+    }
+}`,
+      saidaCorrigida: '[]',
+      dica: 'O `apagar` da classe sobrescreve o `default`, ou é outro método com o mesmo nome? Compare os parâmetros.',
+      explicacao: 'Com `Object`, o método da classe é uma sobrecarga; para o argumento `String`, o compilador escolhe a versão mais específica, que é o `default` da interface, e ele lança a exceção. Com o parâmetro `String`, a classe sobrescreve o `default`. Um `@Override` teria acusado o engano.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t4-e03-q01',
@@ -177,6 +341,7 @@ public class Casa {
       ],
       resposta: 0,
       explicacao: 'A ordem no `implements` nunca decide nada. Classes vencem interfaces, subinterfaces vencem interfaces mães, e o resto é um conflito que a classe resolve.',
+      dica: 'A classe existia antes dos `default`, e não pode ser atropelada por eles.',
     },
     {
       id: 'junior-t4-e03-q02',
@@ -193,6 +358,7 @@ class C implements A, B {
 System.out.println(new C().f());`,
       resposta: 'bac',
       explicacao: 'A classe é obrigada a sobrescrever `f()` e pode chamar cada versão pelo nome da interface, na ordem que quiser.',
+      dica: 'A ordem das chamadas dentro do `return` define a ordem das letras.',
     },
     {
       id: 'junior-t4-e03-q03',
@@ -214,6 +380,7 @@ class Pato implements Voa, Nada {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'As duas interfaces não têm relação, e nenhuma regra decide entre elas. `Pato` precisa sobrescrever `mover()`.',
+      dica: 'As duas interfaces não têm relação e trazem o mesmo `default`.',
     },
     {
       id: 'junior-t4-e03-q04',
@@ -236,6 +403,7 @@ System.out.println(d.desconto());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A classe vence: o método herdado de `Produto` implementa o da interface, mesmo chamado por uma referência `Descontavel`.',
+      dica: 'Regra 1: o método herdado da superclasse vence.',
     },
     {
       id: 'junior-t4-e03-q05',
@@ -252,6 +420,7 @@ System.out.println(d.desconto());`,
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'A subinterface mais específica vence, o diamante sem redefinição tem uma só versão, e a sobrescrita resolve qualquer conflito. Sem ela, dois `default`, ou um `default` e um abstrato, não compilam.',
+      dica: 'Diamante sem redefinição e subinterface que redefine não conflitam.',
     },
     {
       id: 'junior-t4-e03-q06',
@@ -280,6 +449,7 @@ public class Show {
       respostas: ['super'],
       saida: 'lá-uuu',
       explicacao: '`Cantor.super.cantar()` chama o `default` de `Cantor`. Sem o nome da interface, `super.cantar()` procuraria na superclasse, `Object`, e não compilaria.',
+      dica: 'A sintaxe é `Interface.___.metodo()`.',
     },
     {
       id: 'junior-t4-e03-q07',
@@ -301,6 +471,7 @@ class Fim implements Meio {
 }`,
       resposta: 11,
       explicacao: '`Fim` implementa só `Meio` diretamente. `Base.super` tentaria pular um nível, o que não é permitido; a versão de `Base` está escondida pela de `Meio`.',
+      dica: '`X.super` só funciona com interfaces implementadas diretamente.',
     },
     {
       id: 'junior-t4-e03-q08',
@@ -318,6 +489,7 @@ System.out.println(v.rodas());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Moto` estende `Veiculo` e redefine o método: é a interface mais específica, e a versão dela vence, mesmo com `Veiculo` listada no `implements`.',
+      dica: '`Moto` estende `Veiculo` e redefine `rodas()`.',
     },
     {
       id: 'junior-t4-e03-q09',
@@ -342,6 +514,7 @@ class Aluno extends Pessoa implements Saudavel { }`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'A classe vence, mas ao vencer o método de `Pessoa` passa a implementar o da interface, que é `public`. Com acesso de pacote, ele estaria fechando o acesso.',
+      dica: 'Para implementar o método da interface, o da superclasse precisa ser `public`.',
     },
     {
       id: 'junior-t4-e03-q10',
@@ -360,6 +533,7 @@ System.out.println(d.f() + d.g());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`B` e `C` herdam o mesmo `f()` de `A`, sem redefini-lo: só existe uma versão. O `g()` vem só de `C`.',
+      dica: '`f()` só tem uma versão, vinda de `A`; `g()` vem de `C`.',
     },
     {
       id: 'junior-t4-e03-q11',
@@ -374,6 +548,7 @@ System.out.println(d.f() + d.g());`,
       ],
       resposta: 0,
       explicacao: 'A sobrescrita é a única saída para uma classe concreta, e dentro dela qualquer combinação das versões é possível.',
+      dica: 'O compilador não escolhe entre dois `default` sem relação.',
     },
     {
       id: 'junior-t4-e03-q12',
@@ -393,6 +568,7 @@ System.out.println(b.f());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Uma subinterface pode redeclarar um `default` como abstrato, obrigando as classes a implementar. `Impl` implementou, e é a versão dela que roda.',
+      dica: 'Uma subinterface pode tornar abstrato um `default`; `Impl` implementa.',
     },
     {
       id: 'junior-t4-e03-q13',
@@ -408,6 +584,7 @@ System.out.println(b.f());`,
       ],
       respostas: [0, 1],
       explicacao: 'Nos três últimos casos, uma regra decide: a classe vence, a interface mais específica vence, ou só existe uma versão. Nos dois primeiros, nenhuma regra decide.',
+      dica: 'A superclasse com método `public` resolve sozinha; subinterface que redefine também.',
     },
     {
       id: 'junior-t4-e03-q14',
@@ -424,6 +601,7 @@ System.out.println(A.id() + B.id() + " " + new C().nome());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Métodos `static` de interface não são herdados, então não há o que conflitar: cada um é chamado pelo nome da sua interface.',
+      dica: 'Métodos `static` de interface não são herdados, então não conflitam.',
     },
     {
       id: 'junior-t4-e03-q15',
@@ -438,6 +616,7 @@ System.out.println(A.id() + B.id() + " " + new C().nome());`,
       ],
       resposta: 0,
       explicacao: 'Na execução, a JVM procura o `default` mais específico e encontra dois, sem relação. É o mesmo conflito que o compilador recusaria, só que descoberto tarde.',
+      dica: 'A JVM também aplica as regras, e não acha um vencedor.',
     },
   ],
 };

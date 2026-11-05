@@ -379,6 +379,7 @@ public class MockCaseiro {
       ],
       resposta: 0,
       explicacao: 'Com dublês, o teste decide o que cada dependência responde e roda em milissegundos. A integração real fica para outro tipo de teste.',
+      dica: 'O que o teste de unidade quer testar: o serviço ou o banco e o e-mail?',
     },
     {
       id: 'backend-junior-t6-e03-q02',
@@ -388,6 +389,7 @@ public class MockCaseiro {
       opcoes: ['Devolve `false`', 'Lança `NullPointerException`', 'Lança `UnsupportedOperationException`', 'Devolve `true`'],
       resposta: 0,
       explicacao: 'Mocks devolvem valores padrão: `false`, zero, `null`, `Optional.empty()` e coleções vazias, conforme o tipo de retorno.',
+      dica: 'Sem configuração, um mock devolve o valor padrão do tipo.',
     },
     {
       id: 'backend-junior-t6-e03-q03',
@@ -402,6 +404,7 @@ public class MockCaseiro {
       ],
       resposta: 0,
       explicacao: 'O serviço é real; só as dependências são dublês. Com injeção pelo construtor, o teste também poderia escrever `new CheckoutService(estoque, pedidos, notificador)`.',
+      dica: 'O `@InjectMocks` cria o objeto testado com os mocks da classe.',
     },
     {
       id: 'backend-junior-t6-e03-q04',
@@ -416,6 +419,7 @@ public class MockCaseiro {
       ],
       resposta: 0,
       explicacao: 'Ou todos os argumentos são matchers, ou nenhum. O `eq(1)` é a forma de passar um valor exato como matcher.',
+      dica: 'Matchers em todos os argumentos ou em nenhum.',
     },
     {
       id: 'backend-junior-t6-e03-q05',
@@ -430,6 +434,7 @@ public class MockCaseiro {
       ],
       resposta: 0,
       explicacao: 'O modo estrito aponta a linha. Geralmente é sobra de um teste copiado, ou sinal de que o código deixou de chamar a dependência.',
+      dica: 'No modo estrito, toda configuração precisa ser usada.',
     },
     {
       id: 'backend-junior-t6-e03-q06',
@@ -444,6 +449,7 @@ public class MockCaseiro {
       ],
       resposta: 0,
       explicacao: 'É a verificação do caminho triste: sem estoque, o pedido não deve ser salvo nem confirmado.',
+      dica: 'O `never()` vale para qualquer argumento, por causa dos matchers.',
     },
     {
       id: 'backend-junior-t6-e03-q07',
@@ -473,6 +479,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O valor devolvido não diz nada sobre a chamada, mas o handler guardou qual foi. É assim que o `when(...)` do Mockito sabe o que configurar: ele usa a última chamada registrada.',
+      dica: 'O mock não foi configurado, mas guarda a chamada.',
     },
     {
       id: 'backend-junior-t6-e03-q08',
@@ -487,6 +494,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O captor guarda o argumento recebido pelo mock, e o teste pode fazer asserções sobre ele, como o total do carrinho na aula.',
+      dica: 'O argumento é capturado durante a verificação.',
     },
     {
       id: 'backend-junior-t6-e03-q09',
@@ -501,6 +509,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Um `verify` comum só confere que as chamadas aconteceram. Quando a ordem é parte da regra, o `InOrder` a verifica.',
+      dica: 'Pense no que aconteceria se o e-mail saísse antes do pedido ser gravado.',
     },
     {
       id: 'backend-junior-t6-e03-q10',
@@ -528,6 +537,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com três chamadas, o captor real também guarda os três valores: `getAllValues()` devolve `[7, 8, 9]`, e `getValue()`, o último.',
+      dica: 'Todos os valores ficam guardados; o `getValue` devolve o último.',
     },
     {
       id: 'backend-junior-t6-e03-q11',
@@ -543,6 +553,7 @@ public class Teste {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Verificar cada linha copia a implementação no teste; mockar a classe testada testa o mock, e não o código.',
+      dica: 'Duas das opções escondem problemas em vez de resolvê-los.',
     },
     {
       id: 'backend-junior-t6-e03-q12',
@@ -577,6 +588,7 @@ public class Teste {
 }`,
       resposta: '1 2 {1=ana@exemplo.com, 2=bruno@exemplo.com}',
       explicacao: 'O fake se comporta como um repositório de verdade, gerando ids e guardando dados, sem configurar resposta por resposta. O teste pode verificar o estado final.',
+      dica: 'Um *fake* funciona de verdade: guarda e devolve.',
     },
     {
       id: 'backend-junior-t6-e03-q13',
@@ -609,6 +621,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A configuração mais recente que serve vence. No Mockito real, `when(reservar(anyString(), anyInt()))` seguido de `when(reservar(eq("Mouse"), anyInt()))` dá o mesmo resultado; na ordem inversa, o caso geral esconderia o específico.',
+      dica: 'Quando duas configurações servem para a mesma chamada, vale a mais recente.',
     },
     {
       id: 'backend-junior-t6-e03-q14',
@@ -623,6 +636,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Carregar agentes com a JVM já rodando vai ser proibido por padrão. Com o objetivo `properties` do plugin de dependências e o `argLine` do Surefire, o agente entra na partida e os avisos somem.',
+      dica: 'O aviso pede que o agente seja carregado na partida da JVM.',
     },
     {
       id: 'backend-junior-t6-e03-q15',
@@ -637,6 +651,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Na classificação de Gerard Meszaros, popularizada por Martin Fowler, o fake tem comportamento real, mas inadequado para produção, como guardar tudo na memória.',
+      dica: 'Ele funciona de verdade, só que de um jeito simplificado.',
     },
   ],
 };

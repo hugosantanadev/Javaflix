@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">Uma exceção subindo a pilha de chamadas: main chama media, que chama dividir; em dividir, a divisão por zero lança ArithmeticException; a JVM procura um tratador na tabela de exceções de dividir, não acha e desfaz o quadro; repete em media, também sem tratador; em main, a tabela de exceções tem uma entrada para ArithmeticException, e a execução pula para o catch</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <defs>
+    <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker>
+  </defs>
+  <text x="20" y="30" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">A pilha de chamadas (o topo é o método atual)</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="44" width="300" height="60" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="34" y="68" fill="#f3eee7" font-weight="700">dividir(10, 0)</text>
+    <text x="34" y="90" fill="#ff7a1a">return a / b; // lança aqui</text>
+
+    <rect x="20" y="116" width="300" height="60" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="34" y="140" fill="#f3eee7" font-weight="700">media(10, 0)</text>
+    <text x="34" y="162" fill="#bdb5aa">return dividir(soma, n);</text>
+
+    <rect x="20" y="188" width="300" height="76" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="34" y="212" fill="#f3eee7" font-weight="700">main</text>
+    <text x="34" y="234" fill="#bdb5aa">try { media(10, 0); }</text>
+    <text x="34" y="254" fill="#4fd68b">catch (ArithmeticException e)</text>
+  </g>
+  <g stroke="#ff7a1a" stroke-width="1.6" fill="none" marker-end="url(#l)">
+    <path d="M320 74 C 352 74, 352 146, 323 146"/>
+    <path d="M320 146 C 352 146, 352 226, 323 226"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="364" y="100" fill="#ff7a1a">sem tratador: o quadro é desfeito</text>
+    <text x="364" y="190" fill="#ff7a1a">sem tratador: o quadro é desfeito</text>
+  </g>
+  <text x="440" y="236" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">Tabela de exceções de main</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="440" y="246" width="300" height="50" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="452" y="264" fill="#8a8277">de</text>
+    <text x="490" y="264" fill="#8a8277">até</text>
+    <text x="532" y="264" fill="#8a8277">tipo</text>
+    <text x="680" y="264" fill="#8a8277">pula</text>
+    <text x="452" y="284" fill="#f3eee7">0</text>
+    <text x="490" y="284" fill="#f3eee7">7</text>
+    <text x="532" y="284" fill="#4fd68b">ArithmeticException</text>
+    <text x="680" y="284" fill="#f3eee7">10</text>
+  </g>
+  <text x="20" y="318" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">O stack trace guarda esse caminho: dividir, media, main, na ordem em que a exceção subiu.</text>
+</svg>

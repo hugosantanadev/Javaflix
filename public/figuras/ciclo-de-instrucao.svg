@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">O ciclo de instrução da CPU de brinquedo. Na busca, a CPU lê memoria[PC], guarda 0x1E no IR e avança o PC. Na decodificação, separa o opcode 1, que é LOAD_A, e o endereço 14. Na execução, copia memoria[14], que vale 5, para o registrador A. Depois o ciclo recomeça com o PC já apontando para a próxima instrução</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker></defs>
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <rect x="30" y="50" width="210" height="130" rx="8" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="46" y="78" font-size="15" font-weight="700" fill="#f3eee7">1. Busca</text>
+    <rect x="275" y="50" width="210" height="130" rx="8" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="291" y="78" font-size="15" font-weight="700" fill="#f3eee7">2. Decodifica</text>
+    <rect x="520" y="50" width="210" height="130" rx="8" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="536" y="78" font-size="15" font-weight="700" fill="#f3eee7">3. Executa</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12.5" fill="#bdb5aa">
+    <text x="46" y="106">IR = memoria[PC]</text><text x="46" y="128" fill="#4fd68b">IR = 0x1E</text><text x="46" y="154">PC = PC + 1</text>
+    <text x="291" y="106">opcode = IR &gt;&gt; 4</text><text x="291" y="128" fill="#4fd68b">1 = LOAD_A</text><text x="291" y="154">end. = IR &amp; 0xF</text><text x="291" y="172" fill="#4fd68b">14</text>
+    <text x="536" y="106">A = memoria[14]</text><text x="536" y="128" fill="#4fd68b">A = 5</text>
+  </g>
+  <g stroke="#ff7a1a" stroke-width="1.8" fill="none">
+    <path d="M242 115 L271 115" marker-end="url(#s)"/><path d="M487 115 L516 115" marker-end="url(#s)"/>
+    <path d="M625 182 L625 220 L135 220 L135 186" marker-end="url(#s)"/>
+  </g>
+  <text x="380" y="242" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#ff7a1a" text-anchor="middle">e de novo, bilhões de vezes por segundo</text>
+  <text x="30" y="284" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Um salto (JUMP) é só uma execução que escreve no PC: a próxima busca acontece em outro endereço.</text>
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="t">
+  <title id="t">O que cada tipo de teste do Spring Boot sobe, nas camadas da loja, que são o HTTP, o controller, o serviço, o repositório e o banco: o @WebMvcTest sobe o controller com o MockMvc, sem servidor, e o serviço é um mock; o @DataJpaTest sobe o repositório e um banco H2 em memória, com rollback; o @SpringBootTest com RANDOM_PORT sobe tudo, com um servidor de verdade e o banco configurado</title>
+  <rect width="760" height="330" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">
+    <text x="210" y="30">HTTP</text>
+    <text x="320" y="30">Controller</text>
+    <text x="430" y="30">Serviço</text>
+    <text x="540" y="30">Repositório</text>
+    <text x="660" y="30">Banco</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700">
+    <text x="20" y="74" fill="#f3eee7">@WebMvcTest</text>
+    <text x="20" y="154" fill="#f3eee7">@DataJpaTest</text>
+    <text x="20" y="234" fill="#f3eee7">@SpringBootTest</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11">
+    <rect x="200" y="50" width="100" height="40" rx="6" fill="#1b1916" stroke="#8a8277" stroke-dasharray="4 3"/>
+    <text x="212" y="74" fill="#bdb5aa">MockMvc</text>
+    <rect x="310" y="50" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="322" y="74" fill="#4fd68b">real</text>
+    <rect x="420" y="50" width="100" height="40" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="432" y="74" fill="#ff7a1a">@MockitoBean</text>
+    <text x="540" y="74" fill="#6b645b">fora</text>
+    <text x="660" y="74" fill="#6b645b">fora</text>
+
+    <text x="212" y="154" fill="#6b645b">fora</text>
+    <text x="322" y="154" fill="#6b645b">fora</text>
+    <text x="432" y="154" fill="#6b645b">fora</text>
+    <rect x="530" y="130" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="542" y="154" fill="#4fd68b">real</text>
+    <rect x="640" y="130" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="652" y="154" fill="#4fd68b">H2, rollback</text>
+
+    <rect x="200" y="210" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="212" y="234" fill="#4fd68b">porta real</text>
+    <rect x="310" y="210" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="322" y="234" fill="#4fd68b">real</text>
+    <rect x="420" y="210" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="432" y="234" fill="#4fd68b">real</text>
+    <rect x="530" y="210" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="542" y="234" fill="#4fd68b">real</text>
+    <rect x="640" y="210" width="100" height="40" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="652" y="234" fill="#4fd68b">sem rollback</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">
+    <text x="20" y="92">rotas, JSON, validação</text>
+    <text x="20" y="172">consultas, mapeamento</text>
+    <text x="20" y="252">o fluxo inteiro</text>
+  </g>
+  <text x="20" y="290" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Quanto mais camadas reais, mais o teste prova e mais tempo leva para subir.</text>
+  <text x="20" y="310" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">As fatias sobem em frações de segundo; a aplicação inteira, em segundos.</text>
+</svg>

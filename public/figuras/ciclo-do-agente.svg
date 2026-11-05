@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">O ciclo de um agente de código: a partir da tarefa, o modelo decide uma ação, como ler um arquivo, editar ou rodar os testes; a ferramenta executa e devolve o resultado, que vira contexto para a próxima decisão; o ciclo para quando os testes passam ou quando o limite de passos acaba, e o diff final vai para revisão humana</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+    <marker id="v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" text-anchor="middle">
+    <rect x="20" y="120" width="120" height="56" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="80" y="144" font-size="13" font-weight="700" fill="#f3eee7">Tarefa</text>
+    <text x="80" y="162" font-size="11" fill="#8a8277">o seu pedido</text>
+
+    <rect x="200" y="40" width="160" height="56" rx="8" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="280" y="64" font-size="13" font-weight="700" fill="#ff7a1a">Modelo decide</text>
+    <text x="280" y="82" font-size="11" fill="#bdb5aa">qual ferramenta usar</text>
+
+    <rect x="420" y="120" width="160" height="56" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="500" y="144" font-size="13" font-weight="700" fill="#f3eee7">Ferramenta age</text>
+    <text x="500" y="162" font-size="11" fill="#bdb5aa">ler, editar, rodar testes</text>
+
+    <rect x="200" y="200" width="160" height="56" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="280" y="224" font-size="13" font-weight="700" fill="#f3eee7">Resultado</text>
+    <text x="280" y="242" font-size="11" fill="#bdb5aa">vira contexto</text>
+
+    <rect x="620" y="120" width="120" height="56" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="680" y="144" font-size="13" font-weight="700" fill="#4fd68b">Você revisa</text>
+    <text x="680" y="162" font-size="11" fill="#bdb5aa">o diff final</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M140 140 C 170 120, 180 80, 197 72"/>
+    <path d="M360 72 C 420 72, 470 90, 490 117"/>
+    <path d="M490 176 C 470 210, 420 228, 363 228"/>
+    <path d="M220 200 C 200 160, 210 120, 230 99"/>
+  </g>
+  <path d="M580 148 L617 148" stroke="#4fd68b" stroke-width="1.8" fill="none" marker-end="url(#v)"/>
+  <text x="598" y="112" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#4fd68b" text-anchor="middle">testes verdes</text>
+  <text x="598" y="126" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#4fd68b" text-anchor="middle">ou limite</text>
+  <text x="20" y="290" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Cada volta custa tokens e tempo; sem limite de passos, um agente perdido gira para sempre.</text>
+</svg>

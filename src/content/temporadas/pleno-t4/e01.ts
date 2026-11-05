@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'O `toString` de `LocalTime` omite os segundos quando são zero: `LocalTime.of(9, 0)` imprime `09:00`.',
     '`parse` exige o formato ISO com zeros: `"2024-3-5"` lança `DateTimeParseException`.',
   ],
+  ia: {
+    uso:
+      'Com datas, a IA ajuda a montar cálculos com `plusMonths`, `with` e `TemporalAdjusters` e a explicar uma `DateTimeException`. O risco é a API antiga: ela ainda gera `Date`, `Calendar` e `SimpleDateFormat` por hábito, e erra os casos de fim de mês e de ano bissexto, que são os que a prova e a vida real cobram.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21, usando só java.time.\n<cole aqui o cálculo de datas>\n- Mostre o resultado de cada linha com as datas fixas do exemplo, sem LocalDate.now().\n- Diga o que acontece quando o dia não existe no mês de destino e em anos bissextos.\n- Aponte qualquer resultado de plus, minus ou with que esteja sendo descartado.\n- Não use Date, Calendar nem SimpleDateFormat.',
+    erros: [
+      'Usa `Calendar` e `Date`, com meses contados a partir de zero, num projeto que já tem `java.time`.',
+      'Chama `d.plusDays(1);` sem atribuir o resultado, achando que `d` muda.',
+      'Diz que 31 de janeiro mais um mês é 3 de março, quando é o último dia de fevereiro.',
+      'Propõe `LocalDate.plusHours`, que não existe.',
+    ],
+    conferir: [
+      'Rode os casos de 31 de janeiro, 29 de fevereiro e 31 de dezembro.',
+      'Compile: métodos de hora numa data, ou de data numa hora, não existem.',
+      'Teste com `Clock.fixed` no lugar de `now()` para ter uma saída repetível.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: The Date Time API Overview',
@@ -168,6 +185,107 @@ public class Faturas {
     comentarios:
       'Partir do dia 1 de cada mês evita o problema de `LocalDate.of(2024, 2, 31)`, que lançaria `DateTimeException`. O vencimento de março caiu num domingo e foi para a segunda, 1º de abril. Comparar enums com `==` é seguro: cada constante existe uma única vez.',
   },
+  bugs: [
+    {
+      id: 'pleno-t4-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O cálculo da entrega expressa, 24 horas depois do pedido, não compila: `cannot find symbol`, apontando o `plusHours`.',
+      codigo: `import java.time.LocalDate;
+
+public class Prazo {
+    public static void main(String[] args) {
+        LocalDate pedido = LocalDate.of(2024, 5, 10);
+        LocalDate entregaExpressa = pedido.plusHours(24);
+        System.out.println("entrega até " + entregaExpressa);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.time.LocalDate;
+
+public class Prazo {
+    public static void main(String[] args) {
+        LocalDate pedido = LocalDate.of(2024, 5, 10);
+        LocalDate entregaExpressa = pedido.plusDays(1);
+        System.out.println("entrega até " + entregaExpressa);
+    }
+}`,
+      saidaCorrigida: 'entrega até 2024-05-11',
+      dica: 'Um `LocalDate` guarda horas? Que unidades ele aceita somar?',
+      explicacao:
+        '`LocalDate` representa só a data, sem hora, e por isso não tem `plusHours`: cada classe só oferece as unidades que fazem sentido para ela. Para um prazo em dias, use `plusDays(1)`. Se o prazo precisa contar as horas, o pedido deveria ser um `LocalDateTime` ou um `Instant`.',
+    },
+    {
+      id: 'pleno-t4-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O boleto sai com o vencimento igual à data de emissão: `emitido em 2024-03-15, vence em 2024-03-15`.',
+      codigo: `import java.time.LocalDate;
+
+public class Boleto {
+    public static void main(String[] args) {
+        LocalDate emissao = LocalDate.of(2024, 3, 15);
+        LocalDate vencimento = emissao;
+        vencimento.plusDays(30);
+        System.out.println("emitido em " + emissao + ", vence em " + vencimento);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'emitido em 2024-03-15, vence em 2024-03-15' },
+      correcao: `import java.time.LocalDate;
+
+public class Boleto {
+    public static void main(String[] args) {
+        LocalDate emissao = LocalDate.of(2024, 3, 15);
+        LocalDate vencimento = emissao;
+        vencimento = vencimento.plusDays(30);
+        System.out.println("emitido em " + emissao + ", vence em " + vencimento);
+    }
+}`,
+      saidaCorrigida: 'emitido em 2024-03-15, vence em 2024-04-14',
+      dica: '`plusDays` altera o objeto ou devolve um novo? O que acontece com o valor que ele devolve?',
+      explicacao:
+        'Os objetos de `java.time` são imutáveis: `plusDays` não muda `vencimento`, devolve uma data nova, que aqui foi descartada. Atribua o resultado, `vencimento = vencimento.plusDays(30)`. É a mesma regra de `String` e `BigDecimal`, e o IntelliJ avisa quando o resultado é ignorado.',
+    },
+    {
+      id: 'pleno-t4-e01-b03',
+      dificuldade: 3,
+      sintoma: 'Um cliente que assinou em 31 de janeiro passou a pagar dia 29 todo mês, e reclamou que a mensalidade de março venceu dois dias antes: `2024-01-31 2024-02-29 2024-03-29 2024-04-29`.',
+      codigo: `import java.time.LocalDate;
+
+public class Mensalidades {
+    public static void main(String[] args) {
+        LocalDate primeira = LocalDate.of(2024, 1, 31);
+        LocalDate vencimento = primeira;
+        StringBuilder datas = new StringBuilder(primeira.toString());
+        for (int i = 1; i <= 3; i++) {
+            vencimento = vencimento.plusMonths(1);
+            datas.append(' ').append(vencimento);
+        }
+        System.out.println(datas);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: '2024-01-31 2024-02-29 2024-03-29 2024-04-29' },
+      correcao: `import java.time.LocalDate;
+
+public class Mensalidades {
+    public static void main(String[] args) {
+        LocalDate primeira = LocalDate.of(2024, 1, 31);
+        LocalDate vencimento = primeira;
+        StringBuilder datas = new StringBuilder(primeira.toString());
+        for (int i = 1; i <= 3; i++) {
+            vencimento = primeira.plusMonths(i);
+            datas.append(' ').append(vencimento);
+        }
+        System.out.println(datas);
+    }
+}`,
+      saidaCorrigida: '2024-01-31 2024-02-29 2024-03-31 2024-04-30',
+      dica: 'Cada vencimento é calculado a partir de quê? O que aconteceu com o dia 31 na passagem por fevereiro?',
+      explicacao:
+        '`plusMonths` usa o último dia válido quando o dia não existe no mês de destino: 31 de janeiro mais um mês vira 29 de fevereiro. Somando sempre a partir do vencimento anterior, o dia 29 se propaga para todos os meses seguintes. Calcule cada parcela a partir da data original, `primeira.plusMonths(i)`, e o dia 31 volta sempre que o mês permitir.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t4-e01-q01',
@@ -188,6 +306,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`LocalDate` é imutável. Os dois cálculos criam objetos novos que são descartados, porque o resultado não foi atribuído.',
+      dica: 'Os objetos de `java.time` são imutáveis, e os resultados foram descartados.',
     },
     {
       id: 'pleno-t4-e01-q02',
@@ -203,6 +322,7 @@ public class Teste {
 }`,
       resposta: '2023-02-28 2024-02-29',
       explicacao: 'O dia 31 não existe em fevereiro, então o cálculo usa o último dia válido: 28 em 2023 e 29 em 2024, que é bissexto.',
+      dica: 'Quando o dia não existe no mês de destino, vale o último dia válido.',
     },
     {
       id: 'pleno-t4-e01-q03',
@@ -226,6 +346,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'DateTimeException', saida: '2024-02-29' },
       explicacao: '2024 é bissexto e 2023 não. Na criação com `of`, uma data impossível é erro; o ajuste para o último dia válido só acontece em cálculos como `plusMonths`.',
+      dica: '2023 não é bissexto.',
     },
     {
       id: 'pleno-t4-e01-q04',
@@ -246,6 +367,7 @@ public class Teste {
 }`,
       resposta: 9,
       explicacao: '`LocalDate` não tem unidades de hora, então não existe `plusHours`. Para somar horas, seria preciso um `LocalDateTime`.',
+      dica: '`LocalDate` não tem métodos de hora.',
     },
     {
       id: 'pleno-t4-e01-q05',
@@ -263,6 +385,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Segundos zerados são omitidos no `toString`, e as horas sempre têm dois dígitos. Passar da meia-noite volta para 00:01.',
+      dica: 'O `toString` omite os segundos quando são zero, e a hora dá a volta na meia-noite.',
     },
     {
       id: 'pleno-t4-e01-q06',
@@ -280,6 +403,7 @@ public class Teste {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Os construtores são privados, e cada classe só tem os métodos das unidades que representa. `atTime` junta uma data e uma hora num `LocalDateTime`.',
+      dica: 'Não há `new`, e `LocalTime` não tem `plusDays`.',
     },
     {
       id: 'pleno-t4-e01-q07',
@@ -298,6 +422,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`getDayOfWeek` e `getMonth` devolvem enums, impressos pelo nome. `getMonthValue` devolve o número, de 1 a 12.',
+      dica: '`getMonth` devolve o enum; `getMonthValue`, o número de 1 a 12.',
     },
     {
       id: 'pleno-t4-e01-q08',
@@ -316,6 +441,7 @@ public class FimDoMes {
       respostas: ['lastDayOfMonth'],
       saida: '2024-02-29',
       explicacao: '`TemporalAdjusters.lastDayOfMonth()` sabe quantos dias cada mês tem, inclusive em anos bissextos.',
+      dica: 'É o ajustador do fim do mês.',
     },
     {
       id: 'pleno-t4-e01-q09',
@@ -333,6 +459,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Diferente de `LocalTime`, o `LocalDateTime` leva a virada da meia-noite para a data, e aqui também para o ano.',
+      dica: '`LocalDateTime` avança a data quando passa da meia-noite.',
     },
     {
       id: 'pleno-t4-e01-q10',
@@ -357,6 +484,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'DateTimeParseException', saida: 'lendo' },
       explicacao: 'Sem formatador, `parse` usa o formato ISO, que exige dois dígitos para mês e dia: `2024-03-05`.',
+      dica: '`parse` exige o formato ISO, com dois dígitos no mês e no dia.',
     },
     {
       id: 'pleno-t4-e01-q11',
@@ -374,6 +502,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os enums `Month` e `DayOfWeek` dão a volta: depois de dezembro vem janeiro, depois de domingo vem segunda. `maxLength` considera anos bissextos.',
+      dica: 'Os enums de mês e de dia da semana dão a volta; fevereiro pode ter 29 dias.',
     },
     {
       id: 'pleno-t4-e01-q12',
@@ -393,6 +522,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'As duas datas têm o mesmo valor, então `equals` é `true` e nenhuma é posterior à outra. O dia seguinte é posterior.',
+      dica: '`isAfter` é estrito.',
     },
     {
       id: 'pleno-t4-e01-q13',
@@ -407,6 +537,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O construtor, depreciado há décadas, soma 1900 ao ano e conta os meses de 0 a 11. No `java.time`, `LocalDate.of(2024, 3, 15)` diz exatamente o que parece.',
+      dica: 'Na API antiga, o ano conta a partir de 1900 e o mês a partir de zero.',
     },
     {
       id: 'pleno-t4-e01-q14',
@@ -424,6 +555,7 @@ public class Teste {
 }`,
       resposta: '02:15 true',
       explicacao: 'O `LocalTime` passa da meia-noite e chega a 02:15, que vem antes de 22:30 no mesmo relógio, sem data para diferenciar os dias.',
+      dica: '`LocalTime` dá a volta na meia-noite, sem data.',
     },
     {
       id: 'pleno-t4-e01-q15',
@@ -446,6 +578,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`withMonth` ajusta o dia para o último válido, como `plusMonths`. Voltar um dia a partir do dia 1 cai no último dia do mês anterior.',
+      dica: '`withMonth` usa o último dia válido; `withDayOfMonth(1).minusDays(1)` é o último dia do mês anterior.',
     },
   ],
 };

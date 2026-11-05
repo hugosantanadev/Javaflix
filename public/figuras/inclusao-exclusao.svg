@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="290" viewBox="0 0 760 290" role="img" aria-labelledby="t">
+  <title id="t">Diagrama de Venn das turmas de Java e SQL. Só em Java estão Ana e Bruno; nas duas, Carla e Davi; só em SQL, Elisa. Somar as duas turmas, 4 mais 3, conta Carla e Davi duas vezes; descontando a interseção, o total é 5</title>
+  <rect width="760" height="290" fill="#13110f"/>
+  <circle cx="280" cy="135" r="110" fill="#ff7a1a" fill-opacity="0.12" stroke="#ff7a1a" stroke-width="2"/>
+  <circle cx="420" cy="135" r="110" fill="#4fd68b" fill-opacity="0.12" stroke="#4fd68b" stroke-width="2"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="700">
+    <text x="190" y="40" fill="#ff7a1a">Java (4)</text>
+    <text x="440" y="40" fill="#4fd68b">SQL (3)</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="14" fill="#f3eee7" text-anchor="middle">
+    <text x="230" y="128">Ana</text><text x="230" y="152">Bruno</text>
+    <text x="350" y="128">Carla</text><text x="350" y="152">Davi</text>
+    <text x="470" y="140">Elisa</text>
+  </g>
+  <text x="350" y="182" font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#f2c75c" text-anchor="middle">A ∩ B</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" fill="#f2c75c">
+    <text x="570" y="110">|A ∪ B|</text>
+    <text x="570" y="136">= 4 + 3 − 2</text>
+    <text x="570" y="162">= 5</text>
+  </g>
+  <text x="40" y="276" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Quem está na interseção seria contado uma vez em cada turma; por isso se desconta |A ∩ B| uma vez.</text>
+</svg>

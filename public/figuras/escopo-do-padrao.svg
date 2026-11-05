@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Três trechos de código com a variável de padrão s destacada onde ela existe. No if com e lógico, s existe no lado direito do e e no corpo. No if com ou lógico, s não existe no lado direito. No if negado que sai com return, s existe nas linhas depois do if</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <text x="30" y="40" fill="#f3eee7">if (o instanceof String s <tspan fill="#bdb5aa">&amp;&amp;</tspan> <tspan fill="#4fd68b">s.length() > 5</tspan>) {</text>
+    <text x="54" y="62" fill="#4fd68b">usa(s);</text>
+    <text x="30" y="84" fill="#f3eee7">}</text>
+    <text x="30" y="134" fill="#f3eee7">if (o instanceof String s <tspan fill="#bdb5aa">||</tspan> <tspan fill="#ff7a1a">s.isEmpty()</tspan>) {</text>
+    <text x="54" y="156" fill="#ff7a1a">usa(s);</text>
+    <text x="30" y="178" fill="#f3eee7">}</text>
+    <text x="30" y="228" fill="#f3eee7">if (!(o instanceof String s)) return;</text>
+    <text x="30" y="250" fill="#4fd68b">usa(s);</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5">
+    <text x="470" y="40" fill="#4fd68b">o lado direito só roda se o teste deu certo:</text>
+    <text x="470" y="58" fill="#4fd68b">s existe</text>
+    <text x="470" y="134" fill="#ff7a1a">o lado direito roda quando o teste falhou:</text>
+    <text x="470" y="152" fill="#ff7a1a">s não existe (e no corpo, também não)</text>
+    <text x="470" y="228" fill="#4fd68b">se o teste falha, o método sai:</text>
+    <text x="470" y="246" fill="#4fd68b">daqui para baixo, s existe</text>
+  </g>
+  <text x="30" y="290" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">A regra é uma só: a variável existe onde o compilador tem certeza de que o teste deu verdadeiro.</text>
+</svg>

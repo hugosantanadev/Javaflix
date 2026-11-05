@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="290" viewBox="0 0 760 290" role="img" aria-labelledby="t">
+  <title id="t">Linha do tempo de novas tentativas com recuo exponencial: a primeira tentativa falha no instante zero; a segunda vem depois de 100 ms, a terceira depois de mais 200 ms, a quarta depois de mais 400 ms e a quinta depois de mais 800 ms; o jitter sorteia cada espera dentro de uma faixa, para que muitos clientes não voltem todos no mesmo instante</title>
+  <rect width="760" height="290" fill="#13110f"/>
+  <line x1="40" y1="130" x2="730" y2="130" stroke="#43403a" stroke-width="2"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277" text-anchor="middle">
+    <text x="40" y="154">0</text>
+    <text x="85" y="154">100</text>
+    <text x="175" y="154">300</text>
+    <text x="355" y="154">700</text>
+    <text x="715" y="154">1500 ms</text>
+  </g>
+  <g fill="#26170c" stroke="#f2c75c" stroke-width="1" opacity="0.9">
+    <rect x="62" y="96" width="23" height="14" rx="2"/>
+    <rect x="130" y="96" width="45" height="14" rx="2"/>
+    <rect x="265" y="96" width="90" height="14" rx="2"/>
+    <rect x="535" y="96" width="180" height="14" rx="2"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#f2c75c" text-anchor="middle">
+    <text x="74" y="88">±</text>
+    <text x="152" y="88">jitter</text>
+    <text x="310" y="88">jitter</text>
+    <text x="625" y="88">jitter</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700" text-anchor="middle">
+    <circle cx="40" cy="130" r="9" fill="#ff7a1a"/>
+    <circle cx="85" cy="130" r="9" fill="#ff7a1a"/>
+    <circle cx="175" cy="130" r="9" fill="#ff7a1a"/>
+    <circle cx="355" cy="130" r="9" fill="#ff7a1a"/>
+    <circle cx="715" cy="130" r="9" fill="#4fd68b"/>
+    <text x="40" y="186" fill="#ff7a1a">1ª</text>
+    <text x="85" y="186" fill="#ff7a1a">2ª</text>
+    <text x="175" y="186" fill="#ff7a1a">3ª</text>
+    <text x="355" y="186" fill="#ff7a1a">4ª</text>
+    <text x="715" y="186" fill="#4fd68b">5ª</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">
+    <text x="40" y="226">Esperas de 100, 200, 400 e 800 ms: cada uma é o dobro da anterior, até um teto.</text>
+    <text x="40" y="248">As faixas amarelas são o jitter: cada cliente sorteia o momento dentro da faixa.</text>
+    <text x="40" y="270" fill="#8a8277">Sem jitter, mil clientes que falharam juntos voltam juntos, e derrubam o serviço de novo.</text>
+  </g>
+</svg>

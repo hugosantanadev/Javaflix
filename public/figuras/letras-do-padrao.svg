@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">O padrão dd/MM/yyyy HH:mm aplicado a 5 de março de 2024, 14 horas e 7 minutos: dd dá 05, o dia; MM dá 03, o mês; yyyy dá 2024, o ano; HH dá 14, a hora de 0 a 23; mm dá 07, o minuto; embaixo, as três trocas que mais causam erro: mm no lugar de MM mostra o minuto, YYYY no lugar de yyyy mostra o ano da semana, e hh no lugar de HH mostra a hora de 1 a 12</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <text x="20" y="28" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">LocalDateTime.of(2024, 3, 5, 14, 7) formatado com:</text>
+  <rect x="20" y="40" width="720" height="58" rx="8" fill="#1b1916" stroke="#2b2824"/>
+  <text x="40" y="78" font-family="Cascadia Code, Consolas, monospace" font-size="22" font-weight="700"><tspan fill="#ff7a1a">dd</tspan><tspan fill="#6b645b">/</tspan><tspan fill="#4fd68b">MM</tspan><tspan fill="#6b645b">/</tspan><tspan fill="#f2c75c">yyyy</tspan><tspan fill="#6b645b"> </tspan><tspan fill="#f3eee7">HH</tspan><tspan fill="#6b645b">:</tspan><tspan fill="#bdb5aa">mm</tspan></text>
+  <text x="420" y="78" font-family="Cascadia Code, Consolas, monospace" font-size="22" fill="#f3eee7">05/03/2024 14:07</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <rect x="20" y="112" width="12" height="12" rx="2" fill="#ff7a1a"/><text x="38" y="122" fill="#ff7a1a">dd: dia, 05</text>
+    <rect x="160" y="112" width="12" height="12" rx="2" fill="#4fd68b"/><text x="178" y="122" fill="#4fd68b">MM: mês, 03</text>
+    <rect x="300" y="112" width="12" height="12" rx="2" fill="#f2c75c"/><text x="318" y="122" fill="#f2c75c">yyyy: ano, 2024</text>
+    <rect x="460" y="112" width="12" height="12" rx="2" fill="#f3eee7"/><text x="478" y="122" fill="#f3eee7">HH: hora 0 a 23</text>
+    <rect x="610" y="112" width="12" height="12" rx="2" fill="#bdb5aa"/><text x="628" y="122" fill="#bdb5aa">mm: minuto</text>
+  </g>
+  <text x="20" y="168" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#db5c5c">As trocas que mais causam erro</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="180" width="230" height="74" rx="6" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="34" y="204" fill="#f3eee7">dd/mm/yyyy</text>
+    <text x="34" y="224" fill="#db5c5c">05/07/2024</text>
+    <text x="34" y="244" fill="#bdb5aa" font-size="11">o minuto no lugar do mês</text>
+
+    <rect x="265" y="180" width="230" height="74" rx="6" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="279" y="204" fill="#f3eee7">dd/MM/YYYY em 30/12/2024</text>
+    <text x="279" y="224" fill="#db5c5c">30/12/2025</text>
+    <text x="279" y="244" fill="#bdb5aa" font-size="11">é o ano da semana</text>
+
+    <rect x="510" y="180" width="230" height="74" rx="6" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="524" y="204" fill="#f3eee7">hh:mm sem o a</text>
+    <text x="524" y="224" fill="#db5c5c">02:07</text>
+    <text x="524" y="244" fill="#bdb5aa" font-size="11">tarde ou madrugada?</text>
+  </g>
+  <text x="20" y="294" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">O padrão é só uma String: o compilador não confere nada, e o erro aparece na execução ou nem aparece.</text>
+</svg>

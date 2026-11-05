@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Num record pattern, o número e a ordem dos componentes precisam bater com o record.',
     'O padrão sem nome `_` é do Java 22: vale para a prova 1Z0-831, não para a 830.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a trocar cadeias de `instanceof` por um `switch` com padrões e a montar record patterns. Confira a ordem dos `case`, o tratamento de `null` e se o `default` não está escondendo um caso novo.',
+    pedido:
+      'Reescreva esta cadeia de if com instanceof como um switch com padrões, em Java 21.\n<cole o código aqui>\n- Ordene os case do mais específico ao mais geral.\n- Use when para as guardas e record patterns para desmontar records.\n- Se o tipo for selado, não use default; diga como o null é tratado.',
+    erros: [
+      'Escreve a guarda com `&&` em vez de `when`.',
+      'Põe um `case` geral antes de um específico, causando dominância.',
+      'Esquece o `case null` e espera que o `default` pegue o `null`.',
+    ],
+    conferir: [
+      'Compile com o nível 21: dominância e falta de exaustividade aparecem na hora.',
+      'Teste com `null`: sem `case null`, é `NullPointerException`.',
+      'Acrescente um subtipo ao tipo selado e confira que o `switch` deixa de compilar.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Using Pattern Matching, Pattern Matching for Switch',
@@ -165,6 +181,124 @@ public class Avaliador {
     comentarios:
       'No episódio 3, cada record sabia se avaliar; aqui, os dados são só dados, e as operações ficam fora deles. Acrescentar uma operação nova, como derivar a expressão, vira escrever mais um `switch`, sem tocar nos records. É o estilo que Brian Goetz chama de programação orientada a dados, e os atalhos com padrões aninhados mostram o poder dele: as regras de simplificação são lidas quase como matemática.',
   },
+  bugs: [
+    {
+      id: 'junior-t5-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: this case label is dominated by a preceding case label`.',
+      codigo: `public class Tipos {
+    static String descrever(Object o) {
+        return switch (o) {
+            case Number n -> "número " + n;
+            case Integer i -> "inteiro " + i;
+            default -> "outro";
+        };
+    }
+
+    public static void main(String[] args) {
+        System.out.println(descrever(42) + " / " + descrever(2.5));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Tipos {
+    static String descrever(Object o) {
+        return switch (o) {
+            case Integer i -> "inteiro " + i;
+            case Number n -> "número " + n;
+            default -> "outro";
+        };
+    }
+
+    public static void main(String[] args) {
+        System.out.println(descrever(42) + " / " + descrever(2.5));
+    }
+}`,
+      saidaCorrigida: 'inteiro 42 / número 2.5',
+      dica: 'Um `Integer` é um `Number`. Algum inteiro conseguiria passar pelo primeiro `case` e chegar ao segundo?',
+      explicacao: 'Os `case` são testados em ordem, e `Number` captura todo `Integer` antes. O compilador recusa um `case` que nunca seria alcançado. O mais específico vem primeiro.',
+    },
+    {
+      id: 'junior-t5-e05-b02',
+      dificuldade: 2,
+      sintoma: 'Pedidos acima de 500 deveriam ganhar um brinde, mas recebem só `frete grátis`.',
+      codigo: `record Pedido(double total) { }
+
+public class Promocao {
+    static String beneficio(Pedido p) {
+        return switch (p) {
+            case Pedido(double t) when t > 100 -> "frete grátis";
+            case Pedido(double t) when t > 500 -> "frete grátis e brinde";
+            case Pedido(double t) -> "nenhum";
+        };
+    }
+
+    public static void main(String[] args) {
+        System.out.println(beneficio(new Pedido(800)));
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'frete grátis' },
+      correcao: `record Pedido(double total) { }
+
+public class Promocao {
+    static String beneficio(Pedido p) {
+        return switch (p) {
+            case Pedido(double t) when t > 500 -> "frete grátis e brinde";
+            case Pedido(double t) when t > 100 -> "frete grátis";
+            case Pedido(double t) -> "nenhum";
+        };
+    }
+
+    public static void main(String[] args) {
+        System.out.println(beneficio(new Pedido(800)));
+    }
+}`,
+      saidaCorrigida: 'frete grátis e brinde',
+      dica: 'Um pedido de 800 satisfaz qual guarda primeiro?',
+      explicacao: 'Todo total acima de 500 também é maior que 100, e o primeiro `case` que casa vence. O compilador não confere a ordem de guardas, porque não avalia as condições: as faixas mais restritas vêm primeiro.',
+    },
+    {
+      id: 'junior-t5-e05-b03',
+      dificuldade: 3,
+      sintoma: 'O formulário lança `NullPointerException` quando o campo opcional não foi preenchido, embora o `switch` tenha `default`.',
+      codigo: `public class Formulario {
+    static String exibir(Object campo) {
+        return switch (campo) {
+            case String s when s.isBlank() -> "(vazio)";
+            case String s -> s;
+            case Integer i -> String.valueOf(i);
+            default -> "(sem valor)";
+        };
+    }
+
+    public static void main(String[] args) {
+        Object apelido = null;
+        System.out.println(exibir("Ana") + " " + exibir(apelido));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `public class Formulario {
+    static String exibir(Object campo) {
+        return switch (campo) {
+            case String s when s.isBlank() -> "(vazio)";
+            case String s -> s;
+            case Integer i -> String.valueOf(i);
+            case null, default -> "(sem valor)";
+        };
+    }
+
+    public static void main(String[] args) {
+        Object apelido = null;
+        System.out.println(exibir("Ana") + " " + exibir(apelido));
+    }
+}`,
+      saidaCorrigida: 'Ana (sem valor)',
+      dica: 'O `default` de um `switch` pega o valor `null`?',
+      explicacao: 'Sem `case null`, o `switch` lança `NullPointerException` antes de testar qualquer `case`, e o `default` não muda isso. A forma `case null, default ->` trata os dois juntos.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t5-e05-q01',
@@ -179,6 +313,7 @@ public class Avaliador {
       ],
       resposta: 0,
       explicacao: '`case Integer i when i < 0` só casa com inteiros negativos. Se a guarda for falsa, o `switch` continua testando os `case` seguintes.',
+      dica: 'É uma condição extra, além do tipo.',
     },
     {
       id: 'junior-t5-e05-q02',
@@ -201,6 +336,7 @@ public class Avaliador {
 }`,
       resposta: 'grande inteiro texto(3) ?',
       explicacao: 'O primeiro `case` que casa vence. 500 passa na guarda; 5 falha nela e cai no `case Integer i`. O `Double` só casa com o `default`.',
+      dica: 'Cada valor desce os `case` e para no primeiro que casa; o `double` cai no `default`.',
     },
     {
       id: 'junior-t5-e05-q03',
@@ -225,6 +361,7 @@ public class Avaliador {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Todo `Integer` é um `Number`, então o segundo `case` nunca seria alcançado. A ordem certa é do mais específico para o mais geral.',
+      dica: '`Integer` é subtipo de `Number`. O segundo `case` seria alcançado?',
     },
     {
       id: 'junior-t5-e05-q04',
@@ -253,6 +390,7 @@ public class Avaliador {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException', saida: '3' },
       explicacao: 'O `default` não pega o `null`. Sem `case null`, o `switch` lança `NullPointerException`. Com `case null, default -> 0`, a saída seria 3 e 0.',
+      dica: 'Sem `case null`, o que acontece com o `null`?',
     },
     {
       id: 'junior-t5-e05-q05',
@@ -268,6 +406,7 @@ public class Avaliador {
       ],
       respostas: [0, 1],
       explicacao: 'O `null` só é tratado com `case null`. A ordem importa, por causa da dominância, e a guarda usa a palavra `when`.',
+      dica: 'Exaustividade e `case null` são regras; o `default` não pega `null`.',
     },
     {
       id: 'junior-t5-e05-q06',
@@ -291,6 +430,7 @@ public class Plano {
       respostas: ['when'],
       saida: 'diagonal / fora da diagonal',
       explicacao: 'O record pattern desmonta o ponto, e o `when` usa as variáveis dos componentes. O segundo `case` cobre o resto, então o `switch` é exaustivo sem `default`.',
+      dica: 'A palavra da guarda num `case`.',
     },
     {
       id: 'junior-t5-e05-q07',
@@ -312,6 +452,7 @@ public class Sons {
 }`,
       resposta: 8,
       explicacao: 'A interface selada tem três subtipos, e o `switch` só cobre dois. Sem `default`, ele não é exaustivo; o erro aparece no próprio `switch`.',
+      dica: 'O tipo é selado: algum subtipo ficou sem `case`?',
     },
     {
       id: 'junior-t5-e05-q08',
@@ -329,6 +470,7 @@ if (o instanceof Retangulo(Ponto(var x1, var y1), Ponto(var x2, var y2))) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O padrão desmonta o retângulo e os dois pontos de uma vez. A largura é 4 - 1 e a altura 5 - 1: 3 × 4 = 12.',
+      dica: 'O padrão aninhado extrai as quatro coordenadas; faça a conta da área.',
     },
     {
       id: 'junior-t5-e05-q09',
@@ -355,6 +497,7 @@ public class Taxas {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Com a interface selada, os dois `case` cobrem tudo. O `switch` expressão tem tipo `double`, então o `0` do Pix é promovido a 0.0.',
+      dica: 'Sobre o tipo selado, os dois `case` já cobrem tudo; confira a conta de cada taxa.',
     },
     {
       id: 'junior-t5-e05-q10',
@@ -382,6 +525,7 @@ public class Taxas {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`case null, default` é a forma de tratar o `null` e todo o resto num só ramo.',
+      dica: '`case null, default` trata os dois juntos.',
     },
     {
       id: 'junior-t5-e05-q11',
@@ -396,6 +540,7 @@ public class Taxas {
       ],
       resposta: 0,
       explicacao: 'É o mesmo comportamento do `switch` antigo. A diferença é que agora existe o `case null` para tratar o caso.',
+      dica: 'O `default` não pega `null`.',
     },
     {
       id: 'junior-t5-e05-q12',
@@ -416,6 +561,7 @@ System.out.println(status);`,
       provas: ['831'],
       verificar: { tipo: 'saida' },
       explicacao: 'O `_` é um padrão sem nome, do Java 22: casa com qualquer valor e não declara variável. O pedido não está pago, então a guarda falha, e o segundo `case` usa só o cliente.',
+      dica: 'O `_` ignora o componente; o pedido não está pago.',
     },
     {
       id: 'junior-t5-e05-q13',
@@ -431,6 +577,7 @@ System.out.println(status);`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'Padrões de tipo, record patterns e guardas são válidos. Padrões de tipos primitivos ainda não são finais no Java 21, e um `case` não pode juntar padrões que declaram variáveis.',
+      dica: 'Padrões de tipo, record patterns e guardas são válidos; tipos primitivos em padrões não, no Java 21.',
     },
     {
       id: 'junior-t5-e05-q14',
@@ -459,6 +606,7 @@ System.out.println(status);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Padrões também funcionam no `switch` com dois-pontos. O `break` encerra o `switch`; sem ele, a execução não poderia cair num `case` que declara uma variável de padrão.',
+      dica: 'Com dois pontos, os padrões também funcionam; veja qual `case` casa primeiro e o `break`.',
     },
     {
       id: 'junior-t5-e05-q15',
@@ -473,6 +621,7 @@ System.out.println(status);`,
       ],
       resposta: 0,
       explicacao: 'O compilador garantiu a exaustividade para os subtipos que conhecia. Na execução, um valor que nenhum `case` cobre gera `MatchException`, o erro criado no Java 21 para esse caso.',
+      dica: 'A JVM também confere a exaustividade, com uma exceção própria.',
     },
   ],
 };

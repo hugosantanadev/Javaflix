@@ -320,6 +320,7 @@ public class ClienteTeste {
       ],
       resposta: 0,
       explicacao: 'As duas verificam a mesma coisa. A diferença aparece na falha: uma explica o problema, a outra obriga a depurar.',
+      dica: 'Compare o que cada forma escreve quando falha.',
     },
     {
       id: 'backend-junior-t6-e02-q02',
@@ -334,6 +335,7 @@ public class ClienteTeste {
       ],
       resposta: 0,
       explicacao: 'O `isEqualTo` usa o `equals`, que também compara a escala, ou compara com um texto, de outro tipo; o `isSameAs` compara referências.',
+      dica: 'Uma das comparações ignora a escala do `BigDecimal`.',
     },
     {
       id: 'backend-junior-t6-e02-q03',
@@ -348,6 +350,7 @@ public class ClienteTeste {
       ],
       resposta: 0,
       explicacao: 'O `containsExactly` exige os mesmos elementos na mesma ordem. Os outros conferem conteúdo sem ordem, parte do conteúdo e o tamanho.',
+      dica: 'Só uma delas exige a mesma ordem.',
     },
     {
       id: 'backend-junior-t6-e02-q04',
@@ -363,6 +366,7 @@ public class ClienteTeste {
       ],
       respostas: [0, 1, 2],
       explicacao: 'O `containsOnly` aceita repetições e qualquer ordem, mas não elementos a mais, e o Headset sobra. A lista não está vazia.',
+      dica: '`containsOnly` exige que a lista não tenha nada além dos valores dados.',
     },
     {
       id: 'backend-junior-t6-e02-q05',
@@ -377,6 +381,7 @@ public class ClienteTeste {
       ],
       resposta: 0,
       explicacao: 'O `assertThat` só cria o objeto de asserções. Ferramentas de análise estática pegam esse erro; o teste em si fica verde.',
+      dica: 'No AssertJ, quem verifica é o método encadeado depois do `assertThat`.',
     },
     {
       id: 'backend-junior-t6-e02-q06',
@@ -391,6 +396,7 @@ public class ClienteTeste {
       ],
       resposta: 0,
       explicacao: 'A descrição precisa estar configurada quando a verificação acontece. Depois do `isTrue()`, ela já não aparece numa falha.',
+      dica: 'A descrição precisa existir quando a verificação acontece.',
     },
     {
       id: 'backend-junior-t6-e02-q07',
@@ -405,6 +411,7 @@ public class ClienteTeste {
       ],
       resposta: 0,
       explicacao: 'As asserções suaves só lançam o erro no `assertAll`. O `assertSoftly(soft -> ...)` evita esquecer, chamando-o sozinho.',
+      dica: 'As asserções suaves só reclamam quando alguém pede.',
     },
     {
       id: 'backend-junior-t6-e02-q08',
@@ -419,6 +426,7 @@ public class ClienteTeste {
       ],
       resposta: 0,
       explicacao: 'A comparação recursiva confere campo por campo, entrando nos objetos internos, e deixa de fora os campos indicados.',
+      dica: 'O id é diferente, e o resto precisa ser comparado campo a campo.',
     },
     {
       id: 'backend-junior-t6-e02-q09',
@@ -441,6 +449,7 @@ public class Teste {
 }`,
       resposta: '[Teclado, Mouse] false true',
       explicacao: 'O `extracting` é um `map`. A lista não é igual na ordem pedida, mas tem os mesmos elementos em qualquer ordem.',
+      dica: 'Uma lista na ordem errada não passa no `containsExactly`.',
     },
     {
       id: 'backend-junior-t6-e02-q10',
@@ -471,6 +480,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O retorno da primeira chamada foi descartado, e `a` continua como estava. Por isso APIs fluentes se usam numa cadeia só, usando sempre o que cada método devolve.',
+      dica: 'O retorno da primeira chamada de `como` foi usado?',
     },
     {
       id: 'backend-junior-t6-e02-q11',
@@ -485,6 +495,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `assertThatThrownBy` exige que o código lance algo. A asserção sobre o tipo nem chega a ser feita.',
+      dica: 'O `assertThatThrownBy` exige que o código lance alguma coisa.',
     },
     {
       id: 'backend-junior-t6-e02-q12',
@@ -499,6 +510,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `hasMessage` compara a mensagem inteira; o `hasMessageContaining`, um trecho. Há também `hasMessageStartingWith` e `hasMessageEndingWith`.',
+      dica: '`hasMessage` compara a mensagem inteira.',
     },
     {
       id: 'backend-junior-t6-e02-q13',
@@ -524,6 +536,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Como conjuntos, as repetições somem e as listas parecem iguais. Ordenadas, as duas mostram que uma tem dois mouses e a outra, dois teclados, como o `containsExactlyInAnyOrder` percebe.',
+      dica: 'Como conjunto, as repetições somem.',
     },
     {
       id: 'backend-junior-t6-e02-q14',
@@ -538,6 +551,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Com várias funções, o `extracting` produz tuplas, uma por elemento, e a falha mostra exatamente quais tuplas não bateram.',
+      dica: 'O `extracting` aceita mais de uma função, e o resultado são tuplas.',
     },
     {
       id: 'backend-junior-t6-e02-q15',
@@ -552,6 +566,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Há versões do `assertThat` para `String`, `List`, `BigDecimal`, `Optional` e muitos outros tipos, escolhidas em tempo de compilação.',
+      dica: 'O compilador escolhe o método pelo tipo do argumento.',
     },
   ],
 };

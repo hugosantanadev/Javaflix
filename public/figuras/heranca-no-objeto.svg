@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">À esquerda, a hierarquia Object, Animal e Cachorro, cada uma estendendo a de cima. À direita, um único objeto Cachorro no heap: o cabeçalho, depois o campo nome vindo de Animal e por fim o campo raca de Cachorro, cada um numa posição fixa</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <text x="30" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">as classes</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">
+    <rect x="30" y="50" width="200" height="44" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="46" y="78">Object</text>
+    <rect x="30" y="134" width="200" height="44" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="46" y="162">Animal</text>
+    <rect x="30" y="218" width="200" height="44" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="46" y="246">Cachorro</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none">
+    <path d="M90 132 L90 98" marker-end="url(#s)"/>
+    <path d="M90 216 L90 182" marker-end="url(#s)"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#bdb5aa">
+    <text x="102" y="120">extends</text>
+    <text x="102" y="204">extends</text>
+  </g>
+
+  <text x="330" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">um único objeto no heap: new Cachorro("Rex")</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <rect x="330" y="50" width="380" height="56" fill="#1b1916" stroke="#43403a"/>
+    <text x="346" y="83" fill="#bdb5aa">cabeçalho (classe, hash, trava)</text>
+    <rect x="330" y="106" width="380" height="56" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="346" y="139" fill="#f3eee7">nome = "Rex"</text>
+    <text x="694" y="139" fill="#ff7a1a" text-anchor="end">de Animal</text>
+    <rect x="330" y="162" width="380" height="56" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="346" y="195" fill="#f3eee7">raca = "vira-lata"</text>
+    <text x="694" y="195" fill="#4fd68b" text-anchor="end">de Cachorro</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#8a8277" text-anchor="end">
+    <text x="322" y="54">+0</text>
+    <text x="322" y="110">+12</text>
+    <text x="322" y="166">+16</text>
+  </g>
+  <text x="330" y="246" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Os campos da superclasse vêm primeiro, sempre no mesmo lugar:</text>
+  <text x="330" y="266" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">o código de Animal lê nome em +12 em qualquer subclasse.</text>
+</svg>

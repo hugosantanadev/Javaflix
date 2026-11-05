@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Endpoints do Actuator como `env` e `heapdump` não podem ficar públicos em produção.',
     'Versões `SNAPSHOT` e `M1` no Initializr são de desenvolvimento, não para projetos reais.',
   ],
+  ia: {
+    uso:
+      'A IA é útil para explicar o log de subida do Spring Boot, o relatório de falha e o relatório de condições, que são longos e cheios de nomes. Para gerar projetos, prefira o Initializr: o que a IA monta de memória costuma misturar starters e versões de gerações diferentes.',
+    pedido:
+      'Minha aplicação Spring Boot 4.1.1 com Java 25 não sobe.\n<cole aqui o log completo da subida, do primeiro ao último INFO ou ERROR>\n- Diga em qual passo da subida a falha aconteceu e por quê.\n- Proponha a correção com propriedades ou anotações, sem acrescentar dependências.\n- Se a solução envolver o pom.xml, use starters do Spring Boot 4, sem <version>.\n- Diga como confirmo, no próximo log, que a correção funcionou.',
+    erros: [
+      'Usa starters da geração anterior, como `spring-boot-starter-web`, num projeto Spring Boot 4.',
+      'Fixa versões de dependências que o *parent* já gerencia.',
+      'Sugere expor todos os endpoints do Actuator para "facilitar o diagnóstico".',
+      'Põe o controller num pacote fora da árvore da classe principal.',
+    ],
+    conferir: [
+      'Compare o `pom.xml` sugerido com um gerado pelo Initializr na mesma versão.',
+      'Rode com `--debug` e confira no relatório de condições o que foi aplicado.',
+      'Procure a linha `Started ... in` no log e teste o endpoint com `curl`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Spring Initializr',
@@ -188,6 +205,131 @@ public class Condicoes {
     comentarios:
       'As quatro regras do Spring Boot aparecem juntas. A biblioteca ausente desliga a configuração inteira, como o `DataSourceAutoConfiguration` sem driver. O bean do usuário vence o automático, como um `JsonMapper` próprio. Uma propriedade pode ligar algo que vem desligado, como o cache, ou desligar algo que vem ligado, como as métricas com `matchIfMissing = true`. Por isso o Spring Boot processa os beans do usuário antes das autoconfigurações: o `@ConditionalOnMissingBean` só funciona se os seus já estiverem registrados quando ele é avaliado. O `sealed interface` com o `switch` de padrões garante, em tempo de compilação, que todo tipo de condição foi tratado.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t4-e02-b01',
+      dificuldade: 1,
+      sintoma: 'Quem abre a página de boas-vindas sem informar o nome vê `Olá, null!`.',
+      codigo: `import java.util.Map;
+
+public class Saudacao {
+    static String ola(Map<String, String> parametros) {
+        String nome = parametros.get("nome");
+        return "Olá, " + nome + "!";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(ola(Map.of("nome", "Ana")));
+        System.out.println(ola(Map.of()));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'Olá, Ana!\nOlá, null!' },
+      correcao: `import java.util.Map;
+
+public class Saudacao {
+    static String ola(Map<String, String> parametros) {
+        String nome = parametros.getOrDefault("nome", "mundo");
+        return "Olá, " + nome + "!";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(ola(Map.of("nome", "Ana")));
+        System.out.println(ola(Map.of()));
+    }
+}`,
+      saidaCorrigida: 'Olá, Ana!\nOlá, mundo!',
+      dica: 'O que `get` devolve quando o parâmetro não veio?',
+      explicacao:
+        'Um parâmetro ausente simplesmente não está no mapa, e o `get` devolve `null`, que a concatenação transforma no texto "null". É o papel do `defaultValue` do `@RequestParam`: dar um valor quando o parâmetro não vem. Aqui, `getOrDefault`.',
+    },
+    {
+      id: 'backend-junior-t4-e02-b02',
+      dificuldade: 2,
+      sintoma: 'A aplicação não sobe quando a porta é passada pela linha de comando: `NumberFormatException: For input string: "=8081"`.',
+      codigo: `public class Porta {
+    public static void main(String[] args) {
+        String[] linhaDeComando = {"--debug", "--server.port=8081"};
+        int porta = 8080;
+        for (String a : linhaDeComando) {
+            if (a.startsWith("--server.port=")) porta = Integer.parseInt(a.substring(13));
+        }
+        System.out.println("Tomcat started on port " + porta);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'excecao', nome: 'NumberFormatException' },
+      correcao: `public class Porta {
+    public static void main(String[] args) {
+        String[] linhaDeComando = {"--debug", "--server.port=8081"};
+        int porta = 8080;
+        for (String a : linhaDeComando) {
+            if (a.startsWith("--server.port=")) porta = Integer.parseInt(a.substring("--server.port=".length()));
+        }
+        System.out.println("Tomcat started on port " + porta);
+    }
+}`,
+      saidaCorrigida: 'Tomcat started on port 8081',
+      dica: 'Quantos caracteres tem `"--server.port="`? O que sobra depois do `substring(13)`?',
+      explicacao:
+        'O prefixo tem 14 caracteres, e `substring(13)` deixa o `=` junto do número. Contar à mão é a origem do erro: `substring("--server.port=".length())` sempre acerta, mesmo se o prefixo mudar.',
+    },
+    {
+      id: 'backend-junior-t4-e02-b03',
+      dificuldade: 3,
+      sintoma: 'A aplicação falha com dois beans de `JsonMapper`, embora a autoconfiguração devesse ceder ao bean do projeto: `[padrão do Boot, o seu, com snake_case]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class SemBeanIgual {
+    record Bean(String tipo, String origem) {}
+
+    static final List<Bean> beans = new ArrayList<>();
+
+    static void autoconfiguracao() {
+        if (beans.stream().noneMatch(b -> b.tipo().equals("JsonMapper"))) beans.add(new Bean("JsonMapper", "padrão do Boot"));
+    }
+
+    static void configuracaoDoUsuario() {
+        beans.add(new Bean("JsonMapper", "o seu, com snake_case"));
+    }
+
+    public static void main(String[] args) {
+        autoconfiguracao();
+        configuracaoDoUsuario();
+        System.out.println(beans.stream().filter(b -> b.tipo().equals("JsonMapper")).map(Bean::origem).toList());
+    }
+}`,
+      linha: 18,
+      efeito: { tipo: 'saida', saida: '[padrão do Boot, o seu, com snake_case]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class SemBeanIgual {
+    record Bean(String tipo, String origem) {}
+
+    static final List<Bean> beans = new ArrayList<>();
+
+    static void autoconfiguracao() {
+        if (beans.stream().noneMatch(b -> b.tipo().equals("JsonMapper"))) beans.add(new Bean("JsonMapper", "padrão do Boot"));
+    }
+
+    static void configuracaoDoUsuario() {
+        beans.add(new Bean("JsonMapper", "o seu, com snake_case"));
+    }
+
+    public static void main(String[] args) {
+        configuracaoDoUsuario();
+        autoconfiguracao();
+        System.out.println(beans.stream().filter(b -> b.tipo().equals("JsonMapper")).map(Bean::origem).toList());
+    }
+}`,
+      saidaCorrigida: '[o seu, com snake_case]',
+      dica: 'Quando a autoconfiguração confere se já existe um `JsonMapper`, o do projeto já foi registrado?',
+      explicacao:
+        'O `@ConditionalOnMissingBean` só funciona se for avaliado **depois** de os beans do projeto estarem registrados. É por isso que o Spring Boot processa as suas configurações primeiro e as autoconfigurações por último. Aqui, a ordem invertida fez a condição olhar uma lista ainda vazia.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t4-e02-q01',
@@ -202,6 +344,7 @@ public class Condicoes {
       ],
       resposta: 0,
       explicacao: 'Por isso as dependências dos starters vão sem `<version>`. Ele também liga o `-parameters` e define a codificação e a versão do Java.',
+      dica: 'Repare que as dependências do `pom.xml` não têm `<version>`.',
     },
     {
       id: 'backend-junior-t4-e02-q02',
@@ -216,6 +359,7 @@ public class Condicoes {
       ],
       resposta: 0,
       explicacao: 'Uma linha no pom traz tudo o que a funcionalidade precisa, em versões compatíveis entre si.',
+      dica: 'Um starter não tem código próprio: ele junta dependências.',
     },
     {
       id: 'backend-junior-t4-e02-q03',
@@ -230,6 +374,7 @@ public class Condicoes {
       ],
       resposta: 0,
       explicacao: 'A classe vira uma configuração, a varredura começa no pacote dela, e a autoconfiguração é ligada.',
+      dica: 'Configuração, autoconfiguração e varredura.',
     },
     {
       id: 'backend-junior-t4-e02-q04',
@@ -244,6 +389,7 @@ public class Condicoes {
       ],
       resposta: 0,
       explicacao: 'Sem o controller registrado, nenhuma rota `/ola` existe. Mova-o para `br.com.javaflix.loja.web`, por exemplo.',
+      dica: 'Os pacotes não estão na mesma árvore.',
     },
     {
       id: 'backend-junior-t4-e02-q05',
@@ -258,6 +404,7 @@ public class Condicoes {
       ],
       resposta: 0,
       explicacao: 'É a regra geral do Spring Boot: um padrão razoável, que sai do caminho quando você define o seu.',
+      dica: 'A autoconfiguração só cria o bean se não houver um do mesmo tipo.',
     },
     {
       id: 'backend-junior-t4-e02-q06',
@@ -272,6 +419,7 @@ public class Condicoes {
       ],
       resposta: 0,
       explicacao: 'O relatório diz, para cada candidata, qual condição foi atendida ou falhou, como uma classe ausente do classpath.',
+      dica: 'Existe uma opção de linha de comando que imprime o relatório de condições.',
     },
     {
       id: 'backend-junior-t4-e02-q07',
@@ -286,6 +434,7 @@ public class Condicoes {
       ],
       resposta: 0,
       explicacao: 'Só um processo pode escutar numa porta. Antes de encerrar o que está nela, confira de quem é: pode ser outro serviço da máquina.',
+      dica: 'Outra porta, por propriedade ou pela linha de comando.',
     },
     {
       id: 'backend-junior-t4-e02-q08',
@@ -300,6 +449,7 @@ public class Condicoes {
       ],
       resposta: 0,
       explicacao: 'Um único arquivo carrega a aplicação inteira, o que simplifica a implantação e as imagens Docker.',
+      dica: 'Veja o `MANIFEST.MF` da aula: `Main-Class` e `Start-Class`.',
     },
     {
       id: 'backend-junior-t4-e02-q09',
@@ -315,6 +465,7 @@ public class Condicoes {
       ],
       respostas: [0, 1],
       explicacao: 'Os outros endpoints precisam ser expostos com `management.endpoints.web.exposure.include`, e os sensíveis exigem proteção.',
+      dica: 'Só um endpoint fica exposto por padrão, e ele diz se a aplicação está saudável.',
     },
     {
       id: 'backend-junior-t4-e02-q10',
@@ -337,6 +488,7 @@ public class Condicoes {
 }`,
       resposta: 'true false',
       explicacao: 'O JDK tem o `List`, mas não o driver do PostgreSQL. Com a dependência do driver no pom, a segunda chamada daria `true`, e a configuração do banco seria aplicada.',
+      dica: 'Uma das classes existe no JDK; a outra é de uma biblioteca que não está no classpath.',
     },
     {
       id: 'backend-junior-t4-e02-q11',
@@ -360,6 +512,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `flatMap(Optional::stream)` descarta os vazios, e o `findFirst` pega a primeira falha. Só se não houvesse falha nenhuma o resultado seria "aplicada".',
+      dica: 'Siga as condições na ordem: a primeira que falha decide o resultado.',
     },
     {
       id: 'backend-junior-t4-e02-q12',
@@ -369,6 +522,7 @@ public class Teste {
       opcoes: ['`spring-boot-starter-webmvc`', '`spring-boot-starter-tomcat-mvc`', '`spring-mvc-boot`', '`spring-boot-web-server`'],
       resposta: 0,
       explicacao: 'No Spring Boot 3, o mesmo papel era do `spring-boot-starter-web`, nome que ainda aparece em muitos tutoriais.',
+      dica: 'No Spring Boot 4, o starter da web leva o nome do Spring MVC.',
     },
     {
       id: 'backend-junior-t4-e02-q13',
@@ -378,6 +532,7 @@ public class Teste {
       opcoes: ['`4.1.1`', '`4.2.0 (M1)`', '`4.2.0 (SNAPSHOT)`', 'Qualquer uma, são equivalentes'],
       resposta: 0,
       explicacao: 'Marcos (`M1`) e `SNAPSHOT` são versões em desenvolvimento, que podem mudar ou ter defeitos conhecidos.',
+      dica: 'Para produção, a versão estável, sem marcador de pré-lançamento.',
     },
     {
       id: 'backend-junior-t4-e02-q14',
@@ -387,6 +542,7 @@ public class Teste {
       opcoes: ['`Olá, mundo!`', '`Olá, null!`', '`400 Bad Request`', '`Olá, !`'],
       resposta: 0,
       explicacao: 'Sem o `defaultValue`, um `@RequestParam` é obrigatório, e a ausência dele resultaria em `400`.',
+      dica: 'O `defaultValue` vale quando o parâmetro não vem.',
     },
     {
       id: 'backend-junior-t4-e02-q15',
@@ -401,6 +557,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Um bloco `static` de um driver, por exemplo, poderia registrar-se no `DriverManager`. Só para saber se a classe existe, não se quer isso.',
+      dica: 'O segundo argumento de `forName` controla a inicialização da classe.',
     },
   ],
 };

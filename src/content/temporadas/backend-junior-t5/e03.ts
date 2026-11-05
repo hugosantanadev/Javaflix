@@ -199,6 +199,171 @@ public class Cascata {
     comentarios:
       'O Hibernate não sabe que você chamou `remover`: ele descobre as mudanças comparando a coleção com a fotografia de quando ela foi carregada, como o conjunto `gravados` faz aqui. É por isso que trocar a coleção inteira (`pedido.setItens(novaLista)`) é um erro clássico com `orphanRemoval`: a coleção que o Hibernate acompanha some, e ele lança `HibernateException: A collection with cascade="all-delete-orphan" was no longer referenced`. Altere a lista existente com `add`, `remove` e `clear`. O Hibernate real também ordena as operações do *flush*: insere antes de apagar, como esta simulação, e agrupa os comandos quando o *batch* está ligado.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t5-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O pedido aparece na lista do cliente enquanto a transação roda, mas depois de gravado não pertence a ninguém: `na lista: 1, cliente_id gravado: null`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class LadoDono {
+    static class Cliente {
+        final long id;
+        final List<Pedido> pedidos = new ArrayList<>();
+
+        Cliente(long id) { this.id = id; }
+
+        void adicionar(Pedido p) {
+            pedidos.add(p);
+        }
+    }
+
+    static class Pedido {
+        Cliente cliente;
+    }
+
+    public static void main(String[] args) {
+        Cliente ana = new Cliente(1);
+        Pedido p = new Pedido();
+        ana.adicionar(p);
+        System.out.println("na lista: " + ana.pedidos.size() + ", cliente_id gravado: " + (p.cliente == null ? null : p.cliente.id));
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'saida', saida: 'na lista: 1, cliente_id gravado: null' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class LadoDono {
+    static class Cliente {
+        final long id;
+        final List<Pedido> pedidos = new ArrayList<>();
+
+        Cliente(long id) { this.id = id; }
+
+        void adicionar(Pedido p) {
+            pedidos.add(p); p.cliente = this;
+        }
+    }
+
+    static class Pedido {
+        Cliente cliente;
+    }
+
+    public static void main(String[] args) {
+        Cliente ana = new Cliente(1);
+        Pedido p = new Pedido();
+        ana.adicionar(p);
+        System.out.println("na lista: " + ana.pedidos.size() + ", cliente_id gravado: " + (p.cliente == null ? null : p.cliente.id));
+    }
+}`,
+      saidaCorrigida: 'na lista: 1, cliente_id gravado: 1',
+      dica: 'Qual dos dois lados da relação o Hibernate olha para preencher a coluna `cliente_id`?',
+      explicacao:
+        'Numa relação bidirecional, o lado dono é o `@ManyToOne` em `Pedido`: é o campo `cliente` que vira a chave estrangeira. A lista com `mappedBy` em `Cliente` é só um espelho, e mexer nela não grava nada. O método auxiliar precisa ligar os dois lados, `pedidos.add(p)` e `p.cliente = this`, para a memória e o banco contarem a mesma história.',
+    },
+    {
+      id: 'backend-junior-t5-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O usuário tira o teclado do pedido, a tela confirma, e na próxima leitura o item volta: `itens do pedido na tela: [Mouse], no banco: [Mouse, Teclado]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Orfaos {
+    public static void main(String[] args) {
+        boolean orphanRemoval = false;
+        List<String> noBanco = new ArrayList<>(List.of("Mouse", "Teclado"));
+        List<String> naLista = new ArrayList<>(noBanco);
+        naLista.remove("Teclado");
+        if (orphanRemoval) noBanco.retainAll(naLista);
+        System.out.println("itens do pedido na tela: " + naLista + ", no banco: " + noBanco);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'itens do pedido na tela: [Mouse], no banco: [Mouse, Teclado]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Orfaos {
+    public static void main(String[] args) {
+        boolean orphanRemoval = true;
+        List<String> noBanco = new ArrayList<>(List.of("Mouse", "Teclado"));
+        List<String> naLista = new ArrayList<>(noBanco);
+        naLista.remove("Teclado");
+        if (orphanRemoval) noBanco.retainAll(naLista);
+        System.out.println("itens do pedido na tela: " + naLista + ", no banco: " + noBanco);
+    }
+}`,
+      saidaCorrigida: 'itens do pedido na tela: [Mouse], no banco: [Mouse]',
+      dica: 'Tirar um item da coleção é o mesmo que apagar a linha dele?',
+      explicacao:
+        'Sem `orphanRemoval = true`, remover o item da lista só desfaz a ligação na memória; a linha continua na tabela, e, como o item ainda aponta para o pedido, ele volta na próxima busca. Com `orphanRemoval`, o Hibernate entende que um item sem pedido não deve existir e emite o `DELETE`. Use-o quando o filho só faz sentido dentro do pai, como itens de um pedido.',
+    },
+    {
+      id: 'backend-junior-t5-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O endpoint que lista pedidos responde 500 com `LazyInitializationException: could not initialize proxy [Cliente#1] - no Session`.',
+      codigo: `import java.util.Map;
+import java.util.function.Supplier;
+
+public class Preguica {
+    static boolean sessaoAberta;
+    static final Map<Long, String> CLIENTES = Map.of(1L, "Ana Lima");
+
+    static Supplier<String> proxyDoNome(long id) {
+        return () -> {
+            if (!sessaoAberta) throw new LazyInitializationException("could not initialize proxy [Cliente#" + id + "] - no Session");
+            return CLIENTES.get(id);
+        };
+    }
+
+    public static void main(String[] args) {
+        sessaoAberta = true;
+        Supplier<String> nome = proxyDoNome(1);
+        sessaoAberta = false;
+        String paraATela = nome.get();
+        System.out.println("cliente: " + paraATela);
+    }
+}
+
+class LazyInitializationException extends RuntimeException {
+    LazyInitializationException(String m) { super(m); }
+}`,
+      linha: 18,
+      efeito: { tipo: 'excecao', nome: 'LazyInitializationException' },
+      correcao: `import java.util.Map;
+import java.util.function.Supplier;
+
+public class Preguica {
+    static boolean sessaoAberta;
+    static final Map<Long, String> CLIENTES = Map.of(1L, "Ana Lima");
+
+    static Supplier<String> proxyDoNome(long id) {
+        return () -> {
+            if (!sessaoAberta) throw new LazyInitializationException("could not initialize proxy [Cliente#" + id + "] - no Session");
+            return CLIENTES.get(id);
+        };
+    }
+
+    public static void main(String[] args) {
+        sessaoAberta = true;
+        Supplier<String> nome = proxyDoNome(1);
+        String paraATela = nome.get();
+        sessaoAberta = false;
+        System.out.println("cliente: " + paraATela);
+    }
+}
+
+class LazyInitializationException extends RuntimeException {
+    LazyInitializationException(String m) { super(m); }
+}`,
+      saidaCorrigida: 'cliente: Ana Lima',
+      dica: 'Em que momento o nome do cliente é buscado de verdade, e a sessão ainda está aberta nesse momento?',
+      explicacao:
+        'Com `FetchType.LAZY`, o pedido traz um *proxy* do cliente, e o `SELECT` só sai no primeiro uso. O código fechava a sessão (o fim do método `@Transactional`) antes de ler o nome, e o *proxy* não tinha mais como buscar. A correção é usar o dado enquanto a transação está aberta, de preferência montando o DTO no serviço ou buscando com `join fetch`.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t5-e03-q01',
@@ -214,6 +379,7 @@ public class Cascata {
       ],
       resposta: 0,
       explicacao: 'O lado com `mappedBy` é o inverso. O Hibernate só olha o lado dono, o campo `cliente` do pedido, para gravar `cliente_id`.',
+      dica: 'Procure o lado que tem a coluna da chave estrangeira.',
     },
     {
       id: 'backend-junior-t5-e03-q02',
@@ -228,6 +394,7 @@ public class Cascata {
       ],
       resposta: 0,
       explicacao: 'Sem `mappedBy`, a lista ganha mapeamento próprio, numa tabela `clientes_pedidos`, e a mesma informação passa a ser gravada em dois lugares.',
+      dica: 'Sem o `mappedBy`, a lista não sabe que é o espelho do outro lado.',
     },
     {
       id: 'backend-junior-t5-e03-q03',
@@ -262,6 +429,7 @@ public class Teste {
 }`,
       resposta: 'lista [2], banco [1]',
       explicacao: 'Cada metade só foi feita de um lado: a lista em memória tem o pedido 2, mas o banco teria o pedido 1. Um método que atualiza os dois lados juntos evita a divergência.',
+      dica: 'Só o campo `cliente` de cada pedido conta para o banco.',
     },
     {
       id: 'backend-junior-t5-e03-q04',
@@ -271,6 +439,7 @@ public class Teste {
       opcoes: ['`@ManyToOne`', '`@OneToOne`', '`@OneToMany`', '`@ManyToMany`', '`@ElementCollection`'],
       respostas: [0, 1],
       explicacao: 'Os que apontam para um único objeto são `EAGER`; as coleções são `LAZY`. Na prática, declare `LAZY` também nos dois primeiros.',
+      dica: 'Os que terminam em `ToOne` trazem um objeto só.',
     },
     {
       id: 'backend-junior-t5-e03-q05',
@@ -286,6 +455,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O item ficou órfão, sem pedido, e o `orphanRemoval` o apaga. Na aula, o `itens.remove(1)` virou `delete from itens_pedido where id=?`.',
+      dica: 'A remoção de órfãos apaga quem sai da coleção.',
     },
     {
       id: 'backend-junior-t5-e03-q06',
@@ -300,6 +470,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A cascata segue a direção do atributo anotado, qualquer que seja o tipo do relacionamento. Ela serve para composição, como os itens de um pedido, e não para entidades independentes.',
+      dica: 'A cascata no lado "muitos" chega a um objeto compartilhado.',
     },
     {
       id: 'backend-junior-t5-e03-q07',
@@ -315,6 +486,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Sem contexto aberto, a coleção preguiçosa não tem como ir ao banco. Carregue os itens no serviço e devolva um DTO.',
+      dica: 'Quando o serviço retorna, a transação já fechou.',
     },
     {
       id: 'backend-junior-t5-e03-q08',
@@ -329,6 +501,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Com ele ligado, a serialização do JSON pode gerar dezenas de consultas sem ninguém perceber. Desligado, o problema aparece cedo, como exceção.',
+      dica: 'Pense no que fica aberto durante toda a requisição.',
     },
     {
       id: 'backend-junior-t5-e03-q09',
@@ -370,6 +543,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O id já é conhecido e não custa consulta. Só o primeiro `getNome()` de `a` busca; o segundo usa o valor guardado, e `b` nunca é carregado.',
+      dica: 'Conte só os métodos que precisam do nome; o id já está no proxy.',
     },
     {
       id: 'backend-junior-t5-e03-q10',
@@ -402,6 +576,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `toString` do cliente imprime o pedido, que imprime o cliente, e assim para sempre. O mesmo acontece com entidades e `toString`, `equals` e `hashCode` gerados, e com a serialização para JSON.',
+      dica: 'O `toString` de um record mostra todos os componentes.',
     },
     {
       id: 'backend-junior-t5-e03-q11',
@@ -426,6 +601,7 @@ public class Teste {
 }`,
       resposta: 'insert [novo] delete [promo]',
       explicacao: 'Só as diferenças viram SQL: uma linha nova e uma apagada em `produto_tags`. As tags que não mudaram não geram comando nenhum.',
+      dica: 'O que está na atual e não na fotografia entra; o contrário sai.',
     },
     {
       id: 'backend-junior-t5-e03-q12',
@@ -440,6 +616,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A tabela associativa de um `@ManyToMany` tem só as duas chaves estrangeiras. Quando a associação ganha um dado, ela vira uma entidade com dois `@ManyToOne`.',
+      dica: 'A tabela intermediária guarda só as chaves, ou mais alguma coisa?',
     },
     {
       id: 'backend-junior-t5-e03-q13',
@@ -454,6 +631,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O proxy do cliente na aula era um `Cliente`, de uma subclasse criada com ByteBuddy que sobrescreve cada método para buscar os dados no primeiro uso.',
+      dica: 'O proxy é criado como uma subclasse da entidade.',
     },
     {
       id: 'backend-junior-t5-e03-q14',
@@ -464,6 +642,7 @@ public class Teste {
       opcoes: ['Três: um em `pedidos` e dois em `itens_pedido`', 'Um, só do pedido', 'Dois, só dos itens', 'Nenhum, até chamar `persist` em cada item'],
       resposta: 0,
       explicacao: 'O `persist` se propaga do pedido para os itens. Sem a cascata, os itens novos precisariam de `persist` próprio, ou o Hibernate reclamaria de uma entidade transitória.',
+      dica: 'A cascata leva o `persist` do pedido para cada item.',
     },
     {
       id: 'backend-junior-t5-e03-q15',
@@ -479,6 +658,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'As duas buscam o que vai ser usado enquanto há transação. As outras trocam a exceção por consultas escondidas, consultas demais ou dados errados.',
+      dica: 'Prefira as que carregam o dado dentro da transação.',
     },
   ],
 };

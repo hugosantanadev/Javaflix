@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="290" viewBox="0 0 760 290" role="img" aria-labelledby="t">
+  <title id="t">A variável f, do tipo Forma, aponta para um objeto Circulo no heap. Do lado da variável, o compilador só enxerga os métodos de Forma, area e nome. Do lado do objeto, a JVM executa a versão de Circulo de cada método chamado</title>
+  <rect width="760" height="290" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker></defs>
+  <text x="40" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">na compilação: o tipo da referência</text>
+  <text x="430" y="36" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">na execução: o tipo do objeto</text>
+  <rect x="40" y="56" width="260" height="56" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+  <text x="58" y="90" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7">Forma f</text>
+  <path d="M302 84 L426 84" stroke="#ff7a1a" stroke-width="2" fill="none" marker-end="url(#s)"/>
+  <rect x="430" y="56" width="290" height="56" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+  <text x="448" y="90" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7">objeto Circulo (r = 1)</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <text x="58" y="150" fill="#bdb5aa">o compilador enxerga:</text>
+    <text x="58" y="176" fill="#f3eee7" xml:space="preserve">area()   nome()</text>
+    <text x="58" y="202" fill="#8a8277">raio, métodos só de Circulo: não</text>
+    <text x="448" y="150" fill="#bdb5aa">a JVM executa:</text>
+    <text x="448" y="176" fill="#4fd68b">Circulo.area()</text>
+    <text x="448" y="202" fill="#4fd68b">Circulo.nome()</text>
+  </g>
+  <text x="40" y="254" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Primeira pergunta: compila? Olhe a referência. Segunda: o que roda? Olhe o objeto.</text>
+  <text x="40" y="274" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Campos e métodos static ficam do lado esquerdo: seguem a referência.</text>
+</svg>

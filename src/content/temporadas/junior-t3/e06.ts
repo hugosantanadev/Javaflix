@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Um `equals` com `instanceof` entre superclasse e subclasse pode quebrar a simetria.',
     'O `hashCode` padrão não é o endereço de memória do objeto.',
   ],
+  ia: {
+    uso:
+      'A IA gera `equals`, `hashCode` e `toString` em segundos. O trabalho que fica com você é escolher os campos certos e conferir o contrato, que ela nem sempre respeita.',
+    pedido:
+      'Revise o equals, o hashCode e o toString desta classe Java 21.\n<cole o código aqui>\n- Confira a assinatura exata: public boolean equals(Object o) e public int hashCode().\n- Diga se os dois usam exatamente os mesmos campos e se algum deles muda depois de criado.\n- Mostre um teste com HashSet que falharia se o contrato estivesse quebrado.',
+    erros: [
+      'Escreve `equals(MinhaClasse outro)`, uma sobrecarga que as coleções não chamam.',
+      'Gera o `hashCode` com campos diferentes dos do `equals`.',
+      'Usa campos mutáveis, e o objeto se perde no `HashSet` depois de alterado.',
+    ],
+    conferir: [
+      'Ponha dois objetos iguais num `HashSet` e confira que o tamanho é 1.',
+      'Teste `equals(null)` e `equals` com um objeto de outra classe: os dois devem dar `false`.',
+      'Rode a inspeção que aponta `equals` sem `hashCode`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Object as a Superclass',
@@ -153,6 +169,164 @@ public class Agenda {
     comentarios:
       'O conjunto mantém o primeiro contato e ignora o terceiro, igual pelo telefone. Como a classe é imutável, o `hashCode` de um contato nunca muda depois que ele entra no conjunto. Se o telefone pudesse ser alterado, o contato "sumiria" do `HashSet`, porque estaria guardado no balde do `hashCode` antigo.',
   },
+  bugs: [
+    {
+      id: 'junior-t3-e06-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: equals(Object) in Livro cannot override equals(Object) in Object`.',
+      codigo: `class Livro {
+    String isbn;
+
+    Livro(String isbn) { this.isbn = isbn; }
+
+    @Override
+    boolean equals(Object o) {
+        return o instanceof Livro && ((Livro) o).isbn.equals(isbn);
+    }
+}
+
+public class Biblioteca {
+    public static void main(String[] args) {
+        System.out.println(new Livro("978").equals(new Livro("978")));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `class Livro {
+    String isbn;
+
+    Livro(String isbn) { this.isbn = isbn; }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Livro && ((Livro) o).isbn.equals(isbn);
+    }
+}
+
+public class Biblioteca {
+    public static void main(String[] args) {
+        System.out.println(new Livro("978").equals(new Livro("978")));
+    }
+}`,
+      saidaCorrigida: 'true',
+      dica: 'Qual é o acesso do `equals` em `Object`? E o deste?',
+      explicacao: 'O `equals` de `Object` é `public`, e uma sobrescrita não pode fechar o acesso. Sem modificador, o método teria acesso de pacote. A assinatura completa é `public boolean equals(Object o)`.',
+    },
+    {
+      id: 'junior-t3-e06-b02',
+      dificuldade: 2,
+      sintoma: 'O cadastro deveria recusar CPFs repetidos, mas o conjunto termina com `2` elementos.',
+      codigo: `import java.util.HashSet;
+import java.util.Set;
+
+class Cpf {
+    private final String numero;
+
+    Cpf(String numero) { this.numero = numero; }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Cpf && ((Cpf) o).numero.equals(numero);
+    }
+
+    // o hashCode fica o herdado
+}
+
+public class Cadastro {
+    public static void main(String[] args) {
+        Set<Cpf> cpfs = new HashSet<>();
+        cpfs.add(new Cpf("123"));
+        cpfs.add(new Cpf("123"));
+        System.out.println(cpfs.size());
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'saida', saida: '2' },
+      correcao: `import java.util.HashSet;
+import java.util.Set;
+
+class Cpf {
+    private final String numero;
+
+    Cpf(String numero) { this.numero = numero; }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Cpf && ((Cpf) o).numero.equals(numero);
+    }
+
+    @Override public int hashCode() { return numero.hashCode(); }
+}
+
+public class Cadastro {
+    public static void main(String[] args) {
+        Set<Cpf> cpfs = new HashSet<>();
+        cpfs.add(new Cpf("123"));
+        cpfs.add(new Cpf("123"));
+        System.out.println(cpfs.size());
+    }
+}`,
+      saidaCorrigida: '1',
+      dica: 'Antes de chamar o `equals`, o `HashSet` consulta outro método. Ele foi sobrescrito?',
+      explicacao: 'O `HashSet` escolhe o balde pelo `hashCode`, e o herdado de `Object` é diferente para cada objeto. Os dois CPFs caem em baldes diferentes e o `equals` nunca é chamado. Quem sobrescreve o `equals` sobrescreve o `hashCode` com os mesmos campos.',
+    },
+    {
+      id: 'junior-t3-e06-b03',
+      dificuldade: 3,
+      sintoma: 'Comparar dois produtos ainda sem código lança `NullPointerException` dentro do `equals`.',
+      codigo: `import java.util.Objects;
+
+class Produto {
+    private final String codigo;
+
+    Produto(String codigo) { this.codigo = codigo; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Produto)) return false;
+        return codigo.equals(((Produto) o).codigo);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hashCode(codigo); }
+}
+
+public class Estoque {
+    public static void main(String[] args) {
+        Produto rascunho = new Produto(null);
+        System.out.println(rascunho.equals(new Produto(null)));
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `import java.util.Objects;
+
+class Produto {
+    private final String codigo;
+
+    Produto(String codigo) { this.codigo = codigo; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Produto)) return false;
+        return Objects.equals(codigo, ((Produto) o).codigo);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hashCode(codigo); }
+}
+
+public class Estoque {
+    public static void main(String[] args) {
+        Produto rascunho = new Produto(null);
+        System.out.println(rascunho.equals(new Produto(null)));
+    }
+}`,
+      saidaCorrigida: 'true',
+      dica: 'O `instanceof` protege contra o `o` nulo. E contra um campo nulo dentro do próprio objeto?',
+      explicacao: '`codigo.equals(...)` chama um método no campo, que pode ser `null`. `Objects.equals(a, b)` trata `null` dos dois lados: dois nulos são iguais, um nulo e um valor são diferentes. O `hashCode` já usava `Objects.hashCode`, que devolve 0 para `null`.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t3-e06-q01',
@@ -167,6 +341,7 @@ public class Agenda {
       ],
       resposta: 0,
       explicacao: 'Sem sobrescrita, `equals` faz o mesmo que `==`. Cada classe decide o que "igual" significa para ela ao sobrescrevê-lo.',
+      dica: 'Sem sobrescrita, o `equals` faz o mesmo que `==`.',
     },
     {
       id: 'junior-t3-e06-q02',
@@ -184,6 +359,7 @@ System.out.println("Tirei " + c);
 System.out.println(String.valueOf((Object) null) + " " + c.toString().length());`,
       resposta: 'Tirei Ás de copas\nnull 11',
       explicacao: 'A concatenação chama o `toString` sobrescrito. `String.valueOf` com `null` devolve o texto "null", sem exceção. "Ás de copas" tem 11 caracteres.',
+      dica: 'A concatenação chama o `toString` sobrescrito; `String.valueOf(null)` vira o texto "null".',
     },
     {
       id: 'junior-t3-e06-q03',
@@ -204,6 +380,7 @@ System.out.println(a.equals(b) + " " + a.equals(o) + " " + o.equals(a));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`equals(Ponto)` é uma sobrecarga. Só é escolhida quando o argumento é declarado `Ponto`. Com um `Object`, ou chamada por uma referência `Object`, vale o `equals(Object)` herdado, que compara identidade.',
+      dica: '`equals(Ponto)` é sobrecarga. Qual versão o compilador escolhe quando o argumento é declarado `Object`?',
     },
     {
       id: 'junior-t3-e06-q04',
@@ -227,6 +404,7 @@ System.out.println(a.equals(b) + " " + a.equals(o) + " " + o.equals(a));`,
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Com parâmetro `Moeda`, o método é uma sobrecarga, e o `@Override` acusa o erro. É exatamente o bug que a anotação existe para pegar.',
+      dica: 'O parâmetro de `equals` em `Object` é de que tipo?',
     },
     {
       id: 'junior-t3-e06-q05',
@@ -242,6 +420,7 @@ System.out.println(a.equals(b) + " " + a.equals(o) + " " + o.equals(a));`,
       ],
       respostas: [0, 1, 2],
       explicacao: 'Reflexividade, simetria e o tratamento de `null` estão no contrato, junto com transitividade e consistência. O `toString` não tem relação, e `hashCode` igual não implica igualdade.',
+      dica: 'Reflexivo, simétrico, transitivo, consistente e seguro com `null`.',
     },
     {
       id: 'junior-t3-e06-q06',
@@ -276,6 +455,7 @@ public class Detran {
       respostas: ['int'],
       saida: 'true',
       explicacao: 'A assinatura é `public int hashCode()`. Como `equals` e `hashCode` usam o mesmo campo, placas iguais têm o mesmo `hashCode`.',
+      dica: 'O `hashCode` devolve um número inteiro.',
     },
     {
       id: 'junior-t3-e06-q07',
@@ -292,6 +472,7 @@ public class Detran {
 }`,
       resposta: 5,
       explicacao: 'O `equals` de `Object` é `public`, e a sobrescrita não pode fechar o acesso. Falta o `public` na declaração.',
+      dica: 'Um método herdado `public` pode ser sobrescrito com acesso de pacote?',
     },
     {
       id: 'junior-t3-e06-q08',
@@ -314,6 +495,7 @@ System.out.println(cores.size() + " " + new Cor("azul").equals(new Cor("azul")))
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `equals` diz que as cores são iguais, mas o `hashCode` herdado é diferente para cada objeto. O `HashSet` procura pelo `hashCode` primeiro e nunca chega a comparar as duas: aceita a duplicata.',
+      dica: 'O `equals` foi sobrescrito, mas e o `hashCode`?',
     },
     {
       id: 'junior-t3-e06-q09',
@@ -336,6 +518,7 @@ pontos.add(new Ponto(1, 2));
 System.out.println(pontos.size() + " " + pontos.contains(new Ponto(3, 4)));`,
       resposta: '2 true',
       explicacao: 'Com `equals` e `hashCode` coerentes, o segundo (1, 2) é reconhecido como duplicata, e um (3, 4) novo é encontrado pelo `contains`.',
+      dica: 'Com `equals` e `hashCode` coerentes, pontos iguais contam uma vez só.',
     },
     {
       id: 'junior-t3-e06-q10',
@@ -350,6 +533,7 @@ System.out.println(Objects.equals(a, b) + " " + Objects.equals(a, c) + " " + Obj
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Objects.equals` trata `null` dos dois lados: dois nulos são iguais, um nulo e um não nulo não são, e nos outros casos chama o `equals` normal.',
+      dica: '`Objects.equals` trata `null` dos dois lados sem exceção.',
     },
     {
       id: 'junior-t3-e06-q11',
@@ -364,6 +548,7 @@ System.out.println(Objects.equals(a, b) + " " + Objects.equals(a, c) + " " + Obj
       ],
       resposta: 0,
       explicacao: 'Objetos iguais precisam cair no mesmo balde das coleções de hash. Por isso quem sobrescreve `equals` precisa sobrescrever `hashCode`.',
+      dica: 'É a regra que amarra os dois métodos.',
     },
     {
       id: 'junior-t3-e06-q12',
@@ -393,6 +578,7 @@ System.out.println(p.equals(pc) + " " + pc.equals(p));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Para `Ponto`, um ponto colorido é um ponto com o mesmo `x`: `true`. Para `PontoColorido`, um ponto comum nem é colorido: `false`. A simetria foi quebrada, um problema clássico de `equals` com herança.',
+      dica: 'Um `Ponto` não é `instanceof PontoColorido`. A simetria se mantém?',
     },
     {
       id: 'junior-t3-e06-q13',
@@ -408,6 +594,7 @@ System.out.println(p.equals(pc) + " " + pc.equals(p));`,
       ],
       respostas: [0, 1],
       explicacao: 'Colisões são permitidas e inevitáveis: há mais objetos possíveis que valores de `int`. O padrão é um número guardado no cabeçalho, e o contrato exige consistência enquanto o objeto não mudar.',
+      dica: 'Colisões são permitidas; o contrário da regra não é exigido.',
     },
     {
       id: 'junior-t3-e06-q14',
@@ -417,6 +604,7 @@ System.out.println(p.equals(pc) + " " + pc.equals(p));`,
       codigo: `System.out.println("Aa".hashCode() + " " + "BB".hashCode() + " " + "Aa".equals("BB"));`,
       resposta: '2112 2112 false',
       explicacao: '"Aa" dá 65 × 31 + 97 = 2112, e "BB" dá 66 × 31 + 66 = 2112. É uma colisão: mesmo `hashCode`, objetos diferentes. O contrato permite.',
+      dica: 'Strings diferentes podem colidir no `hashCode`.',
     },
     {
       id: 'junior-t3-e06-q15',
@@ -431,6 +619,7 @@ System.out.println(p.equals(pc) + " " + pc.equals(p));`,
       ],
       resposta: 0,
       explicacao: 'O coletor move objetos o tempo todo, e o `hashCode` precisa ficar fixo. A HotSpot sorteia o número com um gerador por thread e o guarda na palavra de marcação do cabeçalho.',
+      dica: 'Os objetos mudam de lugar na coleta de lixo, e o `hashCode` precisa ser fixo.',
     },
   ],
 };

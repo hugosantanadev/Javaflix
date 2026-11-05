@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Bloquear linhas em ordens diferentes em transações diferentes leva a impasses.',
     'Chamadas HTTP ou esperas dentro de uma transação aberta mantêm as linhas bloqueadas o tempo todo.',
   ],
+  ia: {
+    uso:
+      'Concorrência no banco é um assunto em que a IA ajuda a explicar (o que cada nível de isolamento permite, por que houve um impasse) e atrapalha ao gerar código, porque repete o padrão ingênuo de ler, calcular e gravar. Use-a para revisar o código de escrita concorrente e para montar testes com duas conexões.',
+    pedido:
+      'Revise este método que baixa o estoque numa loja com Spring Boot 4.1 e PostgreSQL.\n<cole aqui o método e a entidade>\n- Diga se duas vendas simultâneas do mesmo produto podem perder uma baixa, e mostre a sequência de comandos que causa o problema.\n- Proponha a correção com UPDATE relativo e WHERE quantidade >= ?, checando as linhas afetadas.\n- Não proponha SERIALIZABLE sem tratar as falhas de serialização.\n- Escreva um teste com duas threads e um CountDownLatch que prove a correção.',
+    erros: [
+      'Lê a quantidade, subtrai no Java e grava o valor absoluto.',
+      'Não confere o número de linhas afetadas pelo `UPDATE`.',
+      'Coloca chamadas HTTP dentro da transação.',
+      'Sobe o isolamento para SERIALIZABLE sem repetir as transações recusadas.',
+    ],
+    conferir: [
+      'Rode o teste com duas threads várias vezes: um problema de concorrência pode aparecer só de vez em quando.',
+      'Reproduza a sequência com dois consoles SQL, com o auto-commit desligado.',
+      'Confira que o código trata 0 linhas afetadas como "não deu".',
+    ],
+  },
   recursos: [
     {
       titulo: 'Documentação do PostgreSQL: Transaction Isolation',
@@ -205,6 +222,133 @@ public class MiniMvcc {
     comentarios:
       'Repare que nenhuma leitura esperou nada: enquanto B tinha a versão 80 sem confirmar, A simplesmente lia a anterior. É a grande vantagem do MVCC sobre um banco que bloqueasse a linha a cada leitura. A recusa de R é o mesmo erro que o PostgreSQL dá em REPEATABLE READ, e pelo mesmo motivo: aceitar a gravação de 70 apagaria o 60 de C, que R nunca viu. Um banco de verdade ainda marca quem apagou cada versão, bloqueia a linha para a segunda gravação concorrente esperar a primeira, considera transações em andamento na fotografia e remove as versões que nenhuma transação viva enxerga mais, o trabalho do `VACUUM` no PostgreSQL.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t3-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O inventário do fim do mês achou um teclado a menos do que o sistema diz. Num teste com duas vendas ao mesmo tempo, o programa mostra `estoque depois de duas vendas: 4`, e não 3.',
+      codigo: `import java.util.HashMap;
+import java.util.Map;
+
+public class DuasVendas {
+    public static void main(String[] args) {
+        Map<Integer, Integer> estoque = new HashMap<>(Map.of(7, 5));
+        int lidoPorA = estoque.get(7);
+        int lidoPorB = estoque.get(7);
+        estoque.put(7, lidoPorA - 1);
+        estoque.put(7, lidoPorB - 1);
+        System.out.println("estoque depois de duas vendas: " + estoque.get(7));
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'estoque depois de duas vendas: 4' },
+      correcao: `import java.util.HashMap;
+import java.util.Map;
+
+public class DuasVendas {
+    public static void main(String[] args) {
+        Map<Integer, Integer> estoque = new HashMap<>(Map.of(7, 5));
+        int lidoPorA = estoque.get(7);
+        int lidoPorB = estoque.get(7);
+        estoque.merge(7, -1, Integer::sum);
+        estoque.merge(7, -1, Integer::sum);
+        System.out.println("estoque depois de duas vendas: " + estoque.get(7));
+    }
+}`,
+      saidaCorrigida: 'estoque depois de duas vendas: 3',
+      dica: 'As duas vendas leram o mesmo 5. O que cada uma gravou?',
+      explicacao:
+        'Ler, calcular e gravar o valor absoluto faz a segunda venda sobrescrever a primeira com o mesmo 4: é a atualização perdida. Gravar a variação, como o `merge` com -1 ou o `SET quantidade = quantidade - 1` do SQL, faz cada venda partir do valor atual, e não do que leu antes.',
+    },
+    {
+      id: 'backend-junior-t3-e05-b02',
+      dificuldade: 2,
+      sintoma: 'Com 2 unidades em estoque, a loja confirmou 3 vendas: `venda 3: confirmada`.',
+      codigo: `import java.util.HashMap;
+import java.util.Map;
+
+public class Vender {
+    static final Map<Integer, Integer> estoque = new HashMap<>(Map.of(7, 2));
+
+    static int baixar(int produto) {
+        int q = estoque.get(produto);
+        if (q < 1) return 0;
+        estoque.put(produto, q - 1);
+        return 1;
+    }
+
+    public static void main(String[] args) {
+        for (int venda = 1; venda <= 3; venda++) {
+            int linhas = baixar(7);
+            System.out.println("venda " + venda + ": " + (linhas >= 0 ? "confirmada" : "esgotado"));
+        }
+    }
+}`,
+      linha: 17,
+      efeito: { tipo: 'saida', saida: 'venda 1: confirmada\nvenda 2: confirmada\nvenda 3: confirmada' },
+      correcao: `import java.util.HashMap;
+import java.util.Map;
+
+public class Vender {
+    static final Map<Integer, Integer> estoque = new HashMap<>(Map.of(7, 2));
+
+    static int baixar(int produto) {
+        int q = estoque.get(produto);
+        if (q < 1) return 0;
+        estoque.put(produto, q - 1);
+        return 1;
+    }
+
+    public static void main(String[] args) {
+        for (int venda = 1; venda <= 3; venda++) {
+            int linhas = baixar(7);
+            System.out.println("venda " + venda + ": " + (linhas > 0 ? "confirmada" : "esgotado"));
+        }
+    }
+}`,
+      saidaCorrigida: 'venda 1: confirmada\nvenda 2: confirmada\nvenda 3: esgotado',
+      dica: 'Quantas linhas o `baixar` devolve quando o estoque acabou, e o que a condição faz com esse número?',
+      explicacao:
+        'O `baixar` devolve 0 quando não há estoque, mas `linhas >= 0` é verdadeiro também para 0, e toda venda é confirmada. É o mesmo cuidado com o `UPDATE ... WHERE quantidade >= 1` da aula: o resultado só vale se o número de linhas afetadas for conferido do jeito certo, `> 0`.',
+    },
+    {
+      id: 'backend-junior-t3-e05-b03',
+      dificuldade: 3,
+      sintoma: 'Transferências cruzadas entre as mesmas duas contas às vezes falham com "deadlock detected". O registro de bloqueios mostra `A bloqueia [1, 2], B bloqueia [2, 1]: impasse possível`.',
+      codigo: `import java.util.List;
+
+public class OrdemDosBloqueios {
+    static List<Integer> ordem(int de, int para) {
+        return List.of(de, para);
+    }
+
+    public static void main(String[] args) {
+        List<Integer> a = ordem(1, 2);
+        List<Integer> b = ordem(2, 1);
+        System.out.println("A bloqueia " + a + ", B bloqueia " + b + (a.equals(b) ? ": sem impasse" : ": impasse possível"));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'A bloqueia [1, 2], B bloqueia [2, 1]: impasse possível' },
+      correcao: `import java.util.List;
+
+public class OrdemDosBloqueios {
+    static List<Integer> ordem(int de, int para) {
+        return List.of(Math.min(de, para), Math.max(de, para));
+    }
+
+    public static void main(String[] args) {
+        List<Integer> a = ordem(1, 2);
+        List<Integer> b = ordem(2, 1);
+        System.out.println("A bloqueia " + a + ", B bloqueia " + b + (a.equals(b) ? ": sem impasse" : ": impasse possível"));
+    }
+}`,
+      saidaCorrigida: 'A bloqueia [1, 2], B bloqueia [1, 2]: sem impasse',
+      dica: 'Uma transferência de 1 para 2 e outra de 2 para 1 bloqueiam as contas em que ordem?',
+      explicacao:
+        'Cada transferência bloqueia primeiro a conta de origem. Com origens opostas, A segura a 1 e espera a 2, e B segura a 2 e espera a 1: um ciclo. Bloquear sempre na mesma ordem, a do menor id primeiro, faz B esperar A desde o primeiro bloqueio, e o ciclo não se forma.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t3-e05-q01',
@@ -219,6 +363,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'Tudo ou nada. Com o `ROLLBACK`, o banco volta ao estado de antes da transação.',
+      dica: 'A de atomicidade: tudo ou nada.',
     },
     {
       id: 'backend-junior-t3-e05-q02',
@@ -233,6 +378,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'O JDBC começa em *autocommit*. Para agrupar comandos, desligue-o e chame `commit()` ou `rollback()` explicitamente.',
+      dica: 'Sem desligar o auto-commit, cada comando é confirmado na hora.',
     },
     {
       id: 'backend-junior-t3-e05-q03',
@@ -247,6 +393,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'É a atualização perdida. Cada comando é atômico, mas o par "ler e depois gravar" não é, e nada avisa.',
+      dica: 'As duas leem o mesmo valor antes de qualquer uma gravar.',
     },
     {
       id: 'backend-junior-t3-e05-q04',
@@ -261,6 +408,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'O banco calcula a partir do valor atual e serializa as gravações. Se a condição falhar, 0 linhas afetadas significa "sem estoque".',
+      dica: 'Deixe a conta e a condição para o próprio `UPDATE`.',
     },
     {
       id: 'backend-junior-t3-e05-q05',
@@ -275,6 +423,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'É o bloqueio pessimista: garante que ninguém altere a linha entre a leitura e a gravação da sua transação.',
+      dica: 'FOR UPDATE: lê com a intenção de alterar, e segura a linha.',
     },
     {
       id: 'backend-junior-t3-e05-q06',
@@ -289,6 +438,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'É o bloqueio otimista detectando o conflito. O JPA, com `@Version`, transforma esse 0 numa `OptimisticLockException`.',
+      dica: 'A versão que você leu ainda é a atual?',
     },
     {
       id: 'backend-junior-t3-e05-q07',
@@ -304,6 +454,7 @@ public class MiniMvcc {
       ],
       respostas: [0, 1],
       explicacao: 'O READ COMMITTED só impede ler o que não foi confirmado. A última opção é uma questão de durabilidade, garantida em qualquer nível.',
+      dica: 'READ COMMITTED impede a leitura suja; as outras duas anomalias continuam possíveis.',
     },
     {
       id: 'backend-junior-t3-e05-q08',
@@ -318,6 +469,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'O mesmo código pode se comportar diferente nos dois bancos. Na dúvida, defina o nível explicitamente.',
+      dica: 'Os dois bancos têm padrões diferentes.',
     },
     {
       id: 'backend-junior-t3-e05-q09',
@@ -327,6 +479,7 @@ public class MiniMvcc {
       opcoes: ['80', '60', '140', 'Um erro de leitura'],
       resposta: 0,
       explicacao: 'R enxerga a fotografia do começo da transação. Em READ COMMITTED, a segunda leitura veria 60.',
+      dica: 'REPEATABLE READ: a transação vê a fotografia do momento em que começou.',
     },
     {
       id: 'backend-junior-t3-e05-q10',
@@ -341,6 +494,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'A transação foi desfeita, e as leituras que embasaram a decisão podem estar desatualizadas. Só recomeçando ela decide sobre os dados atuais.',
+      dica: 'A fotografia da transação ficou velha; repetir só um comando não resolve.',
     },
     {
       id: 'backend-junior-t3-e05-q11',
@@ -355,6 +509,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'O impasse nasce de duas transações bloqueando as mesmas linhas em ordens opostas. Com uma ordem fixa, uma sempre espera a outra terminar.',
+      dica: 'O impasse nasce de bloqueios em ordens opostas.',
     },
     {
       id: 'backend-junior-t3-e05-q12',
@@ -369,6 +524,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'Transações devem ser curtas. Faça a chamada externa fora, com uma reserva ou um status intermediário, e confirme a venda numa transação rápida.',
+      dica: 'O que fica bloqueado enquanto a chamada externa espera?',
     },
     {
       id: 'backend-junior-t3-e05-q13',
@@ -395,6 +551,7 @@ public class MiniMvcc {
 }`,
       resposta: '1 0 1 3',
       explicacao: 'A grava e muda a versão para 2. B, com a versão 1, não consegue; ao reler (versão 2), grava e a versão vai a 3.',
+      dica: 'Siga as versões: uma gravação só passa se a versão lida ainda for a atual.',
     },
     {
       id: 'backend-junior-t3-e05-q14',
@@ -419,6 +576,7 @@ public class MiniMvcc {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'B gravou a partir do valor que leu antes da gravação de A, e a venda de 2 unidades sumiu. A versão relativa, como `SET quantidade = quantidade - 3`, chega aos 5 corretos.',
+      dica: 'As duas vendas leem antes de qualquer uma gravar.',
     },
     {
       id: 'backend-junior-t3-e05-q15',
@@ -433,6 +591,7 @@ public class MiniMvcc {
       ],
       resposta: 0,
       explicacao: 'Com várias versões de cada linha, leituras e escritas não disputam bloqueios. Só duas escritas na mesma linha esperam uma pela outra.',
+      dica: 'MVCC guarda versões: leitores e escritores não precisam se esperar.',
     },
   ],
 };

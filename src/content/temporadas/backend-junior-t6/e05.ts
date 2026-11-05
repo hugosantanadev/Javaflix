@@ -286,6 +286,7 @@ public class Espera {
       ],
       resposta: 0,
       explicacao: 'Um teste que passa no H2 prova que o código funciona no H2. Com o banco real, as diferenças aparecem no teste, e não em produção.',
+      dica: 'O teste precisa rodar no mesmo banco de produção.',
     },
     {
       id: 'backend-junior-t6-e05-q02',
@@ -295,6 +296,7 @@ public class Espera {
       opcoes: ['O Docker', 'Um PostgreSQL instalado', 'A aplicação em produção', 'Nada além da JVM'],
       resposta: 0,
       explicacao: 'O Testcontainers pede ao Docker que crie os contêineres. O PostgreSQL vem na imagem, sem instalação.',
+      dica: 'O Testcontainers sobe contêineres.',
     },
     {
       id: 'backend-junior-t6-e05-q03',
@@ -309,6 +311,7 @@ public class Espera {
       ],
       resposta: 0,
       explicacao: 'Na aula, a cadeia de erro mostrou o bean `jdbcContainerConnectionDetailsForPostgres`, criado a partir do contêiner, do qual o `dataSource` dependia.',
+      dica: 'Quem descobre a URL, o usuário e a senha do contêiner?',
     },
     {
       id: 'backend-junior-t6-e05-q04',
@@ -323,6 +326,7 @@ public class Espera {
       ],
       resposta: 0,
       explicacao: 'O erro vem da descoberta do Docker, antes de qualquer imagem ou banco. Iniciar o Docker Desktop resolve na maioria dos casos.',
+      dica: 'A mensagem fala do ambiente, não do banco.',
     },
     {
       id: 'backend-junior-t6-e05-q05',
@@ -337,6 +341,7 @@ public class Espera {
       ],
       resposta: 0,
       explicacao: 'Com portas livres escolhidas na hora, vários contêineres convivem. O `@ServiceConnection` entrega a porta certa ao Spring.',
+      dica: 'Pense num PostgreSQL já instalado na máquina, ou em dois projetos testando ao mesmo tempo.',
     },
     {
       id: 'backend-junior-t6-e05-q06',
@@ -351,6 +356,7 @@ public class Espera {
       ],
       resposta: 0,
       explicacao: 'Conectar depois da primeira mensagem pegaria o servidor temporário prestes a ser desligado, e o teste falharia de vez em quando.',
+      dica: 'A imagem oficial roda os scripts de inicialização num servidor temporário.',
     },
     {
       id: 'backend-junior-t6-e05-q07',
@@ -365,6 +371,7 @@ public class Espera {
       ],
       resposta: 0,
       explicacao: 'O cache de contextos guarda o contexto com o contêiner dentro. Uma variação na configuração de uma classe custaria outro contexto, e outro contêiner.',
+      dica: 'O contêiner é um bean, e o contexto é reaproveitado.',
     },
     {
       id: 'backend-junior-t6-e05-q08',
@@ -379,6 +386,7 @@ public class Espera {
       ],
       resposta: 0,
       explicacao: 'A versão 2 moveu cada módulo para um pacote próprio. A classe em `org.testcontainers.containers` ainda existe, mas está marcada como obsoleta.',
+      dica: 'No Testcontainers 2, cada módulo ganhou um pacote próprio.',
     },
     {
       id: 'backend-junior-t6-e05-q09',
@@ -410,6 +418,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'As três primeiras verificações respondem 503, e a primeira espera desiste. O serviço continua subindo: a quarta verificação, primeira da segunda espera, responde 200.',
+      dica: 'A primeira espera esgota as tentativas; a segunda continua a contagem do serviço.',
     },
     {
       id: 'backend-junior-t6-e05-q10',
@@ -438,6 +447,7 @@ public class Teste {
 }`,
       resposta: 'mensagens: 2, pronto na linha 5',
       explicacao: 'A linha 4 diz "ready for start up", e não "ready to accept connections", e não conta. A segunda mensagem está na linha 5.',
+      dica: 'Conte as linhas com a mensagem; o banco só está pronto na segunda.',
     },
     {
       id: 'backend-junior-t6-e05-q11',
@@ -453,6 +463,7 @@ public class Teste {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Os padrões estão no código da classe. No fim, o contêiner é parado e apagado, e o Ryuk limpa o que sobrar se a JVM morrer.',
+      dica: 'Procure as afirmações sobre credenciais, porta e espera.',
     },
     {
       id: 'backend-junior-t6-e05-q12',
@@ -467,6 +478,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O Ryuk existe justamente para o caso em que o código de limpeza não chega a rodar.',
+      dica: 'Existe um contêiner auxiliar que vigia a JVM.',
     },
     {
       id: 'backend-junior-t6-e05-q13',
@@ -481,6 +493,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A mesma configuração que serve aos testes sobe o banco para o desenvolvimento. Fica em `src/test/java`, fora do pacote final.',
+      dica: 'A classe fica em `src/test/java`, mas tem um `main`.',
     },
     {
       id: 'backend-junior-t6-e05-q14',
@@ -519,6 +532,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `close` roda antes de a exceção sair do `try` com recursos. É a garantia de limpeza que todo recurso de teste, como um contêiner, precisa.',
+      dica: 'O `close` do try-with-resources roda antes do `catch`.',
     },
     {
       id: 'backend-junior-t6-e05-q15',
@@ -533,6 +547,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'É a base da pirâmide. Os testes de integração, mais lentos, cobrem as junções; os de ponta a ponta, poucos, confirmam os fluxos principais.',
+      dica: 'A base da pirâmide é larga.',
     },
   ],
 };

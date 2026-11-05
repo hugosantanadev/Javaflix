@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Uma exceção embrulhada com a causa: a RepositorioException, com a mensagem não foi possível salvar o pedido, guarda no campo cause a IOException disco cheio, cuja causa é null; embaixo, o stack trace real impresso pela JVM, com a exceção de cima, a seção Caused by com a IOException e a linha ... 1 more, que resume o quadro que as duas têm em comum</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="20" y="24" width="300" height="58" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="32" y="46" fill="#ff7a1a" font-weight="700">RepositorioException</text>
+    <text x="32" y="68" fill="#bdb5aa">"não foi possível salvar o pedido"</text>
+
+    <rect x="380" y="24" width="220" height="58" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="392" y="46" fill="#f3eee7" font-weight="700">IOException</text>
+    <text x="392" y="68" fill="#bdb5aa">"disco cheio"</text>
+
+    <rect x="660" y="34" width="80" height="38" rx="6" fill="#1b1916" stroke="#43403a" stroke-dasharray="4 3"/>
+    <text x="680" y="57" fill="#6b645b">null</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M320 53 L377 53"/>
+    <path d="M600 53 L657 53"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">
+    <text x="322" y="100">getCause()</text>
+    <text x="602" y="100">getCause()</text>
+  </g>
+  <text x="20" y="134" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">O que a JVM imprime quando ninguém trata</text>
+  <rect x="20" y="146" width="720" height="128" rx="8" fill="#0d0c0b" stroke="#2b2824"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <text x="34" y="168" fill="#ff7a1a">Exception in thread "main" Embrulha$RepositorioException: não foi possível salvar o pedido</text>
+    <text x="54" y="186" fill="#bdb5aa">at Embrulha.salvar(Embrulha.java:14)</text>
+    <text x="54" y="204" fill="#bdb5aa">at Embrulha.main(Embrulha.java:19)</text>
+    <text x="34" y="226" fill="#f3eee7">Caused by: java.io.IOException: disco cheio</text>
+    <text x="54" y="244" fill="#bdb5aa">at Embrulha.salvar(Embrulha.java:12)</text>
+    <text x="54" y="262" fill="#f2c75c">... 1 more</text>
+  </g>
+  <text x="20" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">O "... 1 more" resume o quadro que a causa tem em comum com a exceção de cima: aqui, o main.</text>
+</svg>

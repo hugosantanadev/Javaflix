@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="310" viewBox="0 0 760 310" role="img" aria-labelledby="t">
+  <title id="t">Barras com o número de operações para n igual a um milhão, em escala logarítmica. O de log n são cerca de 20 operações; O de n, um milhão; O de n log n, 20 milhões; O de n ao quadrado, um trilhão, que a 10 elevado a 9 operações por segundo leva uns 17 minutos; O de 2 elevado a n tem mais de 300 mil dígitos e nunca termina</title>
+  <rect width="760" height="310" fill="#13110f"/>
+  <text x="30" y="30" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">operações para n = 1.000.000 (escala logarítmica), a 10⁹ por segundo</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#f3eee7">
+    <text x="30" y="72">O(log n)</text><text x="30" y="117">O(n)</text><text x="30" y="162">O(n log n)</text><text x="30" y="207">O(n²)</text><text x="30" y="252">O(2ⁿ)</text>
+  </g>
+  <g>
+    <rect x="140" y="56" width="40" height="22" fill="#4fd68b"/>
+    <rect x="140" y="101" width="180" height="22" fill="#4fd68b"/>
+    <rect x="140" y="146" width="230" height="22" fill="#f2c75c"/>
+    <rect x="140" y="191" width="360" height="22" fill="#ff7a1a"/>
+    <rect x="140" y="236" width="590" height="22" fill="#ff7a1a" fill-opacity="0.35" stroke="#ff7a1a" stroke-dasharray="5 4"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">
+    <text x="190" y="72">20 operações: instantâneo</text>
+    <text x="330" y="117">10⁶: 1 ms</text>
+    <text x="380" y="162">2 × 10⁷: 20 ms</text>
+    <text x="510" y="207">10¹²: uns 17 minutos</text>
+    <text x="150" y="252" fill="#f3eee7">2¹⁰⁰⁰⁰⁰⁰: um número com 301.030 dígitos; não termina</text>
+  </g>
+  <text x="30" y="294" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Cada barra é o tamanho do número de dígitos: a diferença entre as classes é de ordens de grandeza, não de porcentagem.</text>
+</svg>

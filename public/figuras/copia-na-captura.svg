@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Como uma lambda captura valores: uma variável local n igual a 1, na pilha do método, é copiada para um campo do objeto da lambda no momento da criação; se n pudesse mudar depois, a cópia ficaria desatualizada, e por isso a variável precisa ser efetivamente final; um campo, ao contrário, não é copiado: a lambda guarda uma referência ao objeto, this, e lê o campo atual quando roda</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <text x="20" y="28" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ff7a1a">Variável local: copiada na criação</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="42" width="200" height="74" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="34" y="64" fill="#bdb5aa">pilha de main</text>
+    <text x="34" y="92" fill="#f3eee7">int n = 1</text>
+    <rect x="320" y="42" width="220" height="74" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="334" y="64" fill="#ff7a1a">objeto da lambda</text>
+    <text x="334" y="92" fill="#f3eee7">cópia: n = 1</text>
+  </g>
+  <path d="M220 79 L317 79" stroke="#ff7a1a" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <text x="232" y="70" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">cópia</text>
+  <text x="560" y="72" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">n = 2 depois?</text>
+  <text x="560" y="92" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#db5c5c">duas versões: não compila</text>
+
+  <text x="20" y="168" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#4fd68b">Campo: lido na hora em que a lambda roda</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="20" y="182" width="200" height="74" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="34" y="204" fill="#bdb5aa">objeto Loja, no heap</text>
+    <text x="34" y="232" fill="#f3eee7">desconto = 0.10</text>
+    <rect x="320" y="182" width="220" height="74" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="334" y="204" fill="#4fd68b">objeto da lambda</text>
+    <text x="334" y="232" fill="#f3eee7">guarda: this</text>
+  </g>
+  <path d="M317 219 L223 219" stroke="#4fd68b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <text x="232" y="210" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">aponta</text>
+  <text x="560" y="212" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">desconto = 0 depois?</text>
+  <text x="560" y="232" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#4fd68b">a lambda vê o 0</text>
+  <text x="20" y="298" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">A regra do efetivamente final vale para locais e parâmetros; campos e o estado dos objetos ficam de fora.</text>
+</svg>

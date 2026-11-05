@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="310" viewBox="0 0 760 310" role="img" aria-labelledby="t">
+  <title id="t">Duas linhas do tempo, das transações A e B, vendendo o mesmo produto com estoque 5: as duas leem 5, A grava 4 e confirma, B grava 4 e confirma, e o estoque termina em 4 depois de duas vendas; com SET quantidade = quantidade - 1, a gravação de B espera a de A e parte do 4, e o estoque termina em 3</title>
+  <rect width="760" height="310" fill="#13110f"/>
+  <text x="30" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#ff7a1a">Ler, calcular no Java e gravar</text>
+  <text x="400" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#4fd68b">Gravar a variação</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <text x="30" y="64" fill="#bdb5aa">A</text><text x="200" y="64" fill="#bdb5aa">B</text>
+    <rect x="50" y="52" width="130" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="58" y="67" fill="#bdb5aa">lê 5</text>
+    <rect x="220" y="80" width="130" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="228" y="95" fill="#bdb5aa">lê 5</text>
+    <rect x="50" y="108" width="130" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="58" y="123" fill="#bdb5aa">grava 4, commit</text>
+    <rect x="220" y="136" width="130" height="22" rx="3" fill="#26170c" stroke="#ff7a1a"/><text x="228" y="151" fill="#ff7a1a">grava 4, commit</text>
+    <rect x="50" y="186" width="300" height="30" rx="4" fill="#26170c" stroke="#ff7a1a"/><text x="62" y="206" fill="#ff7a1a">estoque final: 4 (uma venda perdida)</text>
+
+    <text x="400" y="64" fill="#bdb5aa">A</text><text x="570" y="64" fill="#bdb5aa">B</text>
+    <rect x="420" y="52" width="130" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="428" y="67" fill="#bdb5aa">qtd - 1: 4</text>
+    <rect x="590" y="80" width="140" height="22" rx="3" fill="#2a2516" stroke="#f2c75c"/><text x="598" y="95" fill="#f2c75c">qtd - 1: espera</text>
+    <rect x="420" y="108" width="130" height="22" rx="3" fill="#1b1916" stroke="#43403a"/><text x="428" y="123" fill="#bdb5aa">commit</text>
+    <rect x="590" y="136" width="140" height="22" rx="3" fill="#13221a" stroke="#4fd68b"/><text x="598" y="151" fill="#4fd68b">parte do 4: 3</text>
+    <rect x="420" y="186" width="310" height="30" rx="4" fill="#13221a" stroke="#4fd68b"/><text x="432" y="206" fill="#4fd68b">estoque final: 3</text>
+  </g>
+  <line x1="380" y1="48" x2="380" y2="224" stroke="#43403a" stroke-dasharray="3 3"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="30" y="258" fill="#bdb5aa">À esquerda, B grava um valor calculado a partir de uma leitura que já ficou velha.</text>
+    <text x="30" y="280" fill="#bdb5aa">À direita, o banco bloqueia a linha no primeiro UPDATE, e o segundo trabalha sobre o valor novo.</text>
+    <text x="30" y="302" fill="#8a8277">Nenhum erro aparece no caso da esquerda: só um número errado, semanas depois, no inventário.</text>
+  </g>
+</svg>

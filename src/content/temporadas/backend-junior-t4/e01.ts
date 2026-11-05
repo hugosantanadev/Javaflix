@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Escolher o bean pelo nome do parâmetro funciona, mas renomear a variável muda o comportamento.',
     'Quem recebe um bean com `@Transactional` recebe um proxy, não o objeto original.',
   ],
+  ia: {
+    uso:
+      'A IA explica bem as mensagens de inicialização do Spring, como "required a single bean, but 2 were found", e sugere as saídas. Ao gerar código, ela tende a repetir padrões antigos dos tutoriais: injeção em campo, `@Autowired` desnecessário e estado guardado em serviços.',
+    pedido:
+      'A aplicação Spring Boot 4.1 não sobe com este relatório:\n<cole aqui o APPLICATION FAILED TO START completo>\n<cole aqui as classes envolvidas>\n- Explique a causa em uma frase.\n- Proponha a correção mantendo a injeção pelo construtor e os campos final.\n- Diga qual das saídas (@Primary, @Qualifier, List) combina com cada situação.\n- Não use injeção em campo nem spring.main.allow-circular-references.',
+    erros: [
+      'Usa `@Autowired` em campos privados em vez do construtor.',
+      'Resolve dependência circular ligando `allow-circular-references`.',
+      'Guarda dados de uma requisição em campos de um `@Service`.',
+      'Cria a dependência com `new` dentro do construtor, anulando a injeção.',
+    ],
+    conferir: [
+      'Suba a aplicação e leia o relatório de inicialização inteiro.',
+      'Escreva um teste de unidade criando o serviço com `new` e uma implementação falsa.',
+      'Procure campos não `final` em classes anotadas com `@Service`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Spring Framework: The IoC Container',
@@ -207,6 +224,165 @@ public class Container {
     comentarios:
       'O conjunto ordenado de "em criação" é o mesmo truque que o Spring usa para lançar a `BeanCurrentlyInCreationException`: se um bean é pedido enquanto ainda está sendo criado, só pode haver um ciclo. A mensagem com o caminho completo é o que o relatório de falha do Spring Boot mostra, desenhando o ciclo com setas. A anotação personalizada também revela por que a retenção importa: com o padrão, `CLASS`, a anotação existe no bytecode mas some em tempo de execução, e o `isAnnotationPresent` devolveria `false`. As anotações do Spring, como `@Primary`, são todas `RUNTIME` pelo mesmo motivo.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t4-e01-b01',
+      dificuldade: 1,
+      sintoma: 'O teste do `PedidoService` passa um frete grátis falso, mas o total continua somando o frete dos Correios: `teste com frete grátis: 117.00`.',
+      codigo: `import java.math.BigDecimal;
+
+public class FreteFalso {
+    interface Frete { BigDecimal calcular(BigDecimal subtotal); }
+
+    static class FreteCorreios implements Frete {
+        public BigDecimal calcular(BigDecimal subtotal) { return new BigDecimal("17.00"); }
+    }
+
+    static class PedidoService {
+        private final Frete frete;
+
+        PedidoService(Frete frete) {
+            this.frete = new FreteCorreios();
+        }
+
+        BigDecimal total(BigDecimal subtotal) { return subtotal.add(frete.calcular(subtotal)); }
+    }
+
+    public static void main(String[] args) {
+        PedidoService comFreteGratis = new PedidoService(subtotal -> BigDecimal.ZERO);
+        System.out.println("teste com frete grátis: " + comFreteGratis.total(new BigDecimal("100.00")));
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'saida', saida: 'teste com frete grátis: 117.00' },
+      correcao: `import java.math.BigDecimal;
+
+public class FreteFalso {
+    interface Frete { BigDecimal calcular(BigDecimal subtotal); }
+
+    static class FreteCorreios implements Frete {
+        public BigDecimal calcular(BigDecimal subtotal) { return new BigDecimal("17.00"); }
+    }
+
+    static class PedidoService {
+        private final Frete frete;
+
+        PedidoService(Frete frete) {
+            this.frete = frete;
+        }
+
+        BigDecimal total(BigDecimal subtotal) { return subtotal.add(frete.calcular(subtotal)); }
+    }
+
+    public static void main(String[] args) {
+        PedidoService comFreteGratis = new PedidoService(subtotal -> BigDecimal.ZERO);
+        System.out.println("teste com frete grátis: " + comFreteGratis.total(new BigDecimal("100.00")));
+    }
+}`,
+      saidaCorrigida: 'teste com frete grátis: 100.00',
+      dica: 'O construtor recebe um `Frete`. Ele usa o que recebeu?',
+      explicacao:
+        'O construtor ignora o parâmetro e cria a própria implementação, e a injeção deixa de existir: nem o teste nem o Spring conseguem trocar o frete. Guardar o que chegou pelo construtor é o ponto inteiro da injeção de dependências.',
+    },
+    {
+      id: 'backend-junior-t4-e01-b02',
+      dificuldade: 2,
+      sintoma: 'Em produção, o Bruno recebeu a cobrança do mouse da Ana: `Bruno paga por [Mouse, Teclado]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class CarrinhoCompartilhado {
+    static class CarrinhoService {
+        private final List<String> itens = new ArrayList<>();
+
+        String fechar(String cliente, List<String> novos) {
+            itens.addAll(novos);
+            return cliente + " paga por " + itens;
+        }
+    }
+
+    public static void main(String[] args) {
+        CarrinhoService singleton = new CarrinhoService();
+        System.out.println(singleton.fechar("Ana", List.of("Mouse")));
+        System.out.println(singleton.fechar("Bruno", List.of("Teclado")));
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'Ana paga por [Mouse]\nBruno paga por [Mouse, Teclado]' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class CarrinhoCompartilhado {
+    static class CarrinhoService {
+        private final List<String> itens = new ArrayList<>();
+
+        String fechar(String cliente, List<String> novos) {
+            List<String> itens = new ArrayList<>(novos);
+            return cliente + " paga por " + itens;
+        }
+    }
+
+    public static void main(String[] args) {
+        CarrinhoService singleton = new CarrinhoService();
+        System.out.println(singleton.fechar("Ana", List.of("Mouse")));
+        System.out.println(singleton.fechar("Bruno", List.of("Teclado")));
+    }
+}`,
+      saidaCorrigida: 'Ana paga por [Mouse]\nBruno paga por [Teclado]',
+      dica: 'Quantas instâncias do serviço existem, e de quem é o campo `itens`?',
+      explicacao:
+        'O serviço é um singleton, como todo bean por padrão, e o campo `itens` é compartilhado por todas as requisições: cada uma soma os itens das anteriores. Os dados de uma operação vivem em variáveis locais e parâmetros, nunca em campos de um bean.',
+    },
+    {
+      id: 'backend-junior-t4-e01-b03',
+      dificuldade: 3,
+      sintoma: 'O contêiner caseiro de um projeto de estudo diz que não há bean de frete, embora a classe `Correios` implemente `Frete`: `Frete -> ERRO: 0 beans do tipo Frete`.',
+      codigo: `import java.util.List;
+
+public class BuscaPorTipo {
+    interface Frete {}
+    static class Correios implements Frete {}
+    static class Relogio {}
+
+    static final List<Object> BEANS = List.of(new Correios(), new Relogio());
+
+    static Object bean(Class<?> tipo) {
+        List<Object> candidatos = BEANS.stream().filter(b -> b.getClass() == tipo).toList();
+        if (candidatos.size() != 1) return "ERRO: " + candidatos.size() + " beans do tipo " + tipo.getSimpleName();
+        return candidatos.get(0).getClass().getSimpleName();
+    }
+
+    public static void main(String[] args) {
+        System.out.println("Frete -> " + bean(Frete.class));
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'Frete -> ERRO: 0 beans do tipo Frete' },
+      correcao: `import java.util.List;
+
+public class BuscaPorTipo {
+    interface Frete {}
+    static class Correios implements Frete {}
+    static class Relogio {}
+
+    static final List<Object> BEANS = List.of(new Correios(), new Relogio());
+
+    static Object bean(Class<?> tipo) {
+        List<Object> candidatos = BEANS.stream().filter(tipo::isInstance).toList();
+        if (candidatos.size() != 1) return "ERRO: " + candidatos.size() + " beans do tipo " + tipo.getSimpleName();
+        return candidatos.get(0).getClass().getSimpleName();
+    }
+
+    public static void main(String[] args) {
+        System.out.println("Frete -> " + bean(Frete.class));
+    }
+}`,
+      saidaCorrigida: 'Frete -> Correios',
+      dica: 'A classe do objeto é igual à interface pedida? O que significa "ser do tipo" `Frete`?',
+      explicacao:
+        '`getClass() == tipo` só aceita a classe exata, e nenhum objeto tem a interface como classe. Ser do tipo `Frete` é implementá-la ou estender quem implementa: `tipo.isInstance(b)`, ou `isAssignableFrom`, que é o que o Spring usa para achar candidatos.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t4-e01-q01',
@@ -221,6 +397,7 @@ public class Container {
       ],
       resposta: 0,
       explicacao: 'O serviço depende da interface, não de uma implementação. Quem monta o objeto escolhe qual frete usar.',
+      dica: 'Pense no teste: como trocar o frete de verdade por um falso?',
     },
     {
       id: 'backend-junior-t4-e01-q02',
@@ -235,6 +412,7 @@ public class Container {
       ],
       resposta: 0,
       explicacao: 'O método `@Bean` diz ao contêiner como criar o objeto, e o resultado vira um bean como qualquer outro.',
+      dica: 'Classes de bibliotecas não podem ser anotadas: um método as cria.',
     },
     {
       id: 'backend-junior-t4-e01-q03',
@@ -249,6 +427,7 @@ public class Container {
       ],
       resposta: 0,
       explicacao: '`com.loja.frete` não está dentro de `br.com.loja`. Mova a classe para um subpacote, como `br.com.loja.frete`.',
+      dica: 'A varredura parte do pacote da classe principal e desce.',
     },
     {
       id: 'backend-junior-t4-e01-q04',
@@ -263,6 +442,7 @@ public class Container {
       ],
       resposta: 0,
       explicacao: 'O `@Primary` vence quando há ambiguidade. Os estereótipos são todos `@Component` para o contêiner, e trocá-los não muda nada.',
+      dica: 'Uma das implementações precisa ser a preferida.',
     },
     {
       id: 'backend-junior-t4-e01-q05',
@@ -278,6 +458,7 @@ public class Container {
       ],
       respostas: [0, 1, 2],
       explicacao: 'O escopo muda quantas instâncias existem, não qual é escolhida. E um construtor privado impediria o Spring de criar a classe.',
+      dica: 'Escolher uma, escolher pelo nome ou receber todas.',
     },
     {
       id: 'backend-junior-t4-e01-q06',
@@ -292,6 +473,7 @@ public class Container {
       ],
       resposta: 0,
       explicacao: 'Serviços devem ser sem estado. O carrinho mora no banco, numa sessão ou é recebido em cada requisição, nunca num campo do singleton.',
+      dica: 'Quantas instâncias de um serviço existem, por padrão?',
     },
     {
       id: 'backend-junior-t4-e01-q07',
@@ -301,6 +483,7 @@ public class Container {
       opcoes: ['Singleton: uma instância para todo o contêiner', 'Prototype: uma instância por injeção', 'Request: uma por requisição HTTP', 'Session: uma por usuário'],
       resposta: 0,
       explicacao: 'Os outros escopos precisam ser pedidos com `@Scope`. Os de `request` e `session` só existem em aplicações web.',
+      dica: 'Uma instância para o contêiner inteiro.',
     },
     {
       id: 'backend-junior-t4-e01-q08',
@@ -315,6 +498,7 @@ public class Container {
       ],
       resposta: 0,
       explicacao: 'O ciclo revela responsabilidades mal divididas. As duas opções do meio só escondem o problema, e juntar tudo cria uma classe grande demais.',
+      dica: 'Duas classes que precisam uma da outra fazem coisas demais.',
     },
     {
       id: 'backend-junior-t4-e01-q09',
@@ -338,6 +522,7 @@ public class Container {
 }`,
       resposta: '112 100',
       explicacao: 'O mesmo serviço, com duas implementações de `Frete`. É isso que torna o serviço testável sem frete real.',
+      dica: 'O serviço soma o subtotal com o que a lambda devolve.',
     },
     {
       id: 'backend-junior-t4-e01-q10',
@@ -360,6 +545,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`getParameterTypes` devolve as classes, sem os tipos genéricos, que exigem `getGenericParameterTypes`. Os nomes dos parâmetros só existem com o `-parameters` do compilador.',
+      dica: 'A reflexão dos parâmetros devolve as classes, sem os genéricos.',
     },
     {
       id: 'backend-junior-t4-e01-q11',
@@ -374,6 +560,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Com o construtor, a classe declara tudo o que precisa e pode ser criada com `new` num teste comum.',
+      dica: 'Compare com o construtor: o que fica visível e o que dá para fazer num teste?',
     },
     {
       id: 'backend-junior-t4-e01-q12',
@@ -388,6 +575,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Com a tradução, o código trata, por exemplo, uma `DuplicateKeyException` do Spring, sem depender das exceções de cada driver.',
+      dica: 'É um estereótipo com um trabalho extra sobre as exceções.',
     },
     {
       id: 'backend-junior-t4-e01-q13',
@@ -397,6 +585,7 @@ public class Teste {
       opcoes: ['Uma lista com os dois beans', 'Um erro de ambiguidade', 'Uma lista vazia', 'Só o primeiro bean registrado'],
       resposta: 0,
       explicacao: 'Para coleções, o Spring injeta todos os candidatos. É o caminho para escolher o frete em tempo de execução, como o mais barato para cada pedido.',
+      dica: 'Um parâmetro `List<Frete>` recebe todos os candidatos.',
     },
     {
       id: 'backend-junior-t4-e01-q14',
@@ -411,6 +600,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'É o lugar para inicializações que dependem das dependências, como carregar um cache. O encerramento é com `@PreDestroy`.',
+      dica: 'Depois de criar e injetar, antes de usar.',
     },
     {
       id: 'backend-junior-t4-e01-q15',
@@ -425,6 +615,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Por isso uma chamada de um método para outro dentro da mesma classe não passa pelo proxy, e o `@Transactional` do segundo é ignorado.',
+      dica: 'Quem é injetado não é o objeto original, mas um intermediário.',
     },
   ],
 };

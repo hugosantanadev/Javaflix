@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Coringa não entra em `new ArrayList<?>()`, em `class Caixa<?>` nem em `implements Comparable<?>`.',
     'Mensagens com `CAP#1` ou `capture of ?` indicam o tipo desconhecido que o compilador inventou para um coringa.',
   ],
+  ia: {
+    uso:
+      'Para wildcards, a IA é útil para explicar uma mensagem com `CAP#1` e para responder, linha por linha, o que compila numa questão de atribuições. Mas ela troca as direções com frequência, sugerindo `? extends` onde o método escreve, e confunde `List<?>` com `List<Object>`.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código com wildcards e a mensagem do javac>\n- Para cada linha, diga se compila e qual é o pior caso que decide: a lista que pode estar do outro lado da variável.\n- Para cada parâmetro, diga se o método lê, escreve ou faz os dois, e qual coringa serve.\n- Explique o que é o CAP#1 da mensagem.\n- Não use raw types nem casts para fazer compilar.',
+    erros: [
+      'Sugere `List<? extends Number>` num método que adiciona elementos, o que não compila.',
+      'Troca `List<?>` por `List<Object>`, e as chamadas com `List<String>` deixam de compilar.',
+      'Diz que `List<? super Integer>` devolve `Integer` ao ler, quando devolve `Object`.',
+      'Escreve `new ArrayList<?>()`, que não compila: o coringa não entra na criação do objeto.',
+    ],
+    conferir: [
+      'Compile cada linha sugerida: as regras de wildcards são todas de compilação.',
+      'Teste o método com listas de dois tipos diferentes da família, como `List<Integer>` e `List<Double>`.',
+      'Use `Ctrl+Shift+P` no IntelliJ para ver o tipo capturado de cada expressão.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Wildcards',
@@ -187,6 +204,117 @@ public class Inventario {
     comentarios:
       'Com `List<Produto>` nos parâmetros, nenhuma chamada do `main` compilaria, porque `List<Livro>` não é `List<Produto>`. A origem de `copiarCaros` só é lida, então usa `extends`; o destino só recebe, então usa `super`. Essa divisão entre quem produz e quem consome tem nome, PECS, e é o assunto do próximo episódio.',
   },
+  bugs: [
+    {
+      id: 'pleno-t2-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O método que registra leituras não compila: `incompatible types: int cannot be converted to CAP#1`. O `CAP#1` é o nome que o compilador dá ao tipo desconhecido do coringa.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Leituras {
+    static void registrar(List<? extends Number> destino, int valor) { destino.add(valor); }
+
+    public static void main(String[] args) {
+        List<Number> leituras = new ArrayList<>();
+        registrar(leituras, 21);
+        registrar(leituras, 23);
+        System.out.println(leituras);
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Leituras {
+    static void registrar(List<? super Integer> destino, int valor) { destino.add(valor); }
+
+    public static void main(String[] args) {
+        List<Number> leituras = new ArrayList<>();
+        registrar(leituras, 21);
+        registrar(leituras, 23);
+        System.out.println(leituras);
+    }
+}`,
+      saidaCorrigida: '[21, 23]',
+      dica: 'O método escreve na lista ou lê dela? Qual coringa permite escrever um `Integer`?',
+      explicacao:
+        'Com `? extends Number`, a lista pode ser de `Double`, e o compilador não deixa entrar nada além de `null`. O método só escreve, então o parâmetro pede `? super Integer`: qualquer lista de `Integer`, `Number` ou `Object` aceita o valor. Quem lê usa `extends`; quem escreve usa `super`.',
+    },
+    {
+      id: 'pleno-t2-e04-b02',
+      dificuldade: 2,
+      sintoma: 'O cálculo da média de temperatura quebra na terceira leitura com `ArrayStoreException: java.lang.Double`, embora o array seja declarado como `Number[]`.',
+      codigo: `public class Medicoes {
+    public static void main(String[] args) {
+        Number[] leituras = new Integer[3];
+        leituras[0] = 21;
+        leituras[1] = 22;
+        leituras[2] = 21.5;
+        double soma = 0;
+        for (Number n : leituras) soma += n.doubleValue();
+        System.out.println("média: " + soma / leituras.length);
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'ArrayStoreException' },
+      correcao: `public class Medicoes {
+    public static void main(String[] args) {
+        Number[] leituras = new Number[3];
+        leituras[0] = 21;
+        leituras[1] = 22;
+        leituras[2] = 21.5;
+        double soma = 0;
+        for (Number n : leituras) soma += n.doubleValue();
+        System.out.println("média: " + soma / leituras.length);
+    }
+}`,
+      saidaCorrigida: 'média: 21.5',
+      dica: 'O tipo declarado da variável é `Number[]`. E o tipo do array criado de verdade?',
+      explicacao:
+        'Arrays são covariantes: um `Integer[]` pode ser atribuído a um `Number[]`, e o compilador aceita gravar um `Double` ali. Mas o array conhece o tipo real dos elementos na execução e recusa a gravação com `ArrayStoreException`. Crie o array com o tipo que ele precisa guardar, `new Number[3]`, ou use uma `List<Number>`, que pega o erro já na compilação.',
+    },
+    {
+      id: 'pleno-t2-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O total de conferência do lote não bate com o calculado pelo banco, por uma diferença pequena nos últimos dígitos: `total de conferência: 1234567891111111168`.',
+      codigo: `import java.util.List;
+
+public class Conferencia {
+    static long somar(List<? extends Number> valores) {
+        long total = 0;
+        for (Number n : valores) total += n.doubleValue();
+        return total;
+    }
+
+    public static void main(String[] args) {
+        List<Long> idsDoLote = List.of(1_234_567_890_123_456_789L, 987_654_321L);
+        System.out.println("total de conferência: " + somar(idsDoLote));
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'total de conferência: 1234567891111111168' },
+      correcao: `import java.util.List;
+
+public class Conferencia {
+    static long somar(List<? extends Number> valores) {
+        long total = 0;
+        for (Number n : valores) total += n.longValue();
+        return total;
+    }
+
+    public static void main(String[] args) {
+        List<Long> idsDoLote = List.of(1_234_567_890_123_456_789L, 987_654_321L);
+        System.out.println("total de conferência: " + somar(idsDoLote));
+    }
+}`,
+      saidaCorrigida: 'total de conferência: 1234567891111111110',
+      dica: 'Lido como `Number`, cada id foi convertido para qual tipo antes de entrar na soma? Quantos dígitos esse tipo guarda com exatidão?',
+      explicacao:
+        'Com `? extends Number`, os elementos são lidos como `Number`, e `doubleValue()` converte cada `long` para `double`, que só representa inteiros exatos até 2^53, uns 9 quatrilhões. O id de 19 dígitos perdeu os últimos algarismos, e o `+=` ainda converteu de volta para `long` sem reclamar. Para somar inteiros grandes, use `longValue()`, ou declare o parâmetro como `List<Long>` para não depender da conversão.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t2-e04-q01',
@@ -211,6 +339,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'Tipos genéricos são invariantes. Se a atribuição fosse aceita, `numeros.add(2.5)` colocaria um `Double` numa lista de inteiros.',
+      dica: 'Generics são invariantes.',
     },
     {
       id: 'pleno-t2-e04-q02',
@@ -233,6 +362,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Arrays são covariantes, então a atribuição compila, mas o array lembra que é de `String` e recusa o `Integer` na execução. A posição 1 continua `null`.',
+      dica: 'O array sabe o tipo real dos elementos na execução.',
     },
     {
       id: 'pleno-t2-e04-q03',
@@ -249,6 +379,7 @@ public class Teste {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: '`Integer` estende `Number`; `Object` é supertipo de `Integer`; `?` aceita qualquer coisa. Mas `Integer` não é supertipo de `Number`, e `List<Object>` é invariante.',
+      dica: 'Em `? super X`, o argumento à direita é `X` ou um supertipo; em `? extends X`, `X` ou um subtipo.',
     },
     {
       id: 'pleno-t2-e04-q04',
@@ -270,6 +401,7 @@ public class Teste {
 }`,
       resposta: 10,
       explicacao: 'Com `? extends Number`, a lista pode ser de qualquer subtipo, então o compilador não aceita nenhum valor, nem um `Integer`. Só `null` entra, porque pertence a todo tipo.',
+      dica: 'Numa lista `? extends`, só `null` entra.',
     },
     {
       id: 'pleno-t2-e04-q05',
@@ -301,6 +433,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Number` e `Object` são supertipos de `Integer`, então as duas listas são aceitas, e qualquer `Integer` cabe nelas.',
+      dica: '`Number` e `Object` são supertipos de `Integer`.',
     },
     {
       id: 'pleno-t2-e04-q06',
@@ -317,6 +450,7 @@ public class Teste {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'A lista pode ser de `IOException`, então só entram `IOException` e subclasses, como `FileNotFoundException`. Uma `Exception` genérica não cabe nesse pior caso, e a leitura só garante `Object`.',
+      dica: 'Em `? super IOException`, entra `IOException` ou qualquer subclasse dela; sai só `Object`.',
     },
     {
       id: 'pleno-t2-e04-q07',
@@ -336,6 +470,7 @@ public class Teste {
 }`,
       resposta: '2:a 1:3 2:null',
       explicacao: '`List<?>` aceita listas de qualquer tipo e lê os elementos como `Object`. `Arrays.asList` aceita `null`, ao contrário de `List.of`.',
+      dica: 'O coringa lê os elementos como `Object`, e a concatenação usa o `toString`.',
     },
     {
       id: 'pleno-t2-e04-q08',
@@ -365,6 +500,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 12 },
       explicacao: '`List<Object>` é invariante. Com `List<?>` no parâmetro, a chamada compilaria.',
+      dica: '`List<Object>` só aceita exatamente `List<Object>`.',
     },
     {
       id: 'pleno-t2-e04-q09',
@@ -391,6 +527,7 @@ public class Somas {
       respostas: ['? extends Number'],
       saida: '3.0 1.5',
       explicacao: 'O método só lê os elementos como `Number`, e precisa aceitar listas de subtipos. É o caso do limite superior.',
+      dica: 'O método só lê a lista, e os elementos são `Number` ou subtipos.',
     },
     {
       id: 'pleno-t2-e04-q10',
@@ -414,6 +551,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Para criar o objeto é preciso um tipo concreto. `new ArrayList<>()` funcionaria, deduzindo `Object`.',
+      dica: 'O coringa não entra na criação de objetos.',
     },
     {
       id: 'pleno-t2-e04-q11',
@@ -431,6 +569,7 @@ public class Teste {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'O wildcard só aparece no uso de um tipo, em variáveis e parâmetros. Não serve para criar objetos, declarar parâmetros de tipo ou nomear um supertipo.',
+      dica: 'Coringa só no uso de um tipo, nunca na declaração, no `new` nem no `implements`.',
     },
     {
       id: 'pleno-t2-e04-q12',
@@ -467,6 +606,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Ao chamar `ajudante`, o compilador captura o `?` num `T` com nome. Dentro do auxiliar, ler e escrever o mesmo `T` é permitido. A lista é um `ArrayList`, que aceita `set`.',
+      dica: 'O auxiliar genérico captura o coringa num `T` com nome.',
     },
     {
       id: 'pleno-t2-e04-q13',
@@ -476,6 +616,7 @@ public class Teste {
       opcoes: ['`Object`', '`Integer`', '`Number`', 'Nenhum: a lista não pode ser lida'],
       resposta: 0,
       explicacao: 'A lista pode ser de `Integer`, de `Number` ou de `Object`. O único tipo garantido para qualquer elemento é `Object`.',
+      dica: 'No pior caso, a lista é de `Object`.',
     },
     {
       id: 'pleno-t2-e04-q14',
@@ -496,6 +637,7 @@ public class Teste {
 }`,
       resposta: 9,
       explicacao: 'Escrever `Integer` é permitido, mas a leitura devolve `Object`. Seria preciso um cast para guardar o valor num `Integer`.',
+      dica: 'Ler de `? super Integer` só garante `Object`.',
     },
     {
       id: 'pleno-t2-e04-q15',
@@ -510,6 +652,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: '`List<?>` representa uma lista de algum tipo desconhecido e aceita qualquer parametrização, mas só permite adicionar `null`. `List<Object>` aceita qualquer objeto no `add`, mas só aceita receber uma `List<Object>`.',
+      dica: 'Uma é invariante; a outra representa uma família de tipos.',
     },
   ],
 };

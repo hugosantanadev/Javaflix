@@ -197,6 +197,139 @@ public class Contexto {
     comentarios:
       'São os mesmos três comportamentos que o Hibernate mostrou na aula: o segundo `find` não vai ao banco e devolve o mesmo objeto; a mudança vira `UPDATE` sem chamada nenhuma; e o cache morre com a transação. A atribuição do mesmo nome ao mouse não gerou nada, porque a comparação é por valor, não por "alguém chamou o setter". Uma diferença: este contexto atualiza só as colunas que mudaram, enquanto o Hibernate, por padrão, atualiza todas, porque assim reaproveita o mesmo SQL preparado para qualquer mudança; a anotação `@DynamicUpdate` faz o Hibernate se comportar como aqui. O custo da verificação de sujeira é proporcional ao número de entidades gerenciadas, e é por isso que carregar milhares delas numa transação só, para ler, deixa o commit lento.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t5-e01-b01',
+      dificuldade: 1,
+      sintoma: 'Com `ddl-auto=validate`, a aplicação não sobe: o mapeador caseiro procura colunas que não existem no banco, `[nome, criado_Em, preco_Promocional]`.',
+      codigo: `import java.util.List;
+
+public class NomeDaColuna {
+    static String coluna(String campo) {
+        return campo.replaceAll("([A-Z])", "_$1");
+    }
+
+    public static void main(String[] args) {
+        List<String> campos = List.of("nome", "criadoEm", "precoPromocional");
+        System.out.println(campos.stream().map(NomeDaColuna::coluna).toList());
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: '[nome, criado_Em, preco_Promocional]' },
+      correcao: `import java.util.List;
+
+public class NomeDaColuna {
+    static String coluna(String campo) {
+        return campo.replaceAll("([A-Z])", "_$1").toLowerCase();
+    }
+
+    public static void main(String[] args) {
+        List<String> campos = List.of("nome", "criadoEm", "precoPromocional");
+        System.out.println(campos.stream().map(NomeDaColuna::coluna).toList());
+    }
+}`,
+      saidaCorrigida: '[nome, criado_em, preco_promocional]',
+      dica: 'Os nomes das colunas no banco estão em minúsculas?',
+      explicacao:
+        'A estratégia de nomes do Spring Boot põe um `_` antes de cada maiúscula **e** passa tudo para minúsculas: `criadoEm` vira `criado_em`. Sem o `toLowerCase`, o nome fica `criado_Em`, que bancos como o PostgreSQL tratam como outra coluna quando ela é citada entre aspas.',
+    },
+    {
+      id: 'backend-junior-t5-e01-b02',
+      dificuldade: 2,
+      sintoma: 'A auditoria registra uma alteração de preço toda vez que alguém salva o produto sem mudar nada: `gera UPDATE? true`.',
+      codigo: `import java.math.BigDecimal;
+import java.util.Objects;
+
+public class Sujeira {
+    static boolean mudou(BigDecimal antes, BigDecimal depois) {
+        return !Objects.equals(antes, depois);
+    }
+
+    public static void main(String[] args) {
+        BigDecimal lidoDoBanco = new BigDecimal("349.90");
+        BigDecimal vindoDoFormulario = new BigDecimal("349.9");
+        System.out.println("gera UPDATE? " + mudou(lidoDoBanco, vindoDoFormulario));
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'gera UPDATE? true' },
+      correcao: `import java.math.BigDecimal;
+import java.util.Objects;
+
+public class Sujeira {
+    static boolean mudou(BigDecimal antes, BigDecimal depois) {
+        return antes == null ? depois != null : depois == null || antes.compareTo(depois) != 0;
+    }
+
+    public static void main(String[] args) {
+        BigDecimal lidoDoBanco = new BigDecimal("349.90");
+        BigDecimal vindoDoFormulario = new BigDecimal("349.9");
+        System.out.println("gera UPDATE? " + mudou(lidoDoBanco, vindoDoFormulario));
+    }
+}`,
+      saidaCorrigida: 'gera UPDATE? false',
+      dica: '349.90 e 349.9 são o mesmo preço. O `equals` do `BigDecimal` concorda?',
+      explicacao:
+        'O `equals` do `BigDecimal` compara também a escala, e `349.90` (escala 2) é diferente de `349.9` (escala 1). A comparação de valor é `compareTo`, que dá zero para os dois. É por isso que o banco devolve sempre a escala da coluna, e por isso comparar dinheiro com `equals` gera alterações fantasmas.',
+    },
+    {
+      id: 'backend-junior-t5-e01-b03',
+      dificuldade: 3,
+      sintoma: 'Depois de salvar o pedido, o carrinho perdeu o item: `teclado ainda no carrinho? false`.',
+      codigo: `import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+public class HashPeloId {
+    static class Produto {
+        Long id;
+        final String nome;
+
+        Produto(String nome) { this.nome = nome; }
+
+        @Override public boolean equals(Object o) { return o instanceof Produto p && id != null && id.equals(p.id); }
+        @Override public int hashCode() { return Objects.hashCode(id); }
+    }
+
+    public static void main(String[] args) {
+        Set<Produto> carrinho = new HashSet<>();
+        Produto teclado = new Produto("Teclado");
+        carrinho.add(teclado);
+        teclado.id = 1L;
+        System.out.println("teclado ainda no carrinho? " + carrinho.contains(teclado));
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'saida', saida: 'teclado ainda no carrinho? false' },
+      correcao: `import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+public class HashPeloId {
+    static class Produto {
+        Long id;
+        final String nome;
+
+        Produto(String nome) { this.nome = nome; }
+
+        @Override public boolean equals(Object o) { return o instanceof Produto p && id != null && id.equals(p.id); }
+        @Override public int hashCode() { return Produto.class.hashCode(); }
+    }
+
+    public static void main(String[] args) {
+        Set<Produto> carrinho = new HashSet<>();
+        Produto teclado = new Produto("Teclado");
+        carrinho.add(teclado);
+        teclado.id = 1L;
+        System.out.println("teclado ainda no carrinho? " + carrinho.contains(teclado));
+    }
+}`,
+      saidaCorrigida: 'teclado ainda no carrinho? true',
+      dica: 'O `hashCode` do produto mudou entre o `add` e o `contains`?',
+      explicacao:
+        'O `HashSet` guarda o objeto no balde do `hashCode` do momento do `add`, quando o id ainda era nulo. Quando o banco gera o id, o `hashCode` muda, e o `contains` procura no balde errado. Para entidades com id gerado, o `hashCode` deve ser constante, como o da classe, e o `equals` comparar o id só quando ele existir.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t5-e01-q01',
@@ -211,6 +344,7 @@ public class Contexto {
       ],
       resposta: 0,
       explicacao: 'O código usa as anotações `jakarta.persistence`, e o Hibernate faz o trabalho por baixo. O Spring Boot usa o Hibernate por padrão.',
+      dica: 'Uma é a especificação; o outro, uma implementação dela.',
     },
     {
       id: 'backend-junior-t5-e01-q02',
@@ -225,6 +359,7 @@ public class Contexto {
       ],
       resposta: 0,
       explicacao: 'O padrão é `EnumType.ORDINAL`. Com `EnumType.STRING`, o banco guarda "ESGOTADO", e a ordem das constantes deixa de importar.',
+      dica: 'Sem a anotação, o JPA grava a posição da constante.',
     },
     {
       id: 'backend-junior-t5-e01-q03',
@@ -239,6 +374,7 @@ public class Contexto {
       ],
       resposta: 0,
       explicacao: 'O `create` apaga os dados a cada inicialização, e o `update` não remove nada, não tem controle de versão e pode falhar em mudanças complexas.',
+      dica: 'Em produção, quem muda o esquema são as migrações, não o Hibernate.',
     },
     {
       id: 'backend-junior-t5-e01-q04',
@@ -253,6 +389,7 @@ public class Contexto {
       ],
       resposta: 0,
       explicacao: 'Ele pode ser `protected`, para que o código da aplicação use o construtor com os dados obrigatórios.',
+      dica: 'O JPA cria objetos ao ler linhas, sem saber que argumentos passar.',
     },
     {
       id: 'backend-junior-t5-e01-q05',
@@ -267,6 +404,7 @@ public class Contexto {
       ],
       resposta: 0,
       explicacao: 'O contexto de persistência funciona como um cache de primeiro nível e garante uma instância por id em cada transação.',
+      dica: 'O contexto de persistência funciona como um cache por transação.',
     },
     {
       id: 'backend-junior-t5-e01-q06',
@@ -281,6 +419,7 @@ public class Contexto {
       ],
       resposta: 0,
       explicacao: 'Entidades gerenciadas são acompanhadas. Por isso não existe `update` no JPA, e por isso alterar uma entidade "só para mostrar" na tela pode gravar sem querer.',
+      dica: 'Uma entidade gerenciada é acompanhada até o fim da transação.',
     },
     {
       id: 'backend-junior-t5-e01-q07',
@@ -295,6 +434,7 @@ public class Contexto {
       ],
       resposta: 0,
       explicacao: 'A entidade está destacada: o contexto que a acompanhava não existe mais. O `persist` tentaria inserir uma nova linha com o mesmo id.',
+      dica: 'Fora da transação, a entidade é destacada: alguém precisa trazê-la de volta.',
     },
     {
       id: 'backend-junior-t5-e01-q08',
@@ -309,6 +449,7 @@ public class Contexto {
       ],
       resposta: 0,
       explicacao: 'Na aula, o objeto saiu do `persist` já com `id=1`. Por isso a estratégia `IDENTITY` impede o Hibernate de agrupar `INSERT`s em lote.',
+      dica: 'Com IDENTITY, quem gera o id é o banco.',
     },
     {
       id: 'backend-junior-t5-e01-q09',
@@ -324,6 +465,7 @@ public class Contexto {
       ],
       respostas: [0, 1],
       explicacao: 'O Hibernate cria subclasses e instancia por reflexão. *Setters* são opcionais: os campos podem ser preenchidos direto, e métodos com comportamento costumam ser melhores.',
+      dica: 'O Hibernate cria subclasses e objetos por reflexão.',
     },
     {
       id: 'backend-junior-t5-e01-q10',
@@ -341,6 +483,7 @@ public class Contexto {
 }`,
       resposta: 'preco_promocional criado_em nome',
       explicacao: 'Por isso o `@Column(name = "criado_em")` da aula era opcional: o nome padrão já seria esse.',
+      dica: 'Cada maiúscula ganha um `_` antes, e tudo vai para minúsculas.',
     },
     {
       id: 'backend-junior-t5-e01-q11',
@@ -361,6 +504,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `equals` do `BigDecimal` compara também a escala. Um verificador ingênuo veria mudança onde o valor é o mesmo; o Hibernate compara `BigDecimal` com `compareTo`.',
+      dica: 'Compare com `==` e com `equals` no programa.',
     },
     {
       id: 'backend-junior-t5-e01-q12',
@@ -375,6 +519,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O DTO define o contrato da API; a entidade define o modelo do banco. Os dois mudam por motivos diferentes.',
+      dica: 'O que acontece com a API quando a tabela ganha uma coluna?',
     },
     {
       id: 'backend-junior-t5-e01-q13',
@@ -389,6 +534,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `spring.jpa.show-sql` também mostra o SQL, mas direto no console, sem os parâmetros e fora do sistema de logs.',
+      dica: 'Um logger para o SQL e outro para os valores dos parâmetros.',
     },
     {
       id: 'backend-junior-t5-e01-q14',
@@ -403,6 +549,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O Hibernate ignora o campo no mapeamento: ele não aparece no `CREATE TABLE` nem nos `INSERT`s.',
+      dica: 'Transiente: existe só na memória.',
     },
     {
       id: 'backend-junior-t5-e01-q15',
@@ -417,6 +564,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O objeto fica no "balde" do `hashCode` antigo. Para entidades, use um `hashCode` constante por classe ou uma chave natural imutável.',
+      dica: 'O `HashSet` usa o `hashCode` do momento em que o objeto entrou.',
     },
   ],
 };

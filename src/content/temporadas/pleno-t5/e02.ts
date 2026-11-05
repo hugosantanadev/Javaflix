@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`Predicate.not` (Java 11) inverte uma referência a método; `String::isEmpty.negate()` não compila.',
     'Fora da faixa de -128 a 127, cada autoboxing de `Integer` cria um objeto novo, e `==` entre eles dá `false`.',
   ],
+  ia: {
+    uso:
+      'Para as interfaces funcionais, a IA ajuda a escolher a interface certa para uma lambda e a decifrar nomes como `ToDoubleBiFunction`. Ela erra o nome dos métodos das versões primitivas, inventa interfaces que não existem e usa as versões genéricas com números, o que traz caixas, `==` entre objetos e `null` desembrulhado.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui a lambda ou a descrição do que ela faz>\n- Diga qual interface de java.util.function serve, quantos argumentos ela recebe, o que devolve e o nome exato do método.\n- Se houver números, diga se existe uma versão primitiva e qual seria.\n- Aponte comparações com == entre objetos Integer e desembrulhos que podem receber null.\n- Use só interfaces que existem no pacote; se nenhuma servir, crie uma com @FunctionalInterface.',
+    erros: [
+      'Chama `apply` num `ToIntFunction` ou `get` num `IntSupplier`, que não compilam.',
+      'Inventa `TriFunction` ou `BiSupplier`, que não existem no pacote.',
+      'Compara dois `Integer` vindos de um `Supplier<Integer>` com `==`.',
+      'Diz que um `IntPredicate` pode ser atribuído a um `Predicate<Integer>`.',
+    ],
+    conferir: [
+      'Compile e use o autocompletar para ver o nome do método.',
+      'Abra o Javadoc de `java.util.function` e confira se a interface existe.',
+      'Teste com valores fora da faixa de -128 a 127 e com `null`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc do pacote java.util.function',
@@ -171,6 +188,111 @@ public class Cadastro {
     comentarios:
       'Nenhuma interface nova foi preciso criar: cada etapa tem a forma de uma das famílias padrão. O `IntSupplier` devolve `int` sem autoboxing, e por isso o método é `getAsInt`. O array `proximo` contorna a regra de que lambdas só capturam variáveis efetivamente final: a referência ao array não muda, só o conteúdo, assunto do episódio 4.',
   },
+  bugs: [
+    {
+      id: 'pleno-t5-e02-b01',
+      dificuldade: 1,
+      sintoma: 'A soma dos caracteres das etiquetas não compila: `cannot find symbol`, apontando o `apply`.',
+      codigo: `import java.util.List;
+import java.util.function.ToIntFunction;
+
+public class Etiquetas {
+    public static void main(String[] args) {
+        ToIntFunction<String> tamanho = String::length;
+        int total = 0;
+        for (String nome : List.of("caneta", "caderno")) total += tamanho.apply(nome);
+        System.out.println("caracteres nas etiquetas: " + total);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.List;
+import java.util.function.ToIntFunction;
+
+public class Etiquetas {
+    public static void main(String[] args) {
+        ToIntFunction<String> tamanho = String::length;
+        int total = 0;
+        for (String nome : List.of("caneta", "caderno")) total += tamanho.applyAsInt(nome);
+        System.out.println("caracteres nas etiquetas: " + total);
+    }
+}`,
+      saidaCorrigida: 'caracteres nas etiquetas: 13',
+      dica: '`ToIntFunction` devolve um primitivo. Pela regra de nomes, como se chama o método dela?',
+      explicacao:
+        'Quando a interface devolve um primitivo, o método ganha `As` mais o tipo: `ToIntFunction` tem `applyAsInt`, e não `apply`. É a mesma regra de `IntSupplier.getAsInt` e `ToDoubleFunction.applyAsDouble`. O autocompletar da IDE mostra o nome certo depois do ponto.',
+    },
+    {
+      id: 'pleno-t5-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O saldo chegou exatamente ao estoque mínimo, de 1.000 unidades, e o sistema não pediu reposição: `pedir reposição: false`.',
+      codigo: `import java.util.function.Supplier;
+
+public class Estoque {
+    public static void main(String[] args) {
+        Supplier<Integer> saldoAtual = () -> 1000;
+        Supplier<Integer> estoqueMinimo = () -> 1000;
+        boolean repor = saldoAtual.get() == estoqueMinimo.get();
+        System.out.println("pedir reposição: " + repor);
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'pedir reposição: false' },
+      correcao: `import java.util.function.Supplier;
+
+public class Estoque {
+    public static void main(String[] args) {
+        Supplier<Integer> saldoAtual = () -> 1000;
+        Supplier<Integer> estoqueMinimo = () -> 1000;
+        boolean repor = saldoAtual.get().equals(estoqueMinimo.get());
+        System.out.println("pedir reposição: " + repor);
+    }
+}`,
+      saidaCorrigida: 'pedir reposição: true',
+      dica: 'O que `get()` devolve: um `int` ou um objeto? O que `==` compara entre dois objetos?',
+      explicacao:
+        '`Supplier<Integer>` devolve objetos `Integer`, e `==` compara referências. O cache do `Integer` só cobre de -128 a 127; o 1000 vira dois objetos diferentes. Compare com `equals`, ou use `IntSupplier`, que devolve `int` e permite o `==` entre números.',
+    },
+    {
+      id: 'pleno-t5-e02-b03',
+      dificuldade: 3,
+      sintoma: 'A separação de um pedido quebra com `NullPointerException: Cannot invoke "java.lang.Integer.intValue()"`, apontando a lambda, embora nenhum código chame `intValue`.',
+      codigo: `import java.util.List;
+import java.util.function.ToIntFunction;
+
+public class Separacao {
+    record Item(String produto, Integer quantidade) { }
+
+    public static void main(String[] args) {
+        List<Item> pedido = List.of(new Item("arroz", 2), new Item("feijão", null), new Item("café", 1));
+        ToIntFunction<Item> quantidade = item -> item.quantidade();
+        int volumes = 0;
+        for (Item item : pedido) volumes += quantidade.applyAsInt(item);
+        System.out.println("volumes para separar: " + volumes);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'excecao', nome: 'NullPointerException' },
+      correcao: `import java.util.List;
+import java.util.function.ToIntFunction;
+
+public class Separacao {
+    record Item(String produto, Integer quantidade) { }
+
+    public static void main(String[] args) {
+        List<Item> pedido = List.of(new Item("arroz", 2), new Item("feijão", null), new Item("café", 1));
+        ToIntFunction<Item> quantidade = item -> item.quantidade() == null ? 0 : item.quantidade();
+        int volumes = 0;
+        for (Item item : pedido) volumes += quantidade.applyAsInt(item);
+        System.out.println("volumes para separar: " + volumes);
+    }
+}`,
+      saidaCorrigida: 'volumes para separar: 3',
+      dica: '`ToIntFunction` devolve `int`, mas `quantidade()` devolve `Integer`. O que acontece na conversão quando o valor é `null`?',
+      explicacao:
+        'A lambda devolve um `Integer`, e a `ToIntFunction` precisa de um `int`: o compilador insere o desembrulho, `intValue()`, que lança `NullPointerException` com o feijão sem quantidade. As versões primitivas escondem esse desembrulho. Trate o `null` antes, como na correção, ou, melhor, não aceite `null` no `record`, com uma validação no construtor compacto.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t5-e02-q01',
@@ -192,6 +314,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'As versões para `int` devolvem `int` com `applyAsInt`. O dobro de 3 mais 1 é 7, e 7 é ímpar.',
+      dica: '`dobro` dá 6, a soma dá 7, e 7 é ímpar.',
     },
     {
       id: 'pleno-t5-e02-q02',
@@ -209,6 +332,7 @@ public class Teste {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: '`UnaryOperator` estende `Function`, então só a atribuição nesse sentido vale. Generics não aceitam primitivos, e as versões primitivas não herdam das genéricas.',
+      dica: '`UnaryOperator` estende `Function`, e não o contrário; primitivos não são argumentos de tipo.',
     },
     {
       id: 'pleno-t5-e02-q03',
@@ -229,6 +353,7 @@ public class Teste {
 }`,
       resposta: 9,
       explicacao: '`IntUnaryOperator` devolve `int`, e o método é `applyAsInt`. Já `IntPredicate` mantém o `test` da família.',
+      dica: 'Um operador que devolve `int` usa `applyAsInt`.',
     },
     {
       id: 'pleno-t5-e02-q04',
@@ -246,6 +371,7 @@ public class Medida {
       respostas: ['applyAsInt'],
       saida: '3',
       explicacao: 'O prefixo `To` indica que a saída é primitiva, e o método ganha `As` + o tipo: `applyAsInt`.',
+      dica: 'Devolve primitivo: `As` mais o tipo.',
     },
     {
       id: 'pleno-t5-e02-q05',
@@ -266,6 +392,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Pelo tamanho, "de" é a menor. Pela ordem alfabética, "de" vem depois de "abc" e é a maior.',
+      dica: '`minBy` escolhe o mais curto; `maxBy`, com a ordem natural, o maior texto.',
     },
     {
       id: 'pleno-t5-e02-q06',
@@ -284,6 +411,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`not` inverte o predicado. `isEqual` usa `Objects.equals`, que trata `null` sem exceção e diferencia maiúsculas.',
+      dica: '`not` inverte; `isEqual(null)` aceita `null`; maiúscula não é igual a minúscula.',
     },
     {
       id: 'pleno-t5-e02-q07',
@@ -302,6 +430,7 @@ public class Teste {
 }`,
       resposta: '01',
       explicacao: 'Cada `get()` executa o construtor de novo e devolve um objeto novo. O segundo `StringBuilder` está vazio.',
+      dica: 'Cada `get` de uma referência a construtor cria um objeto novo.',
     },
     {
       id: 'pleno-t5-e02-q08',
@@ -321,6 +450,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Cada chamada de `a.get()` embrulha 1000 num `Integer` novo, fora do cache de -128 a 127, e `==` compara referências. Com `int`, a comparação é de valores.',
+      dica: '1000 está fora do cache: são dois `Integer` diferentes.',
     },
     {
       id: 'pleno-t5-e02-q09',
@@ -336,6 +466,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: '`IntFunction` devolve objeto e usa `apply`; `ToLongFunction` devolve `long` e usa `applyAsLong`; `DoubleSupplier` usa `getAsDouble`.',
+      dica: 'Quem devolve primitivo ganha `As`; quem devolve objeto, não.',
     },
     {
       id: 'pleno-t5-e02-q10',
@@ -359,6 +490,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`ObjIntConsumer` recebe um objeto e um `int` sem embrulhá-lo. O `boolean` devolvido por `add` é descartado.',
+      dica: '`accept` recebe a lista e o número.',
     },
     {
       id: 'pleno-t5-e02-q11',
@@ -383,6 +515,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'O pacote só vai até duas entradas. Para três, é preciso declarar uma interface funcional própria.',
+      dica: 'O pacote não tem uma função de três entradas.',
     },
     {
       id: 'pleno-t5-e02-q12',
@@ -403,6 +536,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`Map.forEach` recebe um `BiConsumer` com a chave e o valor. O `TreeMap` percorre as chaves em ordem.',
+      dica: 'O `forEach` de um mapa recebe um `BiConsumer`, na ordem do `TreeMap`.',
     },
     {
       id: 'pleno-t5-e02-q13',
@@ -412,6 +546,7 @@ public class Teste {
       opcoes: ['`IntFunction<R>`', '`ToIntFunction<T>`', '`IntUnaryOperator`', '`IntSupplier`'],
       resposta: 0,
       explicacao: 'O prefixo `Int` diz o que entra; o `To` diz o que sai. `ToIntFunction` faz o inverso, e `IntUnaryOperator` devolve outro `int`.',
+      dica: '`Int` no começo do nome: recebe `int`.',
     },
     {
       id: 'pleno-t5-e02-q14',
@@ -429,6 +564,7 @@ public class Teste {
 }`,
       resposta: '3.5 10000000000',
       explicacao: 'A média é calculada em `double`. O cast para `long` antes da multiplicação evita o estouro de `int`.',
+      dica: 'A média usa `2.0`, e o quadrado é feito em `long`.',
     },
     {
       id: 'pleno-t5-e02-q15',
@@ -453,6 +589,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: '`IntFunction<R>` recebe `int` mas devolve um objeto do tipo `R`, então o método é `apply`. `applyAsInt` pertence às interfaces que devolvem `int`.',
+      dica: '`IntFunction` devolve objeto: o método é `apply`.',
     },
   ],
 };

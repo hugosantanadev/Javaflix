@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Um método de instância não pode "sobrescrever" um `static`, nem o contrário.',
     'Um método `private` com o mesmo nome na subclasse é um método novo, que a superclasse nunca chama.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a gerar a assinatura de uma sobrescrita e a explicar por que o compilador recusou outra. Use-a para conferir as regras de acesso, retorno e exceções, sempre compilando o resultado.',
+    pedido:
+      'Revise as sobrescritas desta hierarquia Java 21.\n<cole o código aqui>\n- Para cada método redeclarado, diga se é sobrescrita, sobrecarga, método escondido (static) ou método novo (private na superclasse).\n- Aponte os métodos que sobrescrevem sem @Override.\n- Confira acesso, tipo de retorno e exceções verificadas contra o método original.',
+    erros: [
+      'Escreve `equals(MinhaClasse)` no lugar de `equals(Object)`, criando uma sobrecarga.',
+      'Diminui o acesso de um método `public` na subclasse.',
+      'Acrescenta `throws Exception` numa sobrescrita cujo original não declara exceções.',
+    ],
+    conferir: [
+      'Ponha `@Override` em todo método que deveria sobrescrever e compile.',
+      'Chame o método por uma referência do tipo da superclasse e veja qual versão roda.',
+      'Use `javap -p` na subclasse para ver os métodos ponte do retorno covariante.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Overriding and Hiding Methods',
@@ -137,6 +153,152 @@ public class Correios {
     comentarios:
       'O `recibo` é um *método template*: a superclasse fixa o formato, como `final`, e deixa o cálculo para as subclasses. Mesmo escrito em `Envio`, ele chama o `custo` de cada objeto real, graças à tabela de métodos virtuais. Esse é o polimorfismo, assunto do próximo episódio.',
   },
+  bugs: [
+    {
+      id: 'junior-t3-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: status() in ServicoInterno cannot override status() in Servico`.',
+      codigo: `class Servico {
+    public String status() {
+        return "ok";
+    }
+}
+
+class ServicoInterno extends Servico {
+    String status() {
+        return "interno";
+    }
+}
+
+public class Painel {
+    public static void main(String[] args) {
+        Servico s = new ServicoInterno();
+        System.out.println(s.status());
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `class Servico {
+    public String status() {
+        return "ok";
+    }
+}
+
+class ServicoInterno extends Servico {
+    public String status() {
+        return "interno";
+    }
+}
+
+public class Painel {
+    public static void main(String[] args) {
+        Servico s = new ServicoInterno();
+        System.out.println(s.status());
+    }
+}`,
+      saidaCorrigida: 'interno',
+      dica: 'Leia a segunda linha da mensagem. Que modificador o método original tem?',
+      explicacao: 'Uma sobrescrita não pode ter acesso mais fechado que o original: quem usa `Servico` conta com um `status()` público. Sem modificador, o método fica com acesso de pacote, mais restrito que `public`.',
+    },
+    {
+      id: 'junior-t3-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O desconto de Natal deveria ser de 50%, mas o preço sai com o desconto padrão: `90.0`.',
+      codigo: `class Desconto {
+    double aplicar(double preco) {
+        return preco * 0.9;
+    }
+}
+
+class DescontoNatal extends Desconto {
+    double aplicar(int preco) {
+        return preco * 0.5;
+    }
+}
+
+public class Caixa {
+    public static void main(String[] args) {
+        Desconto d = new DescontoNatal();
+        System.out.println(d.aplicar(100.0));
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: '90.0' },
+      correcao: `class Desconto {
+    double aplicar(double preco) {
+        return preco * 0.9;
+    }
+}
+
+class DescontoNatal extends Desconto {
+    double aplicar(double preco) {
+        return preco * 0.5;
+    }
+}
+
+public class Caixa {
+    public static void main(String[] args) {
+        Desconto d = new DescontoNatal();
+        System.out.println(d.aplicar(100.0));
+    }
+}`,
+      saidaCorrigida: '50.0',
+      dica: 'Compare a lista de parâmetros dos dois `aplicar`. Um `@Override` no da subclasse compilaria?',
+      explicacao: 'Com `int` no lugar de `double`, o método da subclasse é uma sobrecarga, não uma sobrescrita, e a chamada pelo tipo `Desconto` usa o original. Um `@Override` teria transformado o engano em erro de compilação.',
+    },
+    {
+      id: 'junior-t3-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O relatório do motor elétrico imprime `motor genérico`, embora `MotorEletrico` declare o próprio `tipo()`.',
+      codigo: `class Motor {
+    private String tipo() {
+        return "genérico";
+    }
+
+    String descrever() {
+        return "motor " + tipo();
+    }
+}
+
+class MotorEletrico extends Motor {
+    String tipo() {
+        return "elétrico";
+    }
+}
+
+public class Oficina {
+    public static void main(String[] args) {
+        System.out.println(new MotorEletrico().descrever());
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'saida', saida: 'motor genérico' },
+      correcao: `class Motor {
+    String tipo() {
+        return "genérico";
+    }
+
+    String descrever() {
+        return "motor " + tipo();
+    }
+}
+
+class MotorEletrico extends Motor {
+    String tipo() {
+        return "elétrico";
+    }
+}
+
+public class Oficina {
+    public static void main(String[] args) {
+        System.out.println(new MotorEletrico().descrever());
+    }
+}`,
+      saidaCorrigida: 'motor elétrico',
+      dica: 'Um método que a subclasse não enxerga pode ser sobrescrito por ela?',
+      explicacao: 'Métodos `private` não são herdados nem entram na tabela de métodos virtuais: `descrever()` chama `Motor.tipo()` diretamente, e o `tipo()` de `MotorEletrico` é um método independente. Tirando o `private`, a chamada passa a ser virtual e segue o objeto real.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t3-e02-q01',
@@ -151,6 +313,7 @@ public class Correios {
       ],
       resposta: 0,
       explicacao: 'Na sobrescrita, a subclasse substitui o comportamento herdado. Mesmo nome com parâmetros diferentes é sobrecarga, e `static` com o mesmo nome é esconder.',
+      dica: 'Sobrescrever acontece entre superclasse e subclasse, com a mesma assinatura.',
     },
     {
       id: 'junior-t3-e02-q02',
@@ -170,6 +333,7 @@ class Derivada extends Base {
 System.out.println(new Derivada().descrever());`,
       resposta: 'eu sou derivada',
       explicacao: '`descrever` é herdado, mas o `nome()` dentro dele é chamado no objeto real, um `Derivada`. Métodos de instância sobrescritos são escolhidos pelo objeto, mesmo quando a chamada está na superclasse.',
+      dica: '`descrever` está em `Base`, mas o objeto é uma `Derivada`. Qual `nome()` roda?',
     },
     {
       id: 'junior-t3-e02-q03',
@@ -186,6 +350,7 @@ System.out.println(new Derivada().descrever());`,
       respostas: [0, 3, 4],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Abrir o acesso e devolver um subtipo é permitido, assim como declarar menos exceções e esconder um `static` com outro. Fechar o acesso e trocar o primitivo de retorno não.',
+      dica: 'Para cada par confira: acesso não diminui, retorno igual ou subtipo, exceções verificadas não aumentam.',
     },
     {
       id: 'junior-t3-e02-q04',
@@ -213,6 +378,7 @@ class Gato extends Animal {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: 'Java diferencia maiúsculas, e `Som` é outro nome. Sem o `@Override`, a classe compilaria com um método novo e o bug passaria despercebido.',
+      dica: 'Java diferencia maiúsculas de minúsculas. Existe um `Som` para sobrescrever?',
     },
     {
       id: 'junior-t3-e02-q05',
@@ -236,6 +402,7 @@ System.out.println(x.s() + " " + x.i() + " " + y.s() + " " + y.i());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O método `static` é escolhido pelo tipo declarado: `x` é `A`, então `A.s`. O método de instância segue o objeto, que nos dois casos é um `B`.',
+      dica: 'Métodos `static` seguem o tipo declarado; os de instância, o objeto real.',
     },
     {
       id: 'junior-t3-e02-q06',
@@ -264,6 +431,7 @@ public class Garagem {
       respostas: ['Override'],
       saida: '2',
       explicacao: '`@Override` não muda o comportamento, mas faz o compilador recusar o método se ele não sobrescrever nada. A chamada por uma variável `Veiculo` executa a versão da moto.',
+      dica: 'É a anotação que confirma a sobrescrita.',
     },
     {
       id: 'junior-t3-e02-q07',
@@ -283,6 +451,7 @@ class ServicoInterno extends Servico {
 }`,
       resposta: 8,
       explicacao: 'O método original é `public`, e a subclasse tentou fechá-lo para `protected`. Quem usa um `Servico` tem o direito de chamar `status()`, e a subclasse não pode tirar esse direito.',
+      dica: 'Compare o acesso do original com o da subclasse.',
     },
     {
       id: 'junior-t3-e02-q08',
@@ -304,6 +473,7 @@ System.out.println(f.quem() + " " + f.nome());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`nome()` de `Pai` é `private`: não é herdado nem sobrescrito. O `quem()` chama sempre a versão de `Pai`. O `nome()` de `Filho` é um método independente.',
+      dica: 'Um método `private` não entra na sobrescrita; `quem()` chama qual `nome()`?',
     },
     {
       id: 'junior-t3-e02-q09',
@@ -332,6 +502,7 @@ class Destino extends Origem {
       resposta: 0,
       verificar: { tipo: 'naoCompila' },
       explicacao: '`FileNotFoundException` é uma `IOException`, e não o contrário. Quem chama `Origem.abrir()` só se preparou para a primeira; a subclasse não pode lançar algo mais amplo.',
+      dica: '`FileNotFoundException` é subclasse de `IOException`. A nova é mais ampla ou mais específica?',
     },
     {
       id: 'junior-t3-e02-q10',
@@ -366,6 +537,7 @@ System.out.println(c.tipo());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O retorno covariante permite que `Coelho.reproduzir()` declare `Coelho`. Por isso o resultado pode ser guardado numa variável `Coelho` sem cast.',
+      dica: 'O retorno covariante permite devolver `Coelho`; e `tipo()` segue o objeto real.',
     },
     {
       id: 'junior-t3-e02-q11',
@@ -380,6 +552,7 @@ System.out.println(c.tipo());`,
       ],
       resposta: 0,
       explicacao: 'Fechar o acesso é proibido. Abrir o acesso, declarar menos exceções verificadas ou uma mais específica, e declarar exceções não verificadas é permitido.',
+      dica: 'Procure a versão que fecha o acesso.',
     },
     {
       id: 'junior-t3-e02-q12',
@@ -401,6 +574,7 @@ class Derivada extends Base {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 8 },
       explicacao: '`final` num método impede a sobrescrita. A classe continua podendo ser estendida; só esse método fica fixo.',
+      dica: 'O que `final` faz num método?',
     },
     {
       id: 'junior-t3-e02-q13',
@@ -427,6 +601,7 @@ System.out.println(i.imprimir("x") + " " + l.imprimir("x") + " " + l.imprimir(1)
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`imprimir(String)` é uma sobrecarga, não uma sobrescrita. Pela variável `Impressora`, o compilador só conhece `imprimir(Object)`, que `Laser` não sobrescreveu. Pela variável `Laser`, a versão `String` é a mais específica para "x", e o `1` só cabe em `Object`.',
+      dica: '`imprimir(String)` sobrecarrega, não sobrescreve. A escolha da sobrecarga usa o tipo declarado.',
     },
     {
       id: 'junior-t3-e02-q14',
@@ -436,6 +611,7 @@ System.out.println(i.imprimir("x") + " " + l.imprimir("x") + " " + l.imprimir(1)
       opcoes: ['Os `final`', 'Os `static`', 'Os `private`', 'Os `protected`', 'Os que devolvem `void`'],
       respostas: [0, 1, 2],
       explicacao: '`final` proíbe por definição; `static` só pode ser escondido; `private` nem é herdado. `protected` e `void` não impedem a sobrescrita.',
+      dica: 'Quais não entram na tabela de métodos virtuais?',
     },
     {
       id: 'junior-t3-e02-q15',
@@ -450,6 +626,7 @@ System.out.println(i.imprimir("x") + " " + l.imprimir("x") + " " + l.imprimir(1)
       ],
       resposta: 0,
       explicacao: 'Para a JVM, o descritor inclui o retorno, então os dois métodos são diferentes. O método ponte ocupa a entrada da tabela virtual da versão original e repassa a chamada.',
+      dica: 'Para a JVM, o tipo de retorno faz parte do descritor do método.',
     },
   ],
 };

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">As três áreas do Git: o diretório de trabalho, a área de preparação e o repositório; git add leva do diretório para a preparação, git commit da preparação para o repositório; git restore --staged tira da preparação e git restore descarta a mudança do diretório</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" text-anchor="middle">
+    <rect x="20" y="70" width="200" height="96" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="120" y="98" font-size="14" font-weight="700" fill="#f3eee7">Diretório de trabalho</text>
+    <text x="120" y="120" font-size="12" fill="#bdb5aa">os arquivos no disco,</text>
+    <text x="120" y="138" font-size="12" fill="#bdb5aa">como você os edita</text>
+    <rect x="280" y="70" width="200" height="96" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="380" y="98" font-size="14" font-weight="700" fill="#f3eee7">Área de preparação</text>
+    <text x="380" y="120" font-size="12" fill="#bdb5aa">o que entra no</text>
+    <text x="380" y="138" font-size="12" fill="#bdb5aa">próximo commit</text>
+    <rect x="540" y="70" width="200" height="96" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="640" y="98" font-size="14" font-weight="700" fill="#4fd68b">Repositório (.git)</text>
+    <text x="640" y="120" font-size="12" fill="#bdb5aa">o histórico de commits,</text>
+    <text x="640" y="138" font-size="12" fill="#bdb5aa">que não se perde</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.8" fill="none" marker-end="url(#v)">
+    <path d="M220 100 L277 100"/>
+    <path d="M480 100 L537 100"/>
+  </g>
+  <g stroke="#ff7a1a" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#l)">
+    <path d="M380 166 C 380 220, 300 220, 260 196"/>
+    <path d="M120 230 C 80 230, 70 200, 100 169"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700">
+    <text x="249" y="90" fill="#4fd68b" text-anchor="middle">add</text>
+    <text x="509" y="90" fill="#4fd68b" text-anchor="middle">commit</text>
+    <text x="300" y="232" fill="#ff7a1a">git restore --staged</text>
+    <text x="130" y="248" fill="#ff7a1a">git restore</text>
+  </g>
+  <text x="300" y="248" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">tira da preparação, mantém a mudança</text>
+  <text x="130" y="264" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">descarta a mudança: sem volta</text>
+  <text x="20" y="40" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">git status mostra em qual das três áreas cada mudança está.</text>
+</svg>

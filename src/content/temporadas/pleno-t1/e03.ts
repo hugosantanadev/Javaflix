@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Um `catch` vazio engole o problema: registre ou relance.',
     '`UncheckedIOException` embrulha uma `IOException` numa exceção unchecked.',
   ],
+  ia: {
+    uso:
+      'Para multi-catch e relançamento, a IA é útil para explicar por que um `catch` não compila e para mostrar o stack trace com `Caused by` de um código que embrulha exceções. O ponto fraco são as regras finas da prova: ela esquece que alternativas relacionadas por herança não compilam e não conhece bem o relançamento preciso do Java 7.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código e, se houver, a mensagem do javac>\n- Diga se compila e, se não, qual regra do multi-catch ou do relançamento foi violada.\n- Para cada catch, diga qual é o tipo da variável e quais exceções checked o método precisa declarar.\n- Se sugerir embrulhar a exceção, passe a original como causa e explique quem vai tratá-la.\n- Não troque os tipos por catch (Exception e) só para compilar.',
+    erros: [
+      'Escreve `catch (FileNotFoundException | IOException e)`, que não compila.',
+      'Diz que `catch (Exception e) { throw e; }` sempre obriga o método a declarar `throws Exception`.',
+      'Cria a exceção nova sem passar a original como causa, e a origem some do log.',
+      'Afirma que a variável do multi-catch pode ser reatribuída como a de um `catch` comum.',
+    ],
+    conferir: [
+      'Compile o trecho: as regras do multi-catch e do relançamento são todas de compilação.',
+      'Rode com a exceção acontecendo e procure a seção `Caused by` no stack trace.',
+      'Use `Ctrl+Shift+P` no IntelliJ para ver o tipo que o compilador deu à variável do `catch`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Catching and Handling Exceptions, Multi-catching Exceptions',
@@ -146,6 +163,207 @@ public class Importador {
     comentarios:
       'Linhas ruins isoladas são toleradas: o multi-catch registra e segue. Quando o arquivo inteiro está ruim, o problema muda de natureza, e uma exceção checked própria obriga quem chama a decidir o que fazer. A causa preservada permite, no log, saber exatamente qual erro de baixo nível disparou a falha.',
   },
+  bugs: [
+    {
+      id: 'pleno-t1-e03-b01',
+      dificuldade: 1,
+      sintoma: 'A leitura do arquivo de cupons parou de compilar depois que alguém juntou os dois `catch` num só: `Alternatives in a multi-catch statement cannot be related by subclassing`.',
+      codigo: `import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public class Cupons {
+    static String ler(String arquivo) throws IOException {
+        if (!arquivo.endsWith(".csv")) throw new FileNotFoundException(arquivo);
+        return "NATAL10;FRETE0";
+    }
+
+    public static void main(String[] args) {
+        for (String arquivo : new String[] {"cupons.csv", "cupons.txt"}) {
+            try {
+                System.out.println(ler(arquivo));
+            } catch (FileNotFoundException | IOException e) {
+                System.out.println("sem cupons: " + e.getMessage());
+            }
+        }
+    }
+}`,
+      linha: 14,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public class Cupons {
+    static String ler(String arquivo) throws IOException {
+        if (!arquivo.endsWith(".csv")) throw new FileNotFoundException(arquivo);
+        return "NATAL10;FRETE0";
+    }
+
+    public static void main(String[] args) {
+        for (String arquivo : new String[] {"cupons.csv", "cupons.txt"}) {
+            try {
+                System.out.println(ler(arquivo));
+            } catch (IOException e) {
+                System.out.println("sem cupons: " + e.getMessage());
+            }
+        }
+    }
+}`,
+      saidaCorrigida: 'NATAL10;FRETE0\nsem cupons: cupons.txt',
+      dica: 'As duas exceções da lista têm alguma relação de herança?',
+      explicacao:
+        '`FileNotFoundException` é subclasse de `IOException`, então listar as duas é redundante, e o compilador recusa alternativas relacionadas por herança. Basta o tipo mais geral: `catch (IOException e)` já pega o arquivo inexistente.',
+    },
+    {
+      id: 'pleno-t1-e03-b02',
+      dificuldade: 2,
+      sintoma: 'Um pedido não foi salvo, e o log diz só que não foi possível salvar, sem a causa: `não foi possível salvar o pedido PED-1042 | causa: null`.',
+      codigo: `import java.io.IOException;
+
+public class Pedidos {
+    static class RepositorioException extends RuntimeException {
+        RepositorioException(String mensagem) {
+            super(mensagem);
+        }
+
+        RepositorioException(String mensagem, Throwable causa) {
+            super(mensagem, causa);
+        }
+    }
+
+    static void gravar(String pedido) throws IOException {
+        throw new IOException("disco cheio ao gravar " + pedido);
+    }
+
+    static void salvar(String pedido) {
+        try {
+            gravar(pedido);
+        } catch (IOException e) {
+            throw new RepositorioException("não foi possível salvar o pedido " + pedido);
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            salvar("PED-1042");
+        } catch (RepositorioException e) {
+            System.out.println(e.getMessage() + " | causa: " + e.getCause());
+        }
+    }
+}`,
+      linha: 22,
+      efeito: { tipo: 'saida', saida: 'não foi possível salvar o pedido PED-1042 | causa: null' },
+      correcao: `import java.io.IOException;
+
+public class Pedidos {
+    static class RepositorioException extends RuntimeException {
+        RepositorioException(String mensagem) {
+            super(mensagem);
+        }
+
+        RepositorioException(String mensagem, Throwable causa) {
+            super(mensagem, causa);
+        }
+    }
+
+    static void gravar(String pedido) throws IOException {
+        throw new IOException("disco cheio ao gravar " + pedido);
+    }
+
+    static void salvar(String pedido) {
+        try {
+            gravar(pedido);
+        } catch (IOException e) {
+            throw new RepositorioException("não foi possível salvar o pedido " + pedido, e);
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            salvar("PED-1042");
+        } catch (RepositorioException e) {
+            System.out.println(e.getMessage() + " | causa: " + e.getCause());
+        }
+    }
+}`,
+      saidaCorrigida: 'não foi possível salvar o pedido PED-1042 | causa: java.io.IOException: disco cheio ao gravar PED-1042',
+      dica: 'A exceção nova sabe qual exceção a provocou? Quem passou essa informação para ela?',
+      explicacao:
+        'A `RepositorioException` foi criada só com a mensagem, e a `IOException` original se perdeu: `getCause()` devolve `null`, e o stack trace não tem a seção `Caused by`. Ao traduzir uma exceção, passe sempre a original como causa, no construtor que recebe um `Throwable`.',
+    },
+    {
+      id: 'pleno-t1-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O envio deveria tentar de novo quando a rede falha, mas o programa morre na primeira falha com `RuntimeException: java.io.IOException: rede instável`.',
+      codigo: `import java.io.IOException;
+
+public class Envio {
+    static int tentativas = 0;
+
+    static void enviar() throws IOException {
+        tentativas++;
+        if (tentativas < 3) throw new IOException("rede instável");
+    }
+
+    static void enviarComLog() throws IOException {
+        try {
+            enviar();
+        } catch (Exception e) {
+            System.out.println("log: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) {
+        while (true) {
+            try {
+                enviarComLog();
+                System.out.println("enviado na tentativa " + tentativas);
+                break;
+            } catch (IOException e) {
+                System.out.println("tentando de novo");
+            }
+        }
+    }
+}`,
+      linha: 16,
+      efeito: { tipo: 'excecao', nome: 'RuntimeException' },
+      correcao: `import java.io.IOException;
+
+public class Envio {
+    static int tentativas = 0;
+
+    static void enviar() throws IOException {
+        tentativas++;
+        if (tentativas < 3) throw new IOException("rede instável");
+    }
+
+    static void enviarComLog() throws IOException {
+        try {
+            enviar();
+        } catch (Exception e) {
+            System.out.println("log: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    public static void main(String[] args) {
+        while (true) {
+            try {
+                enviarComLog();
+                System.out.println("enviado na tentativa " + tentativas);
+                break;
+            } catch (IOException e) {
+                System.out.println("tentando de novo");
+            }
+        }
+    }
+}`,
+      saidaCorrigida: 'log: rede instável\ntentando de novo\nlog: rede instável\ntentando de novo\nenviado na tentativa 3',
+      dica: 'Que tipo de exceção sai de `enviarComLog` quando a rede falha? É esse o tipo que o `main` espera para tentar de novo?',
+      explicacao:
+        'O `catch` registrava o erro e embrulhava a `IOException` numa `RuntimeException`, e o `catch (IOException e)` do `main`, que faz a nova tentativa, nunca era alcançado. Como `e` não é reatribuída, `throw e` relança a própria `IOException`, e o método só precisa declarar `throws IOException`: é o relançamento preciso do Java 7. Embrulhe só quando quiser mudar o tipo de propósito, e confira quem trata o tipo original.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t1-e03-q01',
@@ -160,6 +378,7 @@ public class Importador {
       ],
       resposta: 0,
       explicacao: 'O multi-catch usa uma única barra entre os tipos e uma única variável no fim.',
+      dica: 'O separador do multi-catch é um único símbolo, e a variável aparece uma vez só.',
     },
     {
       id: 'pleno-t1-e03-q02',
@@ -182,6 +401,7 @@ public class Importador {
 }`,
       resposta: 'l Class Strin',
       explicacao: 'O caractere de índice 5 de "javaflix" é "l". O `Integer` gera `ClassCastException`, e "oi" não tem índice 5. O mesmo bloco trata as duas exceções.',
+      dica: 'Cada chamada falha de um jeito diferente, ou não falha.',
     },
     {
       id: 'pleno-t1-e03-q03',
@@ -206,6 +426,7 @@ public class Importador {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Alternativas com relação de herança são redundantes, e o compilador recusa. Bastaria `catch (IllegalArgumentException e)`.',
+      dica: 'Uma das duas exceções da lista é subclasse da outra.',
     },
     {
       id: 'pleno-t1-e03-q04',
@@ -222,6 +443,7 @@ public class Importador {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Tipos sem relação de herança podem se combinar, checked ou não. `IllegalStateException` é uma `RuntimeException`, e a variável do multi-catch não aceita nova atribuição.',
+      dica: 'Procure os trechos com herança na lista ou com uma checked que o `try` não lança.',
     },
     {
       id: 'pleno-t1-e03-q05',
@@ -257,6 +479,7 @@ public class T {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Como `e` não é reatribuída, o compilador sabe que o `try` só lança `IOException` e aceita a declaração mais precisa. É o relançamento preciso do Java 7.',
+      dica: 'Com `e` sem reatribuição, o compilador sabe exatamente o que o `try` lança.',
     },
     {
       id: 'pleno-t1-e03-q06',
@@ -282,6 +505,7 @@ public class Rede {
       respostas: ['|'],
       saida: 'falhou: 5s',
       explicacao: 'A barra vertical separa as alternativas. As duas exceções são checked e sem relação de herança.',
+      dica: 'É o mesmo símbolo do ou lógico, só que um só.',
     },
     {
       id: 'pleno-t1-e03-q07',
@@ -301,6 +525,7 @@ public class Rede {
 }`,
       resposta: 8,
       explicacao: 'A variável de um multi-catch é implicitamente `final`. Num `catch` de um tipo só, a reatribuição seria permitida.',
+      dica: 'A variável do multi-catch é implicitamente `final`.',
     },
     {
       id: 'pleno-t1-e03-q08',
@@ -329,6 +554,7 @@ public class Rede {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A exceção nova carrega a original como causa. A mensagem é a da nova, e `getCause()` devolve a `NumberFormatException`.',
+      dica: 'A mensagem é da exceção nova; a causa, da original.',
     },
     {
       id: 'pleno-t1-e03-q09',
@@ -356,6 +582,7 @@ public class T {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 9 },
       explicacao: 'O relançamento preciso só vale se a variável for efetivamente final. Reatribuída, ela volta a ser só uma `Exception` para o compilador, que exige `throws Exception`.',
+      dica: 'Depois da reatribuição, o compilador só sabe que `e` é uma `Exception`.',
     },
     {
       id: 'pleno-t1-e03-q10',
@@ -370,6 +597,7 @@ public class T {
       ],
       resposta: 0,
       explicacao: 'Só os métodos do supertipo comum podem ser chamados. Para usar algo específico de uma das alternativas, seria preciso um `instanceof`.',
+      dica: 'O compilador precisa de um tipo que sirva para as duas alternativas.',
     },
     {
       id: 'pleno-t1-e03-q11',
@@ -392,6 +620,7 @@ public class T {
 }`,
       resposta: '!10!',
       explicacao: 'Com `i = 0`, a divisão é por zero. Com `i = 1`, 10 / 1 = 10. Com `i = 2`, o índice não existe. O multi-catch trata os dois erros do mesmo jeito, e o laço continua.',
+      dica: 'Siga as três voltas do laço: um resultado normal, uma divisão por zero e um índice fora do array.',
     },
     {
       id: 'pleno-t1-e03-q12',
@@ -406,6 +635,7 @@ public class T {
       ],
       resposta: 0,
       explicacao: 'A exceção nova dá o contexto da camada atual; a causa guarda o detalhe técnico. Sem ela, a informação de quem realmente falhou se perde.',
+      dica: 'Pense no que aparece no log quando a causa é preservada.',
     },
     {
       id: 'pleno-t1-e03-q13',
@@ -421,6 +651,7 @@ public class T {
       ],
       respostas: [0, 1],
       explicacao: 'A lista pode ter quantos tipos forem necessários, sem repetição nem herança entre eles, e o bloco roda uma vez, para a exceção que de fato aconteceu.',
+      dica: 'Duas regras do multi-catch: a variável e a relação entre os tipos.',
     },
     {
       id: 'pleno-t1-e03-q14',
@@ -456,6 +687,7 @@ public class T {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`UncheckedIOException` é uma `RuntimeException`, então `ler` não precisa de `throws`. A `IOException` original continua acessível como causa.',
+      dica: 'A `UncheckedIOException` guarda a `IOException` como causa.',
     },
     {
       id: 'pleno-t1-e03-q15',
@@ -470,6 +702,7 @@ public class T {
       ],
       resposta: 0,
       explicacao: 'Por isso o multi-catch gera menos bytecode que dois `catch` com o mesmo corpo. Já o relançamento preciso é só análise do compilador, sem efeito no bytecode.',
+      dica: 'O multi-catch não duplica código no bytecode.',
     },
   ],
 };

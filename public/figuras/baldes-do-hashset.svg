@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="310" viewBox="0 0 760 310" role="img" aria-labelledby="t">
+  <title id="t">Um HashSet com oito baldes. O primeiro Cpf 123, adicionado ao conjunto, tem hashCode herdado que leva ao balde 2. O segundo Cpf 123, usado no contains, tem outro hashCode herdado e leva ao balde 6, que está vazio; o equals nunca é chamado e a resposta é false</title>
+  <rect width="760" height="310" fill="#13110f"/>
+  <defs>
+    <marker id="v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker>
+  </defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <rect x="30" y="40" width="230" height="56" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="44" y="64" fill="#f3eee7">add(new Cpf("123"))</text>
+    <text x="44" y="84" fill="#4fd68b">hashCode 1956... → 2</text>
+    <rect x="30" y="200" width="230" height="56" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="44" y="224" fill="#f3eee7">contains(new Cpf("123"))</text>
+    <text x="44" y="244" fill="#ff7a1a">hashCode 8137... → 6</text>
+  </g>
+  <text x="400" y="28" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">os baldes do HashSet</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#8a8277">
+    <rect x="400" y="40" width="60" height="30" fill="#1b1916" stroke="#43403a"/><text x="470" y="60">0</text>
+    <rect x="400" y="70" width="60" height="30" fill="#1b1916" stroke="#43403a"/><text x="470" y="90">1</text>
+    <rect x="400" y="100" width="60" height="30" fill="#1b1916" stroke="#4fd68b"/><text x="470" y="120">2</text>
+    <rect x="400" y="130" width="60" height="30" fill="#1b1916" stroke="#43403a"/><text x="470" y="150">3</text>
+    <rect x="400" y="160" width="60" height="30" fill="#1b1916" stroke="#43403a"/><text x="470" y="180">4</text>
+    <rect x="400" y="190" width="60" height="30" fill="#1b1916" stroke="#43403a"/><text x="470" y="210">5</text>
+    <rect x="400" y="220" width="60" height="30" fill="#1b1916" stroke="#ff7a1a"/><text x="470" y="240">6</text>
+    <rect x="400" y="250" width="60" height="30" fill="#1b1916" stroke="#43403a"/><text x="470" y="270">7</text>
+  </g>
+  <text x="414" y="120" font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#4fd68b">123</text>
+  <text x="414" y="240" font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#ff7a1a">vazio</text>
+  <path d="M262 68 L396 112" stroke="#4fd68b" stroke-width="1.6" fill="none" marker-end="url(#v)"/>
+  <path d="M262 228 L396 234" stroke="#ff7a1a" stroke-width="1.6" fill="none" marker-end="url(#l)"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">
+    <text x="500" y="110">O contains só procura no balde</text>
+    <text x="500" y="128">que o hashCode indica.</text>
+    <text x="500" y="226">Balde vazio: o equals nem roda,</text>
+    <text x="500" y="244">e a resposta é false.</text>
+  </g>
+  <text x="30" y="298" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Com hashCode sobrescrito usando o número do CPF, os dois objetos caem no mesmo balde e o equals decide.</text>
+</svg>

@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'A documentação gerada só a partir do código erra o que é decidido em execução, como o `201` de um `ResponseEntity.created`.',
     'OpenAPI é a especificação; Swagger é o nome das ferramentas que a usam.',
   ],
+  ia: {
+    uso:
+      'Para ferramentas de API, a IA ajuda a traduzir: um curl da documentação para Java, uma rota para um arquivo `.http`, exemplos de resposta para um esquema OpenAPI. Os riscos são o vazamento de segredos (tokens em comandos colados) e documentos incompletos, sem os status de erro.',
+    pedido:
+      'Escreva o trecho OpenAPI 3.1 da rota POST /produtos de uma API Spring Boot 4.1.\n<cole aqui o controller e o record ProdutoNovo, sem dados reais>\n- Inclua as respostas 201 com Location, 400 e 422, com o corpo de erro no formato application/problem+json.\n- Use number para preço e integer com format int64 para o id.\n- Escreva também dois curl para testar o sucesso e o 422, com --json e -i.\n- Não inclua tokens; use $TOKEN onde for preciso autenticar.',
+    erros: [
+      'Documenta só a resposta de sucesso e omite os erros.',
+      'Põe tokens reais nos exemplos de curl ou de coleção.',
+      'Usa aspas duplas em volta do JSON no curl do Linux, e o terminal interpreta o conteúdo.',
+      'Esquece de codificar parâmetros da query string com espaços e acentos.',
+    ],
+    conferir: [
+      'Cole o documento no Swagger Editor e veja se ele valida sem erros.',
+      'Rode os curl sugeridos e compare o status e o corpo com o documento.',
+      'Procure `Bearer`, `Cookie` e `password` em tudo o que for compartilhado.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Everything curl',
@@ -220,6 +237,115 @@ public class Contrato {
     comentarios:
       'Reunir todos os erros de uma vez, em vez de parar no primeiro, poupa o cliente de corrigir um campo por requisição. Cada campo produz no máximo um erro, o primeiro que encontrar, para não acumular mensagens redundantes como "deve ser número" e "deve ser no mínimo" para o mesmo valor. Validadores de JSON Schema de verdade, como os usados por *gateways* e geradores de código, seguem a mesma ideia com muito mais regras: padrões de texto, formatos como `email` e `date`, objetos aninhados e combinações como `oneOf`. No Spring, o mesmo papel é feito pelo Bean Validation, com `@NotBlank`, `@Size` e `@DecimalMin` nos DTOs, assunto da [temporada de Spring Boot](/assistir/backend-junior-t4-e04).',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t2-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O botão "copiar como cURL" da ferramenta interna gera um comando que o terminal não aceita quando o produto tem apóstrofo no nome: `curl --json \'{"nome":"Pão d\'Ouro"}\' http://localhost:8086/produtos`.',
+      codigo: `public class Aspas {
+    static String aspas(String texto) {
+        return "'" + texto + "'";
+    }
+
+    public static void main(String[] args) {
+        System.out.println("curl --json " + aspas("{\\"nome\\":\\"Pão d'Ouro\\"}") + " http://localhost:8086/produtos");
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: 'curl --json \'{"nome":"Pão d\'Ouro"}\' http://localhost:8086/produtos' },
+      correcao: `public class Aspas {
+    static String aspas(String texto) {
+        return "'" + texto.replace("'", "'\\\\''") + "'";
+    }
+
+    public static void main(String[] args) {
+        System.out.println("curl --json " + aspas("{\\"nome\\":\\"Pão d'Ouro\\"}") + " http://localhost:8086/produtos");
+    }
+}`,
+      saidaCorrigida: 'curl --json \'{"nome":"Pão d\'\\\'\'Ouro"}\' http://localhost:8086/produtos',
+      dica: 'Dentro de aspas simples no terminal, como se escreve uma aspa simples?',
+      explicacao:
+        'Entre aspas simples, o terminal não interpreta nada, nem a barra: a única forma de pôr um apóstrofo é fechar as aspas, escrever `\'` e reabrir, o `\'\'\'`. Sem isso, o apóstrofo de "d\'Ouro" fecha o texto no meio, e o resto vira lixo para o terminal.',
+    },
+    {
+      id: 'backend-junior-t2-e05-b02',
+      dificuldade: 2,
+      sintoma: 'A busca por "pão & queijo" devolve todos os produtos, e o log do servidor mostra a URL `http://localhost:8086/produtos?termo=pão & queijo&pagina=1`.',
+      codigo: `import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+public class Busca {
+    static String url(String termo) {
+        return "http://localhost:8086/produtos?termo=" + termo + "&pagina=1";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(url("pão & queijo"));
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'http://localhost:8086/produtos?termo=pão & queijo&pagina=1' },
+      correcao: `import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+public class Busca {
+    static String url(String termo) {
+        return "http://localhost:8086/produtos?termo=" + URLEncoder.encode(termo, StandardCharsets.UTF_8) + "&pagina=1";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(url("pão & queijo"));
+    }
+}`,
+      saidaCorrigida: 'http://localhost:8086/produtos?termo=p%C3%A3o+%26+queijo&pagina=1',
+      dica: 'O que o `&` significa dentro de uma query string?',
+      explicacao:
+        'Na query string, `&` separa parâmetros, espaço não é permitido e `ã` precisa ser codificado. Sem `URLEncoder.encode`, o servidor recebe `termo=pão ` e um parâmetro estranho chamado ` queijo`. Todo valor que vem de fora passa pela codificação antes de entrar na URL.',
+    },
+    {
+      id: 'backend-junior-t2-e05-b03',
+      dificuldade: 3,
+      sintoma: 'Um comando copiado do navegador e colado num chamado público expôs o token de um cliente, embora a ferramenta "mascarasse segredos": `-H \'authorization: Bearer eyJhbGciOi.segredo\'`.',
+      codigo: `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Mascarar {
+    static String linha(String nome, String valor) {
+        boolean secreto = nome.equals("Authorization") || nome.equals("Cookie");
+        return "-H '" + nome + ": " + (secreto ? "***" : valor) + "'";
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> copiados = new LinkedHashMap<>();
+        copiados.put("accept", "application/json");
+        copiados.put("authorization", "Bearer eyJhbGciOi.segredo");
+        copiados.forEach((n, v) -> System.out.println(linha(n, v)));
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: '-H \'accept: application/json\'\n-H \'authorization: Bearer eyJhbGciOi.segredo\'' },
+      correcao: `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Mascarar {
+    static String linha(String nome, String valor) {
+        boolean secreto = nome.equalsIgnoreCase("Authorization") || nome.equalsIgnoreCase("Cookie");
+        return "-H '" + nome + ": " + (secreto ? "***" : valor) + "'";
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> copiados = new LinkedHashMap<>();
+        copiados.put("accept", "application/json");
+        copiados.put("authorization", "Bearer eyJhbGciOi.segredo");
+        copiados.forEach((n, v) -> System.out.println(linha(n, v)));
+    }
+}`,
+      saidaCorrigida: '-H \'accept: application/json\'\n-H \'authorization: ***\'',
+      dica: 'Nomes de cabeçalho diferenciam maiúsculas de minúsculas? E o `equals`?',
+      explicacao:
+        'O navegador, falando HTTP/2, copia os nomes de cabeçalho em minúsculas, e o `equals` exige a grafia exata. Nomes de cabeçalho não diferenciam maiúsculas, e a comparação tem de ser `equalsIgnoreCase`. Numa lista de segredos, prefira sempre errar para o lado de mascarar demais.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t2-e05-q01',
@@ -229,6 +355,7 @@ public class Contrato {
       opcoes: ['`-i`', '`-s`', '`-o`', '`-L`'],
       resposta: 0,
       explicacao: 'O `-s` silencia a barra de progresso, o `-o` grava o corpo num arquivo e o `-L` segue redirecionamentos.',
+      dica: 'Uma letra só, que inclui os cabeçalhos na saída.',
     },
     {
       id: 'backend-junior-t2-e05-q02',
@@ -238,6 +365,7 @@ public class Contrato {
       opcoes: ['`POST`', '`GET`', '`PUT`', '`PATCH`'],
       resposta: 0,
       explicacao: 'Enviar um corpo com `-d` muda o método para `POST`, a menos que `-X` diga outro. E esse comando ainda não diz que o corpo é JSON: faltou o `Content-Type`.',
+      dica: 'O `-d` muda o método quando nenhum foi dado com `-X`.',
     },
     {
       id: 'backend-junior-t2-e05-q03',
@@ -252,6 +380,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'É um atalho para `--data-binary` com os dois cabeçalhos. O próprio manual avisa que nada verifica se o texto é JSON válido.',
+      dica: 'O atalho põe dois cabeçalhos sozinho.',
     },
     {
       id: 'backend-junior-t2-e05-q04',
@@ -266,6 +395,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'O `-o /dev/null` descarta o corpo, o `-s` silencia o resto, e o `-w` imprime só a variável pedida.',
+      dica: 'Silencioso, corpo descartado e só o código de status impresso.',
     },
     {
       id: 'backend-junior-t2-e05-q05',
@@ -280,6 +410,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: '`>` é o que sai, `<` é o que chega, e `*` são as informações do curl, como a resolução do nome e a conexão.',
+      dica: 'No `-v`, um sinal marca o que foi enviado e o outro, o que voltou.',
     },
     {
       id: 'backend-junior-t2-e05-q06',
@@ -294,6 +425,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'Com aspas duplas por fora, as aspas do JSON fechariam o argumento, e o `$` seria interpretado como variável.',
+      dica: 'Dentro de aspas simples, o terminal não interpreta nada.',
     },
     {
       id: 'backend-junior-t2-e05-q07',
@@ -311,6 +443,7 @@ public class Contrato {
 }`,
       resposta: "'d'\\''Ouro'",
       explicacao: 'Dentro de aspas simples não há escape. A aspa do texto fecha o trecho, vem uma aspa escapada (`\\\'`), e um novo trecho se abre.',
+      dica: 'Cada aspa simples vira: fecha aspas, aspa escapada, abre aspas.',
     },
     {
       id: 'backend-junior-t2-e05-q08',
@@ -325,6 +458,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'O `&` é especial no terminal. Com a URL entre aspas, ele vira só um caractere da query string.',
+      dica: 'No terminal, o `&` no fim de um comando o manda para o segundo plano.',
     },
     {
       id: 'backend-junior-t2-e05-q09',
@@ -339,6 +473,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'O apelido foi removido no PowerShell 7, mas o Windows PowerShell 5.1, que vem com o sistema, ainda o tem.',
+      dica: 'No PowerShell 5.1, `curl` é outra coisa: um apelido.',
     },
     {
       id: 'backend-junior-t2-e05-q10',
@@ -353,6 +488,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'O formato se chamava Especificação Swagger até ser doado à OpenAPI Initiative. O Swagger UI e o Swagger Editor continuam com o nome antigo.',
+      dica: 'Swagger virou o nome das ferramentas; a especificação mudou de nome.',
     },
     {
       id: 'backend-junior-t2-e05-q11',
@@ -367,6 +503,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'Há também `/v3/api-docs.yaml`. Os caminhos podem ser trocados com as propriedades `springdoc.api-docs.path` e `springdoc.swagger-ui.path`.',
+      dica: 'Um caminho para o documento em JSON e outro para a página interativa.',
     },
     {
       id: 'backend-junior-t2-e05-q12',
@@ -381,6 +518,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'O tipo `ResponseEntity<Produto>` não diz qual status será usado. O curl mostrou que a resposta real é `201`; a documentação precisa da anotação.',
+      dica: 'O springdoc lê as assinaturas, e `ResponseEntity` não diz o status.',
     },
     {
       id: 'backend-junior-t2-e05-q13',
@@ -396,6 +534,7 @@ public class Contrato {
       ],
       respostas: [0, 1],
       explicacao: 'Geradores criam interfaces e modelos, mas a lógica continua sendo escrita à mão, e o contrato evolui junto com a API.',
+      dica: 'Com o contrato pronto antes, quem pode trabalhar ao mesmo tempo?',
     },
     {
       id: 'backend-junior-t2-e05-q14',
@@ -410,6 +549,7 @@ public class Contrato {
       ],
       resposta: 0,
       explicacao: 'O `Produto` aparece na listagem, na busca e na criação, mas é definido num lugar: `$ref: "#/components/schemas/Produto"`.',
+      dica: 'Um esquema escrito uma vez e referenciado em vários lugares.',
     },
     {
       id: 'backend-junior-t2-e05-q15',
@@ -431,6 +571,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`3.0` sem os zeros finais é `3`, de escala 0. E o `equals` do `BigDecimal` compara também a escala: `1.0` e `1` são diferentes para ele, iguais para o `compareTo`.',
+      dica: 'Siga o programa e veja como cada parte do comando é montada.',
     },
   ],
 };

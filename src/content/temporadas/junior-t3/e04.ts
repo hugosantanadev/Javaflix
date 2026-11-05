@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     '`instanceof` entre tipos impossíveis, como `String` e `Integer`, não compila.',
     '`(Tipo) x.metodo()` aplica o cast ao resultado; o certo é `((Tipo) x).metodo()`.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a decidir se um cast é seguro e a trocar o par `instanceof` + cast pela forma com padrão. Use-a também para perguntar se aquela cadeia de testes de tipo não deveria ser um método sobrescrito.',
+    pedido:
+      'Revise os casts deste código Java 21.\n<cole o código aqui>\n- Para cada cast, diga se compila e em que situação lançaria ClassCastException.\n- Troque instanceof seguido de cast pela forma com padrão.\n- Aponte cadeias de instanceof que poderiam virar um método sobrescrito.',
+    erros: [
+      'Faz o cast sem testar o tipo, contando que a lista só tem um tipo.',
+      'Esquece os parênteses e aplica o cast ao resultado do método: `(Tipo) x.metodo()`.',
+      'Compara `getClass()` quando subclasses também deveriam ser aceitas.',
+    ],
+    conferir: [
+      'Teste com um objeto de cada subclasse, inclusive um que não deveria passar.',
+      'Teste com `null`: `instanceof` dá `false` e o cast dá `null`.',
+      'Compile: casts entre tipos sem relação são recusados.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Inheritance, Casting Objects',
@@ -173,6 +189,138 @@ public class Zoologico {
     comentarios:
       'O pinguim mostra que `instanceof` respeita a hierarquia, e o cast para `Ave` não impede o polimorfismo: o `voar()` executado é o do objeto real. Repare também que o modelo tem um problema clássico: um pinguim é uma ave que não voa. Isso sugere que "voar" não deveria estar em `Ave`; interfaces, na próxima temporada, resolvem melhor.',
   },
+  bugs: [
+    {
+      id: 'junior-t3-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: cannot find symbol`, apontando `juros()` numa variável do tipo `Conta`.',
+      codigo: `class Conta {
+    double saldo = 100;
+}
+
+class Poupanca extends Conta {
+    double juros() { return saldo * 0.01; }
+}
+
+public class Banco {
+    public static void main(String[] args) {
+        Conta c = new Poupanca();
+        System.out.println((Poupanca) c.juros());
+    }
+}`,
+      linha: 12,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `class Conta {
+    double saldo = 100;
+}
+
+class Poupanca extends Conta {
+    double juros() { return saldo * 0.01; }
+}
+
+public class Banco {
+    public static void main(String[] args) {
+        Conta c = new Poupanca();
+        System.out.println(((Poupanca) c).juros());
+    }
+}`,
+      saidaCorrigida: '1.0',
+      dica: 'O ponto da chamada e o cast: quem é aplicado primeiro?',
+      explicacao: 'A chamada de método tem precedência sobre o cast: `(Poupanca) c.juros()` tenta chamar `juros()` em `Conta` e só depois converter o resultado. Com `((Poupanca) c).juros()`, o cast vem antes, e a referência passa a ser `Poupanca`.',
+    },
+    {
+      id: 'junior-t3-e04-b02',
+      dificuldade: 2,
+      sintoma: 'O abrigo tem 2 cachorros e 1 gato, mas o relatório diz `cachorros: 0`.',
+      codigo: `class Animal { }
+class Cachorro extends Animal { }
+class Gato extends Animal { }
+
+public class Abrigo {
+    public static void main(String[] args) {
+        Animal[] bichos = {new Cachorro(), new Gato(), new Cachorro()};
+        int animais = 0, cachorros = 0;
+        for (Animal b : bichos) {
+            if (b instanceof Animal) animais++;
+            else if (b instanceof Cachorro) cachorros++;
+        }
+        System.out.println("animais: " + animais + ", cachorros: " + cachorros);
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'animais: 3, cachorros: 0' },
+      correcao: `class Animal { }
+class Cachorro extends Animal { }
+class Gato extends Animal { }
+
+public class Abrigo {
+    public static void main(String[] args) {
+        Animal[] bichos = {new Cachorro(), new Gato(), new Cachorro()};
+        int animais = 0, cachorros = 0;
+        for (Animal b : bichos) {
+            if (b instanceof Animal) animais++;
+            if (b instanceof Cachorro) cachorros++;
+        }
+        System.out.println("animais: " + animais + ", cachorros: " + cachorros);
+    }
+}`,
+      saidaCorrigida: 'animais: 3, cachorros: 2',
+      dica: 'Um cachorro passa no primeiro teste? Se passa, o `else` chega a ser avaliado?',
+      explicacao: '`instanceof Animal` é verdadeiro para todo cachorro, então o `else if` nunca roda. As duas contagens são independentes e precisam de dois `if`. Numa cadeia de `else if`, os tipos mais específicos vêm primeiro.',
+    },
+    {
+      id: 'junior-t3-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O total da folha lança `ClassCastException: class Estagiario cannot be cast to class Gerente`.',
+      codigo: `class Funcionario {
+    double salario() { return 3000; }
+}
+
+class Gerente extends Funcionario {
+    double bonus() { return 2000; }
+}
+
+class Estagiario extends Funcionario { }
+
+public class Folha {
+    public static void main(String[] args) {
+        Funcionario[] equipe = {new Gerente(), new Estagiario()};
+        double total = 0;
+        for (Funcionario f : equipe) {
+            total += f.salario();
+            total += ((Gerente) f).bonus();
+        }
+        System.out.println(total);
+    }
+}`,
+      linha: 17,
+      efeito: { tipo: 'excecao', nome: 'ClassCastException' },
+      correcao: `class Funcionario {
+    double salario() { return 3000; }
+}
+
+class Gerente extends Funcionario {
+    double bonus() { return 2000; }
+}
+
+class Estagiario extends Funcionario { }
+
+public class Folha {
+    public static void main(String[] args) {
+        Funcionario[] equipe = {new Gerente(), new Estagiario()};
+        double total = 0;
+        for (Funcionario f : equipe) {
+            total += f.salario();
+            if (f instanceof Gerente g) total += g.bonus();
+        }
+        System.out.println(total);
+    }
+}`,
+      saidaCorrigida: '8000.0',
+      dica: 'O compilador aceitou o cast. Todo `Funcionario` do array é mesmo um `Gerente`?',
+      explicacao: 'O compilador só confere se o cast é possível; a JVM confere se é verdadeiro para cada objeto, e o estagiário não é gerente. Teste o tipo antes, com `instanceof` com padrão, ou mova o bônus para um método sobrescrito que vale 0 na superclasse.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t3-e04-q01',
@@ -187,6 +335,7 @@ public class Zoologico {
       ],
       resposta: 0,
       explicacao: 'Subir é seguro e automático: todo cachorro é um animal. Descer exige o cast, porque o compilador não sabe se aquele animal é mesmo um cachorro.',
+      dica: 'Subir na hierarquia é sempre seguro; descer é uma aposta.',
     },
     {
       id: 'junior-t3-e04-q02',
@@ -201,6 +350,7 @@ A x = new B();
 System.out.println((x instanceof A) + " " + (x instanceof B) + " " + (x instanceof C));`,
       resposta: 'true true false',
       explicacao: 'O objeto é um `B`, e portanto também um `A`. Não é um `C`, que é mais específico que ele.',
+      dica: '`instanceof` vale para o tipo do objeto e todos os seus ancestrais.',
     },
     {
       id: 'junior-t3-e04-q03',
@@ -218,6 +368,7 @@ System.out.println("comi");`,
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ClassCastException' },
       explicacao: 'O cast compila, porque uma `Fruta` poderia ser uma `Banana`. Na execução, a JVM vê que o objeto é uma `Maca` e lança a exceção.',
+      dica: 'Maçã e banana são frutas, então compila. Mas o objeto é de qual tipo?',
     },
     {
       id: 'junior-t3-e04-q04',
@@ -233,6 +384,7 @@ Revista r = (Revista) l;`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Nenhuma das classes estende a outra: um `Livro` nunca poderia ser uma `Revista`. O compilador recusa o cast antes de qualquer execução.',
+      dica: '`Livro` e `Revista` têm alguma relação de herança?',
     },
     {
       id: 'junior-t3-e04-q05',
@@ -249,6 +401,7 @@ Revista r = (Revista) l;`,
       respostas: [1, 3],
       verificar: { tipo: 'opcoesNaoCompilam' },
       explicacao: 'Com `Object`, qualquer cast e qualquer teste são possíveis, e o compilador aceita. Entre `String` e `Integer`, classes sem relação, os dois são impossíveis e não compilam.',
+      dica: 'O compilador recusa casts e testes entre tipos que nunca poderiam coincidir. `String` e `Integer` são `final`.',
     },
     {
       id: 'junior-t3-e04-q06',
@@ -270,6 +423,7 @@ Revista r = (Revista) l;`,
       respostas: ['instanceof'],
       saida: 'texto de 4 letras / outra coisa',
       explicacao: 'O `instanceof` garante que o cast seguinte não vai falhar. Para o `42`, que é um `Integer`, o teste dá `false` e o cast nem é tentado.',
+      dica: 'É o operador que pergunta o tipo do objeto.',
     },
     {
       id: 'junior-t3-e04-q07',
@@ -288,6 +442,7 @@ Revista r = (Revista) l;`,
 }`,
       resposta: 8,
       explicacao: 'Um `Integer` nunca poderia ser uma `String`, e o compilador recusa o teste. Os outros dois são possíveis: um `Object` pode ser um `Integer`, e toda `String` é um `Object`.',
+      dica: 'Um `Integer` poderia algum dia ser uma `String`?',
     },
     {
       id: 'junior-t3-e04-q08',
@@ -304,6 +459,7 @@ System.out.println((a instanceof Animal) + " " + (o instanceof Object) + " " + s
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O cast de `null` sempre funciona, porque não há objeto para conferir. E `instanceof` com `null` é sempre `false`, qualquer que seja o tipo.',
+      dica: '`instanceof` com `null` dá `false`; o cast de `null` dá `null`.',
     },
     {
       id: 'junior-t3-e04-q09',
@@ -324,6 +480,7 @@ System.out.println(((Poupanca) c).juros());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os parênteses externos fazem o cast acontecer antes da chamada. Com a referência `Poupanca`, `juros()` passa a ser visível, e o objeto realmente é uma poupança.',
+      dica: 'Os parênteses fazem o cast acontecer antes da chamada.',
     },
     {
       id: 'junior-t3-e04-q10',
@@ -344,6 +501,7 @@ System.out.println((Poupanca) c.juros());`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 10 },
       explicacao: 'O ponto tem precedência sobre o cast: o código tenta chamar `c.juros()` primeiro, e `Conta` não tem esse método. O certo é `((Poupanca) c).juros()`.',
+      dica: 'Sem os parênteses externos, o cast é aplicado a quê?',
     },
     {
       id: 'junior-t3-e04-q11',
@@ -358,6 +516,7 @@ System.out.println((Poupanca) c.juros());`,
       ],
       resposta: 0,
       explicacao: 'O cast de referência é só uma verificação e uma mudança de "visão". O objeto já era um cachorro; senão, o cast lançaria `ClassCastException`.',
+      dica: 'O cast cria algum objeto novo?',
     },
     {
       id: 'junior-t3-e04-q12',
@@ -371,6 +530,7 @@ Veiculo v = new Moto();
 System.out.println((v instanceof Veiculo) + " " + (v.getClass() == Veiculo.class) + " " + v.getClass().getSimpleName());`,
       resposta: 'true false Moto',
       explicacao: '`instanceof` aceita subtipos: uma moto é um veículo. `getClass()` devolve a classe exata do objeto, que é `Moto`.',
+      dica: '`instanceof` olha a hierarquia; `getClass()` dá a classe exata.',
     },
     {
       id: 'junior-t3-e04-q13',
@@ -386,6 +546,7 @@ System.out.println((v instanceof Veiculo) + " " + (v.getClass() == Veiculo.class
       ],
       respostas: [0, 1],
       explicacao: 'O operador nunca lança exceção: com `null`, simplesmente devolve `false`. Ele olha a hierarquia toda, e o compilador recusa testes entre tipos impossíveis.',
+      dica: 'Pense em `null` e em subtipos.',
     },
     {
       id: 'junior-t3-e04-q14',
@@ -402,6 +563,7 @@ if (!(o instanceof String s)) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A forma com padrão declara `s` já convertida. A variável existe onde o teste com certeza deu verdadeiro: como a condição está negada, isso é o `else`.',
+      dica: 'Na negação, `s` existe no ramo em que o teste é verdadeiro sem o `!`.',
     },
     {
       id: 'junior-t3-e04-q15',
@@ -416,6 +578,7 @@ if (!(o instanceof String s)) {
       ],
       resposta: 0,
       explicacao: 'As duas fazem a mesma consulta à hierarquia. `checkcast` lança `ClassCastException` se a resposta for não; `instanceof` só empurra 0 ou 1 na pilha.',
+      dica: 'Uma instrução confere e lança exceção; a outra confere e empurra 0 ou 1.',
     },
   ],
 };

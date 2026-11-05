@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'A mensagem de uma exceção inesperada pode conter dados sensíveis: ela vai para o log, nunca para a resposta.',
     'Um tratador para `Exception.class` é a rede de segurança, mas não deve esconder exceções que merecem status próprio.',
   ],
+  ia: {
+    uso:
+      'A IA escreve bem as anotações de validação de um DTO a partir das regras descritas e monta o esqueleto de um `@RestControllerAdvice`. Os erros dela se concentram na segurança das respostas, devolvendo mensagens internas, e na integração com o Spring Boot 4, com advices que nunca são chamados.',
+    pedido:
+      'API Spring Boot 4.1 com spring.mvc.problemdetails.enabled=true.\n<cole aqui o record NovoProduto, as exceções de domínio e as regras de cada campo>\n- Escreva as anotações do Bean Validation para as regras, lembrando que só o @NotNull recusa nulo.\n- Escreva um @RestControllerAdvice que estende ResponseEntityExceptionHandler, lista os campos inválidos no 400, traduz as exceções de domínio para 404 e 422 e responde 500 com mensagem genérica.\n- Nunca coloque e.getMessage() de exceções inesperadas na resposta; registre a exceção completa no log.\n- Escreva testes com @WebMvcTest para um campo inválido e para o 500.',
+    erros: [
+      'Esquece o `@NotNull` junto de `@DecimalMin`, e o campo ausente passa.',
+      'Usa `@NotEmpty` onde a regra pedia `@NotBlank`.',
+      'Escreve um advice comum, que não é chamado para `MethodArgumentNotValidException` com Problem Details ligado.',
+      'Devolve a mensagem da exceção no `500`.',
+    ],
+    conferir: [
+      'Mande um JSON sem cada campo obrigatório e com cada campo só com espaços.',
+      'Force uma exceção com uma mensagem contendo "senha" e confira a resposta.',
+      'Veja no log que a exceção completa, com o *stack trace*, foi registrada.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Spring Boot: Validation',
@@ -165,6 +182,127 @@ public class Tratadores {
     comentarios:
       'O `EstoqueInsuficiente` não tem tratador próprio e herda o de `ErroDeNegocio`; o `CupomExpirado` tem o seu, que vence por ser mais próximo. O `IllegalStateException` sobe até `RuntimeException` e depois até `Exception`, a rede de segurança. É exatamente a regra do `ExceptionHandlerMethodResolver` do Spring, que mede a distância de cada tratador na hierarquia e escolhe o menor. A separação entre a resposta e o log é a parte de segurança: o cliente nunca vê a senha, e quem opera o sistema vê tudo. Em produção, o "log" seria um `log.error("Erro inesperado", e)`, com o *stack trace* completo.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t4-e04-b01',
+      dificuldade: 1,
+      sintoma: 'Produtos aparecem na loja com o nome em branco. O teste da validação mostra `\'   \' aceito: true`.',
+      codigo: `public class NomeEmBranco {
+    static boolean valido(String nome) {
+        return nome != null && !nome.isEmpty();
+    }
+
+    public static void main(String[] args) {
+        for (String nome : new String[] {"Teclado", "", "   "}) {
+            System.out.println("'" + nome + "' aceito: " + valido(nome));
+        }
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '\'Teclado\' aceito: true\n\'\' aceito: false\n\'   \' aceito: true' },
+      correcao: `public class NomeEmBranco {
+    static boolean valido(String nome) {
+        return nome != null && !nome.isBlank();
+    }
+
+    public static void main(String[] args) {
+        for (String nome : new String[] {"Teclado", "", "   "}) {
+            System.out.println("'" + nome + "' aceito: " + valido(nome));
+        }
+    }
+}`,
+      saidaCorrigida: '\'Teclado\' aceito: true\n\'\' aceito: false\n\'   \' aceito: false',
+      dica: 'Um texto só com espaços está vazio?',
+      explicacao:
+        '`isEmpty` só recusa o texto de tamanho zero; três espaços têm tamanho 3. `isBlank` recusa também o que só tem espaços, que é o que o `@NotBlank` faz. É a diferença entre `@NotEmpty` e `@NotBlank` da aula.',
+    },
+    {
+      id: 'backend-junior-t4-e04-b02',
+      dificuldade: 2,
+      sintoma: 'Pedidos sem estoque, que deveriam receber 422, recebem 500 e disparam alertas de erro do servidor: `EstoqueInsuficiente -> 500`.',
+      codigo: `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class EscolherTratador {
+    static class ErroDeNegocio extends RuntimeException {}
+    static class EstoqueInsuficiente extends ErroDeNegocio {}
+
+    static final Map<Class<?>, Integer> TRATADORES = new LinkedHashMap<>();
+
+    static int status(RuntimeException e) {
+        for (var t : TRATADORES.entrySet()) if (t.getKey().isInstance(e)) return t.getValue();
+        return 500;
+    }
+
+    public static void main(String[] args) {
+        TRATADORES.put(Exception.class, 500);
+        TRATADORES.put(ErroDeNegocio.class, 422);
+        System.out.println("EstoqueInsuficiente -> " + status(new EstoqueInsuficiente()));
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: 'EstoqueInsuficiente -> 500' },
+      correcao: `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class EscolherTratador {
+    static class ErroDeNegocio extends RuntimeException {}
+    static class EstoqueInsuficiente extends ErroDeNegocio {}
+
+    static final Map<Class<?>, Integer> TRATADORES = new LinkedHashMap<>();
+
+    static int status(RuntimeException e) {
+        for (Class<?> c = e.getClass(); c != null; c = c.getSuperclass()) if (TRATADORES.containsKey(c)) return TRATADORES.get(c);
+        return 500;
+    }
+
+    public static void main(String[] args) {
+        TRATADORES.put(Exception.class, 500);
+        TRATADORES.put(ErroDeNegocio.class, 422);
+        System.out.println("EstoqueInsuficiente -> " + status(new EstoqueInsuficiente()));
+    }
+}`,
+      saidaCorrigida: 'EstoqueInsuficiente -> 422',
+      dica: 'Os dois tratadores servem para a exceção. Qual deles o laço encontra primeiro?',
+      explicacao:
+        'Toda exceção é uma `Exception`, então o tratador genérico, registrado primeiro, ganha sempre. O Spring escolhe o tratador do tipo **mais próximo** na hierarquia, subindo de classe em classe a partir da exceção lançada. Com isso, a ordem de registro deixa de importar.',
+    },
+    {
+      id: 'backend-junior-t4-e04-b03',
+      dificuldade: 3,
+      sintoma: 'Um pentest encontrou o endereço interno do banco e a senha numa resposta de erro da API: `Problema[status=500, detail=conexão recusada: jdbc:postgresql://10.0.3.7/loja senha=segredo123]`.',
+      codigo: `public class ErroInterno {
+    record Problema(int status, String detail) {}
+
+    static Problema tratar(Exception e) {
+        return new Problema(500, e.getMessage());
+    }
+
+    public static void main(String[] args) {
+        Exception e = new IllegalStateException("conexão recusada: jdbc:postgresql://10.0.3.7/loja senha=segredo123");
+        System.out.println(tratar(e));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'Problema[status=500, detail=conexão recusada: jdbc:postgresql://10.0.3.7/loja senha=segredo123]' },
+      correcao: `public class ErroInterno {
+    record Problema(int status, String detail) {}
+
+    static Problema tratar(Exception e) {
+        return new Problema(500, "Ocorreu um erro inesperado. Tente de novo mais tarde.");
+    }
+
+    public static void main(String[] args) {
+        Exception e = new IllegalStateException("conexão recusada: jdbc:postgresql://10.0.3.7/loja senha=segredo123");
+        System.out.println(tratar(e));
+    }
+}`,
+      saidaCorrigida: 'Problema[status=500, detail=Ocorreu um erro inesperado. Tente de novo mais tarde.]',
+      dica: 'O que vai para o cliente: a mensagem da exceção ou uma mensagem escrita para ele?',
+      explicacao:
+        'A mensagem de uma exceção inesperada é escrita para quem depura, e pode ter endereços, consultas e senhas. Para o cliente, uma mensagem genérica; a exceção completa vai para o log, com o mesmo identificador de rastreio, para quem opera o sistema encontrá-la.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t4-e04-q01',
@@ -179,6 +317,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'A validação do corpo só acontece quando pedida. Com `@Valid @RequestBody`, o mesmo corpo resulta em `400`.',
+      dica: 'As regras do DTO só são verificadas quando alguém pede.',
     },
     {
       id: 'backend-junior-t4-e04-q02',
@@ -193,6 +332,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'Só o `@NotNull` e as anotações que o incluem, como `@NotBlank` e `@NotEmpty`, rejeitam o nulo. As outras validam apenas valores presentes.',
+      dica: 'Todas as regras, menos uma, consideram o nulo válido.',
     },
     {
       id: 'backend-junior-t4-e04-q03',
@@ -207,6 +347,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'Para nomes, títulos e descrições, o `@NotBlank` é quase sempre o certo. O `@NotEmpty` também serve para coleções.',
+      dica: 'Um olha o tamanho; o outro, se há algo além de espaços.',
     },
     {
       id: 'backend-junior-t4-e04-q04',
@@ -221,6 +362,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'As informações estão no `BindingResult` da `MethodArgumentNotValidException`; o tratador as transforma numa lista no corpo da resposta.',
+      dica: 'O cliente recebeu o status certo, mas sabe qual campo corrigir?',
     },
     {
       id: 'backend-junior-t4-e04-q05',
@@ -230,6 +372,7 @@ public class Tratadores {
       opcoes: ['`500`', '`404`', '`400`', '`204`'],
       resposta: 0,
       explicacao: 'O Spring não sabe que a exceção significa "não encontrado". Um `@ExceptionHandler` que a traduza para `404` resolve.',
+      dica: 'Uma exceção que ninguém trata vira erro do servidor.',
     },
     {
       id: 'backend-junior-t4-e04-q06',
@@ -244,6 +387,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'Sem ela, cada controller precisaria dos seus próprios `@ExceptionHandler`, repetidos.',
+      dica: 'É um conselho para todos os controllers ao mesmo tempo.',
     },
     {
       id: 'backend-junior-t4-e04-q07',
@@ -258,6 +402,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'Mensagens internas podem conter senhas, nomes de tabelas e versões de bibliotecas. O detalhe é para quem opera o sistema, não para quem chama a API.',
+      dica: 'O que o cliente deve ver, e onde os detalhes devem ficar?',
     },
     {
       id: 'backend-junior-t4-e04-q08',
@@ -272,6 +417,7 @@ public class Tratadores {
       ],
       resposta: 0,
       explicacao: 'O Spring escolhe o tratador do tipo mais próximo da exceção. O de `Exception` só pega o que nenhum outro tratou.',
+      dica: 'O Spring procura o tratador do tipo mais próximo da exceção.',
     },
     {
       id: 'backend-junior-t4-e04-q09',
@@ -287,6 +433,7 @@ public class Tratadores {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Erros de entrada são do cliente, `4xx`. Status `200` com erro no corpo engana clientes e monitoramento.',
+      dica: 'Formato inválido, recurso inexistente e regra de negócio.',
     },
     {
       id: 'backend-junior-t4-e04-q10',
@@ -307,6 +454,7 @@ public class Tratadores {
 }`,
       resposta: 'EstoqueInsuficiente -> ErroDeNegocio -> RuntimeException -> Exception',
       explicacao: 'Cada passo do laço é um candidato a tratador. O primeiro que tiver um `@ExceptionHandler` vence.',
+      dica: 'Siga o `getSuperclass()` até chegar a `Exception`.',
     },
     {
       id: 'backend-junior-t4-e04-q11',
@@ -336,6 +484,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A anotação está só no componente `nome`. É lendo assim, componente a componente, que o validador descobre as regras de cada campo.',
+      dica: 'Siga o programa e veja que valor cada regra lê.',
     },
     {
       id: 'backend-junior-t4-e04-q12',
@@ -350,6 +499,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A mensagem também pode ser uma chave, entre chaves, de um arquivo de mensagens, para ter traduções.',
+      dica: 'Toda anotação de validação tem um atributo para a mensagem.',
     },
     {
       id: 'backend-junior-t4-e04-q13',
@@ -364,6 +514,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O Spring passa o idioma da requisição para o validador. Com `Accept-Language: en`, as mesmas regras responderiam em inglês.',
+      dica: 'Um cabeçalho da requisição diz o idioma preferido do cliente.',
     },
     {
       id: 'backend-junior-t4-e04-q14',
@@ -378,6 +529,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A propriedade faz o Spring Boot registrar o próprio tratador das exceções do Spring MVC. Um advice que estende `ResponseEntityExceptionHandler` assume esse papel.',
+      dica: 'Com Problem Details ligado, quem trata essa exceção é um tratador próprio do Spring.',
     },
     {
       id: 'backend-junior-t4-e04-q15',
@@ -392,6 +544,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O domínio deve poder ser usado fora da web, por uma fila ou um job. Com o tratador, só a camada web sabe que "não encontrado" é `404`.',
+      dica: 'Onde ficam as decisões de HTTP em cada abordagem?',
     },
   ],
 };

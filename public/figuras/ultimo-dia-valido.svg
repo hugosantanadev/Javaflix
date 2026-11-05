@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">A regra do último dia válido no plusMonths: 31 de janeiro de 2024 mais um mês seria 31 de fevereiro, que não existe, e vira 29 de fevereiro, o último dia válido; somando um mês a partir de 29 de fevereiro, chega-se a 29 de março; somando dois meses a partir de 31 de janeiro, chega-se a 31 de março</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">
+    <text x="20" y="30">Encadeando: cada mês a partir do anterior</text>
+    <text x="20" y="190">A partir da data original</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <rect x="20" y="46" width="150" height="56" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="36" y="72" fill="#f3eee7">31/01/2024</text>
+    <text x="36" y="92" fill="#6b645b" font-size="11">janeiro: 31 dias</text>
+
+    <rect x="250" y="46" width="200" height="56" rx="6" fill="#2a1d10" stroke="#f2c75c"/>
+    <text x="266" y="72" fill="#f2c75c">29/02/2024</text>
+    <text x="266" y="92" fill="#bdb5aa" font-size="11">31/02 não existe: vira 29</text>
+
+    <rect x="530" y="46" width="210" height="56" rx="6" fill="#2a1414" stroke="#db5c5c"/>
+    <text x="546" y="72" fill="#db5c5c">29/03/2024</text>
+    <text x="546" y="92" fill="#bdb5aa" font-size="11">o dia 29 ficou para sempre</text>
+
+    <rect x="20" y="206" width="150" height="56" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="36" y="232" fill="#f3eee7">31/01/2024</text>
+    <text x="36" y="252" fill="#6b645b" font-size="11">a data original</text>
+
+    <rect x="530" y="206" width="210" height="56" rx="6" fill="#13221a" stroke="#4fd68b"/>
+    <text x="546" y="232" fill="#4fd68b">31/03/2024</text>
+    <text x="546" y="252" fill="#bdb5aa" font-size="11">março tem 31: o dia volta</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M170 74 L247 74"/>
+    <path d="M450 74 L527 74"/>
+    <path d="M170 234 L527 234"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#bdb5aa">
+    <text x="180" y="66">plusMonths(1)</text>
+    <text x="460" y="66">plusMonths(1)</text>
+    <text x="300" y="226">primeira.plusMonths(2)</text>
+  </g>
+  <text x="20" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Para parcelas mensais, calcule cada uma a partir da data original, e não da parcela anterior.</text>
+</svg>

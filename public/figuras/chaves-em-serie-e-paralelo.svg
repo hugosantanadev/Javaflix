@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Dois circuitos com uma fonte, duas chaves A e B e uma lâmpada. À esquerda, as chaves estão em série: a lâmpada só acende se A e B estiverem fechadas, o que é um AND. À direita, as chaves estão em paralelo: a lâmpada acende se A ou B estiver fechada, o que é um OR</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">
+    <text x="40" y="34">em série: AND</text>
+    <text x="420" y="34">em paralelo: OR</text>
+  </g>
+  <g stroke="#bdb5aa" stroke-width="2" fill="none">
+    <path d="M60 140 L100 140"/><path d="M150 140 L190 140"/><path d="M240 140 L280 140"/>
+    <path d="M100 140 L146 122"/><path d="M190 140 L236 122"/>
+    <path d="M440 140 L470 140 L470 100 L510 100"/><path d="M470 140 L470 180 L510 180"/>
+    <path d="M560 100 L590 100 L590 140 L620 140"/><path d="M560 180 L590 180 L590 140"/>
+    <path d="M510 100 L556 82"/><path d="M510 180 L556 162"/>
+  </g>
+  <g fill="#bdb5aa"><circle cx="100" cy="140" r="4"/><circle cx="150" cy="140" r="4"/><circle cx="190" cy="140" r="4"/><circle cx="240" cy="140" r="4"/>
+    <circle cx="510" cy="100" r="4"/><circle cx="560" cy="100" r="4"/><circle cx="510" cy="180" r="4"/><circle cx="560" cy="180" r="4"/></g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#ff7a1a">
+    <text x="118" y="112">A</text><text x="208" y="112">B</text><text x="528" y="74">A</text><text x="528" y="154">B</text>
+  </g>
+  <g stroke="#f2c75c" stroke-width="2" fill="#13110f"><circle cx="300" cy="140" r="18"/><circle cx="640" cy="140" r="18"/></g>
+  <g stroke="#f2c75c" stroke-width="1.5"><path d="M290 130 L310 150 M310 130 L290 150"/><path d="M630 130 L650 150 M650 130 L630 150"/></g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277"><text x="40" y="145">fonte</text><text x="400" y="145">fonte</text></g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">
+    <text x="40" y="226">A corrente só passa se A e B</text>
+    <text x="40" y="244">estiverem fechadas.</text>
+    <text x="420" y="226">Basta uma das duas estar fechada</text>
+    <text x="420" y="244">para a corrente achar um caminho.</text>
+  </g>
+  <text x="40" y="284" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Troque as chaves por transistores e você tem as portas lógicas de um processador.</text>
+</svg>

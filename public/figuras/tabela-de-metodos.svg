@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">As tabelas de métodos virtuais de Base e Derivada lado a lado. As duas têm as mesmas posições: 0 para toString, 1 para nome e 2 para descrever. Na tabela de Derivada, só a posição 1 aponta para um código novo, Derivada.nome; as outras continuam apontando para o código de Base</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">
+    <text x="40" y="36">tabela de Base</text>
+    <text x="420" y="36">tabela de Derivada</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13.5">
+    <g fill="#1b1916" stroke="#43403a">
+      <rect x="40" y="50" width="300" height="50"/><rect x="40" y="100" width="300" height="50"/><rect x="40" y="150" width="300" height="50"/>
+      <rect x="420" y="50" width="300" height="50"/><rect x="420" y="150" width="300" height="50"/>
+    </g>
+    <rect x="420" y="100" width="300" height="50" fill="#1b1916" stroke="#4fd68b" stroke-width="2"/>
+    <g fill="#8a8277"><text x="52" y="80">0</text><text x="52" y="130">1</text><text x="52" y="180">2</text><text x="432" y="80">0</text><text x="432" y="130">1</text><text x="432" y="180">2</text></g>
+    <g fill="#bdb5aa"><text x="80" y="80">Object.toString</text><text x="80" y="130">Base.nome</text><text x="80" y="180">Base.descrever</text><text x="460" y="80">Object.toString</text><text x="460" y="180">Base.descrever</text></g>
+    <text x="460" y="130" fill="#4fd68b" font-weight="700">Derivada.nome</text>
+  </g>
+  <text x="40" y="236" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#ff7a1a" xml:space="preserve">invokevirtual nome  →  classe real do objeto, posição 1</text>
+  <text x="40" y="264" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">A subclasse herda a tabela e troca só as entradas que sobrescreve, na mesma posição.</text>
+  <text x="40" y="284" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Por isso descrever(), escrito em Base, chama Derivada.nome num objeto Derivada.</text>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">A anatomia de um método genérico: em public static, depois T entre sinais de menor e maior, depois T, ultimo e os parâmetros List de T lista, os modificadores vêm primeiro, depois a lista de parâmetros de tipo, depois o tipo de retorno, o nome e os parâmetros; embaixo, a inferência: na chamada ultimo de List.of de Ana e Bia, os argumentos dizem que T é String; numa atribuição a Number, o destino decide</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <rect x="20" y="30" width="720" height="58" rx="8" fill="#1b1916" stroke="#2b2824"/>
+  <text x="40" y="66" font-family="Cascadia Code, Consolas, monospace" font-size="17" font-weight="700"><tspan fill="#bdb5aa">public static </tspan><tspan fill="#ff7a1a">&lt;T&gt; </tspan><tspan fill="#4fd68b">T </tspan><tspan fill="#f3eee7">ultimo</tspan><tspan fill="#8a8277">(List&lt;T&gt; lista)</tspan></text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <rect x="40" y="104" width="12" height="12" rx="2" fill="#bdb5aa"/>
+    <text x="58" y="114" fill="#bdb5aa">1. modificadores</text>
+    <rect x="180" y="104" width="12" height="12" rx="2" fill="#ff7a1a"/>
+    <text x="198" y="114" fill="#ff7a1a">2. parâmetros de tipo</text>
+    <rect x="350" y="104" width="12" height="12" rx="2" fill="#4fd68b"/>
+    <text x="368" y="114" fill="#4fd68b">3. retorno</text>
+    <rect x="460" y="104" width="12" height="12" rx="2" fill="#f3eee7"/>
+    <text x="478" y="114" fill="#f3eee7">4. nome</text>
+    <rect x="560" y="104" width="12" height="12" rx="2" fill="#8a8277"/>
+    <text x="578" y="114" fill="#8a8277">5. parâmetros</text>
+  </g>
+  <text x="40" y="146" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#db5c5c">Fora dessa ordem não compila: static T &lt;T&gt; ultimo(...) e &lt;T&gt; public static T ultimo(...).</text>
+
+  <text x="40" y="196" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">De onde o compilador tira o T</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="40" y="208" width="330" height="62" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="54" y="232" fill="#f3eee7">ultimo(List.of("Ana", "Bia"))</text>
+    <text x="54" y="254" fill="#4fd68b">argumentos: T = String</text>
+    <rect x="390" y="208" width="330" height="62" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="404" y="232" fill="#f3eee7">Number n = escolher(f, 1, 2.5)</text>
+    <text x="404" y="254" fill="#4fd68b">destino: T = Number</text>
+  </g>
+  <text x="40" y="300" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">A inferência acontece só na compilação; sem pistas, o T vira o supertipo comum dos argumentos.</text>
+</svg>

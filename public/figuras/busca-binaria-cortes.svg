@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">A busca pelo 23 no array 2, 5, 8, 12, 16, 23, 38, 56, 72, 91 em três linhas. Na primeira, o intervalo é o array todo e o meio, posição 4, vale 16, menor que 23. Na segunda, o intervalo vai de 5 a 9 e o meio, posição 7, vale 56, maior. Na terceira, o intervalo vai de 5 a 6 e o meio, posição 5, vale 23: achou</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="10" fill="#8a8277" text-anchor="middle">
+    <text x="85" y="34">0</text><text x="150" y="34">1</text><text x="215" y="34">2</text><text x="280" y="34">3</text><text x="345" y="34">4</text><text x="410" y="34">5</text><text x="475" y="34">6</text><text x="540" y="34">7</text><text x="605" y="34">8</text><text x="670" y="34">9</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="15" text-anchor="middle">
+    <g fill="#1b1916" stroke="#43403a">
+      <rect x="55" y="42" width="60" height="40"/><rect x="120" y="42" width="60" height="40"/><rect x="185" y="42" width="60" height="40"/><rect x="250" y="42" width="60" height="40"/><rect x="380" y="42" width="60" height="40"/><rect x="445" y="42" width="60" height="40"/><rect x="510" y="42" width="60" height="40"/><rect x="575" y="42" width="60" height="40"/><rect x="640" y="42" width="60" height="40"/>
+    </g>
+    <rect x="315" y="42" width="60" height="40" fill="#1b1916" stroke="#ff7a1a" stroke-width="2"/>
+    <g fill="#f3eee7"><text x="85" y="68">2</text><text x="150" y="68">5</text><text x="215" y="68">8</text><text x="280" y="68">12</text><text x="345" y="68">16</text><text x="410" y="68">23</text><text x="475" y="68">38</text><text x="540" y="68">56</text><text x="605" y="68">72</text><text x="670" y="68">91</text></g>
+    <g fill="#1b1916" stroke="#43403a">
+      <rect x="380" y="112" width="60" height="40"/><rect x="445" y="112" width="60" height="40"/><rect x="575" y="112" width="60" height="40"/><rect x="640" y="112" width="60" height="40"/>
+    </g>
+    <rect x="510" y="112" width="60" height="40" fill="#1b1916" stroke="#ff7a1a" stroke-width="2"/>
+    <g fill="#f3eee7"><text x="410" y="138">23</text><text x="475" y="138">38</text><text x="540" y="138">56</text><text x="605" y="138">72</text><text x="670" y="138">91</text></g>
+    <rect x="380" y="182" width="60" height="40" fill="#1b1916" stroke="#4fd68b" stroke-width="2"/>
+    <rect x="445" y="182" width="60" height="40" fill="#1b1916" stroke="#43403a"/>
+    <text x="410" y="208" fill="#4fd68b">23</text><text x="475" y="208" fill="#f3eee7">38</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">
+    <text x="55" y="132">16 &lt; 23: descarta a esquerda</text>
+    <text x="55" y="202">56 &gt; 23: descarta a direita</text>
+    <text x="520" y="208" fill="#4fd68b">achou: posição 5</text>
+  </g>
+  <text x="55" y="270" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">10 elementos, 3 comparações. Cada volta corta o que sobrou pela metade: 10, 5, 2.</text>
+</svg>

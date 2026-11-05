@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Compor não executa nada: só cria uma função nova, executada no `apply`.',
     '`andThen(null)` lança `NullPointerException` na composição, não na chamada.',
   ],
+  ia: {
+    uso:
+      'Para compor funções, a IA ajuda a transformar uma regra escrita em português numa cadeia de `and`, `or` e `andThen`, e a explicar a ordem de execução de um pipeline. Ela troca `andThen` por `compose`, confia numa precedência de `and` sobre `or` que a composição não tem e atribui o resultado de `andThen` a um `UnaryOperator`.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui as funções, os predicados e a regra de negócio>\n- Escreva a expressão equivalente com &&, || e chamadas aninhadas, e diga a ordem em que cada função roda.\n- Para cada predicado, diga quais partes podem nem ser avaliadas por causa do curto-circuito.\n- Diga o tipo do resultado de cada composição.\n- Teste com um valor que dê resultados diferentes entre andThen e compose.',
+    erros: [
+      'Usa `compose` achando que aplica a função da esquerda primeiro.',
+      'Escreve `a.or(b).and(c)` para `a || (b && c)`, que é outra regra.',
+      'Atribui `op.andThen(...)` a um `UnaryOperator`, que não compila.',
+      'Procura `andThen` em `Supplier` ou `compose` em `BiFunction`, que não existem.',
+    ],
+    conferir: [
+      'Rode a composição com um valor em que a ordem muda o resultado.',
+      'Ponha um `print` em cada predicado e veja quais rodam.',
+      'Use `Ctrl+Shift+P` para conferir o tipo da composição.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Combining Lambda Expressions',
@@ -157,6 +174,109 @@ public class Precos {
     comentarios:
       'Cada pedido ganha um cálculo próprio, montado só com as regras que se aplicam a ele. A variável `calculo` é reatribuída, o que é permitido porque nenhuma lambda a captura. O desconto escrito como `v - v / 10` evita o arredondamento binário de `v * 0.9`. Os predicados reaproveitam `valorMinimo` com limites diferentes: uma função que fabrica funções.',
   },
+  bugs: [
+    {
+      id: 'pleno-t5-e05-b01',
+      dificuldade: 1,
+      sintoma: 'A composição do preço com o frete não compila: `incompatible types: no instance(s) of type variable(s) V exist so that Function<Integer,V> conforms to UnaryOperator<Integer>`.',
+      codigo: `import java.util.function.Function;
+import java.util.function.UnaryOperator;
+
+public class Precos {
+    public static void main(String[] args) {
+        UnaryOperator<Integer> arredondar = centavos -> (centavos + 50) / 100 * 100;
+        UnaryOperator<Integer> comFrete = arredondar.andThen(centavos -> centavos + 1500);
+        System.out.println("total em centavos: " + comFrete.apply(12_345));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.function.Function;
+import java.util.function.UnaryOperator;
+
+public class Precos {
+    public static void main(String[] args) {
+        UnaryOperator<Integer> arredondar = centavos -> (centavos + 50) / 100 * 100;
+        Function<Integer, Integer> comFrete = arredondar.andThen(centavos -> centavos + 1500);
+        System.out.println("total em centavos: " + comFrete.apply(12_345));
+    }
+}`,
+      saidaCorrigida: 'total em centavos: 13800',
+      dica: 'Que tipo `andThen` devolve? Ele sabe que a função composta continua indo de `Integer` para `Integer`?',
+      explicacao:
+        '`andThen` é herdado de `Function` e devolve uma `Function<T, V>`, mesmo quando as duas partes são `UnaryOperator`. O compilador não tem como garantir que o resultado seja um `UnaryOperator`, e recusa a atribuição. Declare a variável como `Function<Integer, Integer>`.',
+    },
+    {
+      id: 'pleno-t5-e05-b02',
+      dificuldade: 2,
+      sintoma: 'A regra é dar R$ 10 de desconto e depois cobrar 10% de imposto, mas a nota de R$ 100,00 saiu com R$ 100,00 de total: `total em centavos: 10000`.',
+      codigo: `import java.util.function.Function;
+
+public class NotaFiscal {
+    public static void main(String[] args) {
+        Function<Integer, Integer> descontoDe10Reais = centavos -> centavos - 1000;
+        Function<Integer, Integer> imposto10PorCento = centavos -> centavos * 110 / 100;
+        Function<Integer, Integer> total = descontoDe10Reais.compose(imposto10PorCento);
+        System.out.println("total em centavos: " + total.apply(10_000));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'total em centavos: 10000' },
+      correcao: `import java.util.function.Function;
+
+public class NotaFiscal {
+    public static void main(String[] args) {
+        Function<Integer, Integer> descontoDe10Reais = centavos -> centavos - 1000;
+        Function<Integer, Integer> imposto10PorCento = centavos -> centavos * 110 / 100;
+        Function<Integer, Integer> total = descontoDe10Reais.andThen(imposto10PorCento);
+        System.out.println("total em centavos: " + total.apply(10_000));
+    }
+}`,
+      saidaCorrigida: 'total em centavos: 9900',
+      dica: '`f.compose(g)` aplica qual função primeiro: `f` ou `g`?',
+      explicacao:
+        '`f.compose(g)` aplica `g` primeiro: o imposto foi calculado sobre os R$ 100 inteiros, e o desconto veio depois, R$ 110 - 10 = R$ 100. `f.andThen(g)` aplica `f` primeiro: desconto e depois imposto, (R$ 100 - 10) × 1,1 = R$ 99. Leia `andThen` como "e depois", e `compose` como "depois de".',
+    },
+    {
+      id: 'pleno-t5-e05-b03',
+      dificuldade: 3,
+      sintoma: 'A regra de negócio diz que cliente VIP tem frete grátis sempre, mas a Ana, VIP da Bahia, foi cobrada: `frete grátis para Ana: false`.',
+      codigo: `import java.util.function.Predicate;
+
+public class FreteGratis {
+    record Pedido(String cliente, boolean vip, int totalEmReais, String uf) { }
+
+    public static void main(String[] args) {
+        Predicate<Pedido> vip = Pedido::vip;
+        Predicate<Pedido> acimaDe200 = p -> p.totalEmReais() > 200;
+        Predicate<Pedido> noEstado = p -> p.uf().equals("SP");
+        Predicate<Pedido> freteGratis = vip.or(acimaDe200).and(noEstado);
+        Pedido ana = new Pedido("Ana", true, 80, "BA");
+        System.out.println("frete grátis para " + ana.cliente() + ": " + freteGratis.test(ana));
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: 'frete grátis para Ana: false' },
+      correcao: `import java.util.function.Predicate;
+
+public class FreteGratis {
+    record Pedido(String cliente, boolean vip, int totalEmReais, String uf) { }
+
+    public static void main(String[] args) {
+        Predicate<Pedido> vip = Pedido::vip;
+        Predicate<Pedido> acimaDe200 = p -> p.totalEmReais() > 200;
+        Predicate<Pedido> noEstado = p -> p.uf().equals("SP");
+        Predicate<Pedido> freteGratis = vip.or(acimaDe200.and(noEstado));
+        Pedido ana = new Pedido("Ana", true, 80, "BA");
+        System.out.println("frete grátis para " + ana.cliente() + ": " + freteGratis.test(ana));
+    }
+}`,
+      saidaCorrigida: 'frete grátis para Ana: true',
+      dica: '`vip.or(acimaDe200).and(noEstado)` é `vip || (acimaDe200 && noEstado)` ou `(vip || acimaDe200) && noEstado`?',
+      explicacao:
+        'A composição segue a ordem das chamadas, da esquerda para a direita, sem a precedência de `&&` sobre `||`: o código montou `(vip || acimaDe200) && noEstado`, e a Ana, fora de SP, perdeu o frete. Para a regra certa, agrupe com uma chamada aninhada, `vip.or(acimaDe200.and(noEstado))`, ou dê nome a cada parte da regra.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t5-e05-q01',
@@ -176,6 +296,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`andThen`: 4 - 1 = 3, depois 3² = 9. `compose`: primeiro 4² = 16, depois 16 - 1 = 15.',
+      dica: '`andThen` aplica `menos1` primeiro; `compose` aplica `quadrado` primeiro.',
     },
     {
       id: 'pleno-t5-e05-q02',
@@ -193,6 +314,7 @@ public class Teste {
 }`,
       resposta: 'x212',
       explicacao: '`compose(b)` aplica `b` antes de tudo: "x2". Depois vem a função `a.andThen(b)`: "x21" e "x212".',
+      dica: 'O `compose` de fora roda antes de toda a cadeia.',
     },
     {
       id: 'pleno-t5-e05-q03',
@@ -218,6 +340,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'No `or`, "ab" não é vazio, então `curto` também é avaliado. No `and`, o primeiro já é falso, e `curto` não roda. As letras aparecem antes do texto, porque os testes rodam enquanto a `String` é montada.',
+      dica: '`or` para no primeiro verdadeiro; `and`, no primeiro falso.',
     },
     {
       id: 'pleno-t5-e05-q04',
@@ -235,6 +358,7 @@ public class Teste {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: '`Supplier` não tem `andThen`, `BiFunction` não tem `compose`, e o `andThen` de um `UnaryOperator` devolve uma `Function`, que não é um `UnaryOperator`.',
+      dica: 'Procure `andThen` em `Supplier` e outras combinações que não existem.',
     },
     {
       id: 'pleno-t5-e05-q05',
@@ -257,6 +381,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os três consumidores recebem a mesma lista, em sequência. Quando o segundo roda, o "x" já está lá, e o tamanho é 1.',
+      dica: 'O mesmo argumento passa pelos três consumidores, que veem a lista já alterada.',
     },
     {
       id: 'pleno-t5-e05-q06',
@@ -277,6 +402,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Para "x", `a` e `b` são falsos e `c` é verdadeiro. A primeira expressão é `(a && b) || c`; a segunda, `(a || b) && c`.',
+      dica: 'A ordem é da esquerda para a direita, sem precedência.',
     },
     {
       id: 'pleno-t5-e05-q07',
@@ -295,6 +421,7 @@ public class Ordem {
       respostas: ['compose'],
       saida: '16',
       explicacao: '`dobro.compose(mais3)` calcula `dobro(mais3(5))`: 8 e depois 16. Com `andThen`, seriam 10 e 13.',
+      dica: 'É o método que aplica a outra função primeiro.',
     },
     {
       id: 'pleno-t5-e05-q08',
@@ -314,6 +441,7 @@ public class Teste {
 }`,
       resposta: 8,
       explicacao: '`andThen` e `compose` são herdados de `Function` e devolvem `Function`. Guardar o resultado num `UnaryOperator` exigiria um tipo mais específico do que o método garante.',
+      dica: 'O `andThen` de um `UnaryOperator` devolve uma `Function`.',
     },
     {
       id: 'pleno-t5-e05-q09',
@@ -332,6 +460,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`menos.apply(10)` devolve a função `b -> 10 - b`, que recebe o 3. A ordem dos argumentos importa.',
+      dica: 'O primeiro `apply` fixa `a`; o segundo, `b`.',
     },
     {
       id: 'pleno-t5-e05-q10',
@@ -357,6 +486,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException', saida: 'compondo' },
       explicacao: '`andThen` confere o argumento com `Objects.requireNonNull` ao compor, e a exceção sai ali, antes de qualquer `apply`.',
+      dica: '`andThen(null)` falha na hora da composição.',
     },
     {
       id: 'pleno-t5-e05-q11',
@@ -380,6 +510,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A identidade é o ponto de partida neutro. As etapas são aplicadas na ordem da lista: 3, 9 e 7. `tudo` pode mudar porque nenhuma lambda a captura.',
+      dica: 'As etapas rodam na ordem da lista.',
     },
     {
       id: 'pleno-t5-e05-q12',
@@ -395,6 +526,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: '`compose` aplica o argumento primeiro, `Supplier` não tem métodos de composição, e compor só cria uma função nova, executada depois.',
+      dica: 'Uma afirmação fala da ordem; outra, do curto-circuito.',
     },
     {
       id: 'pleno-t5-e05-q13',
@@ -411,6 +543,7 @@ public class Teste {
 }`,
       resposta: '6',
       explicacao: '`BiFunction.andThen` transforma o resultado com uma `Function`: "ababab" tem 6 caracteres.',
+      dica: '`repeat` junta três cópias; `length` conta os caracteres.',
     },
     {
       id: 'pleno-t5-e05-q14',
@@ -433,6 +566,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A faixa é "maior que 5 e não maior que 10". O 7 passa; o 12 é maior que 10 e não passa.',
+      dica: '7 está acima de 5 e não está acima de 10.',
     },
     {
       id: 'pleno-t5-e05-q15',
@@ -447,6 +581,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: '`andThen` é um método `default` que devolve uma lambda capturando as duas funções. As funções originais não mudam, porque objetos funcionais são imutáveis.',
+      dica: 'Compor não executa nada.',
     },
   ],
 };

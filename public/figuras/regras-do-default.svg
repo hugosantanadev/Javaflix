@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">As três regras para escolher qual versão de um método a classe herda, em ordem. Primeira pergunta: a classe ou uma superclasse tem o método? Se sim, ele vence. Segunda: uma interface estende a outra e redefine o método? Se sim, a mais específica vence. Senão, terceira regra: a classe precisa sobrescrever, e pode usar Interface.super.metodo()</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13">
+    <rect x="30" y="26" width="370" height="54" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="46" y="50" fill="#ff7a1a" font-size="12">1</text>
+    <text x="64" y="50" fill="#f3eee7">A classe ou uma superclasse tem o método?</text>
+    <text x="64" y="69" fill="#8a8277" font-size="12">(precisa ser public)</text>
+    <rect x="30" y="118" width="370" height="54" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="46" y="142" fill="#ff7a1a" font-size="12">2</text>
+    <text x="64" y="142" fill="#f3eee7">Uma interface estende a outra</text>
+    <text x="64" y="161" fill="#f3eee7">e redefine o método?</text>
+    <rect x="30" y="210" width="370" height="54" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="46" y="234" fill="#ff7a1a" font-size="12">3</text>
+    <text x="64" y="234" fill="#f3eee7">Senão, a classe é obrigada a sobrescrever</text>
+    <text x="64" y="253" fill="#8a8277" font-size="12">e pode escolher com Interface.super.metodo()</text>
+    <rect x="480" y="30" width="250" height="46" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="496" y="58" fill="#4fd68b">a classe vence</text>
+    <rect x="480" y="122" width="250" height="46" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="496" y="150" fill="#4fd68b">a interface mais específica vence</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none">
+    <path d="M402 53 L476 53" marker-end="url(#s)"/>
+    <path d="M402 145 L476 145" marker-end="url(#s)"/>
+    <path d="M215 82 L215 114" marker-end="url(#s)"/>
+    <path d="M215 174 L215 206" marker-end="url(#s)"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#8a8277">
+    <text x="420" y="46">sim</text><text x="420" y="138">sim</text>
+    <text x="224" y="102">não</text><text x="224" y="194">não</text>
+  </g>
+  <text x="30" y="290" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Pergunte nesta ordem e pare na primeira resposta "sim".</text>
+</svg>

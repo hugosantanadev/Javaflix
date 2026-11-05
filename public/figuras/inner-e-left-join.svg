@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="310" viewBox="0 0 760 310" role="img" aria-labelledby="t">
+  <title id="t">INNER JOIN, LEFT JOIN e anti-junção entre clientes e pedidos: o INNER JOIN devolve só os clientes com pedido, Ana duas vezes e Bruno uma; o LEFT JOIN acrescenta a Elisa com o pedido nulo; a anti-junção, com WHERE pedido IS NULL, devolve só a Elisa</title>
+  <rect width="760" height="310" fill="#13110f"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="middle">
+    <text x="130" y="36" fill="#f3eee7">INNER JOIN</text>
+    <text x="380" y="36" fill="#f3eee7">LEFT JOIN</text>
+    <text x="630" y="36" fill="#f3eee7">LEFT ... IS NULL</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12">
+    <rect x="40" y="52" width="180" height="26" fill="#1b1916" stroke="#43403a"/>
+    <text x="52" y="70" fill="#8a8277">cliente</text><text x="142" y="70" fill="#8a8277">pedido</text>
+    <rect x="40" y="78" width="180" height="26" fill="#13221a" stroke="#43403a"/><text x="52" y="96" fill="#4fd68b">Ana</text><text x="142" y="96" fill="#4fd68b">101</text>
+    <rect x="40" y="104" width="180" height="26" fill="#13221a" stroke="#43403a"/><text x="52" y="122" fill="#4fd68b">Ana</text><text x="142" y="122" fill="#4fd68b">103</text>
+    <rect x="40" y="130" width="180" height="26" fill="#13221a" stroke="#43403a"/><text x="52" y="148" fill="#4fd68b">Bruno</text><text x="142" y="148" fill="#4fd68b">102</text>
+
+    <rect x="290" y="52" width="180" height="26" fill="#1b1916" stroke="#43403a"/>
+    <text x="302" y="70" fill="#8a8277">cliente</text><text x="392" y="70" fill="#8a8277">pedido</text>
+    <rect x="290" y="78" width="180" height="26" fill="#13221a" stroke="#43403a"/><text x="302" y="96" fill="#4fd68b">Ana</text><text x="392" y="96" fill="#4fd68b">101</text>
+    <rect x="290" y="104" width="180" height="26" fill="#13221a" stroke="#43403a"/><text x="302" y="122" fill="#4fd68b">Ana</text><text x="392" y="122" fill="#4fd68b">103</text>
+    <rect x="290" y="130" width="180" height="26" fill="#13221a" stroke="#43403a"/><text x="302" y="148" fill="#4fd68b">Bruno</text><text x="392" y="148" fill="#4fd68b">102</text>
+    <rect x="290" y="156" width="180" height="26" fill="#26170c" stroke="#43403a"/><text x="302" y="174" fill="#ff7a1a">Elisa</text><text x="392" y="174" fill="#ff7a1a">NULL</text>
+
+    <rect x="540" y="52" width="180" height="26" fill="#1b1916" stroke="#43403a"/>
+    <text x="552" y="70" fill="#8a8277">cliente</text><text x="642" y="70" fill="#8a8277">pedido</text>
+    <rect x="540" y="78" width="180" height="26" fill="#26170c" stroke="#43403a"/><text x="552" y="96" fill="#ff7a1a">Elisa</text><text x="642" y="96" fill="#ff7a1a">NULL</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#bdb5aa">
+    <text x="40" y="214">só quem tem par</text>
+    <text x="290" y="214">todos da esquerda; sem par, NULL</text>
+    <text x="540" y="214">só quem não tem par</text>
+  </g>
+  <text x="40" y="262" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Repare: a Ana aparece duas vezes nas duas junções. Um para muitos repete a linha da esquerda.</text>
+  <text x="40" y="284" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">Somar uma coluna da esquerda depois de juntar soma o mesmo valor várias vezes.</text>
+</svg>

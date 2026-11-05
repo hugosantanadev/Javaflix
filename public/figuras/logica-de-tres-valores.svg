@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Tabelas-verdade do AND e do OR na lógica de três valores do SQL, com verdadeiro, falso e desconhecido: no AND, qualquer falso dá falso, e desconhecido com verdadeiro dá desconhecido; no OR, qualquer verdadeiro dá verdadeiro, e desconhecido com falso dá desconhecido</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <text x="190" y="38" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7" text-anchor="middle">AND</text>
+  <text x="570" y="38" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7" text-anchor="middle">OR</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" text-anchor="middle" fill="#8a8277">
+    <text x="130" y="68">V</text><text x="190" y="68">F</text><text x="250" y="68">D</text>
+    <text x="80" y="102">V</text><text x="80" y="148">F</text><text x="80" y="194">D</text>
+    <text x="510" y="68">V</text><text x="570" y="68">F</text><text x="630" y="68">D</text>
+    <text x="460" y="102">V</text><text x="460" y="148">F</text><text x="460" y="194">D</text>
+  </g>
+  <g stroke="#13110f" stroke-width="3">
+    <rect x="100" y="78" width="60" height="44" fill="#13221a"/>
+    <rect x="160" y="78" width="60" height="44" fill="#26170c"/>
+    <rect x="220" y="78" width="60" height="44" fill="#2a2516"/>
+    <rect x="100" y="124" width="60" height="44" fill="#26170c"/>
+    <rect x="160" y="124" width="60" height="44" fill="#26170c"/>
+    <rect x="220" y="124" width="60" height="44" fill="#26170c"/>
+    <rect x="100" y="170" width="60" height="44" fill="#2a2516"/>
+    <rect x="160" y="170" width="60" height="44" fill="#26170c"/>
+    <rect x="220" y="170" width="60" height="44" fill="#2a2516"/>
+
+    <rect x="480" y="78" width="60" height="44" fill="#13221a"/>
+    <rect x="540" y="78" width="60" height="44" fill="#13221a"/>
+    <rect x="600" y="78" width="60" height="44" fill="#13221a"/>
+    <rect x="480" y="124" width="60" height="44" fill="#13221a"/>
+    <rect x="540" y="124" width="60" height="44" fill="#26170c"/>
+    <rect x="600" y="124" width="60" height="44" fill="#2a2516"/>
+    <rect x="480" y="170" width="60" height="44" fill="#13221a"/>
+    <rect x="540" y="170" width="60" height="44" fill="#2a2516"/>
+    <rect x="600" y="170" width="60" height="44" fill="#2a2516"/>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" text-anchor="middle">
+    <text x="130" y="105" fill="#4fd68b">V</text><text x="190" y="105" fill="#ff7a1a">F</text><text x="250" y="105" fill="#f2c75c">D</text>
+    <text x="130" y="151" fill="#ff7a1a">F</text><text x="190" y="151" fill="#ff7a1a">F</text><text x="250" y="151" fill="#ff7a1a">F</text>
+    <text x="130" y="197" fill="#f2c75c">D</text><text x="190" y="197" fill="#ff7a1a">F</text><text x="250" y="197" fill="#f2c75c">D</text>
+    <text x="510" y="105" fill="#4fd68b">V</text><text x="570" y="105" fill="#4fd68b">V</text><text x="630" y="105" fill="#4fd68b">V</text>
+    <text x="510" y="151" fill="#4fd68b">V</text><text x="570" y="151" fill="#ff7a1a">F</text><text x="630" y="151" fill="#f2c75c">D</text>
+    <text x="510" y="197" fill="#4fd68b">V</text><text x="570" y="197" fill="#f2c75c">D</text><text x="630" y="197" fill="#f2c75c">D</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12">
+    <text x="40" y="248" fill="#bdb5aa">V verdadeiro, F falso, D desconhecido (o resultado de qualquer comparação com NULL).</text>
+    <text x="40" y="270" fill="#bdb5aa">Um F decide o AND sozinho, e um V decide o OR sozinho; nos outros casos, o D se espalha.</text>
+    <text x="40" y="292" fill="#8a8277">O WHERE só mantém a linha quando o resultado final é V: D é descartado como se fosse F.</text>
+  </g>
+</svg>

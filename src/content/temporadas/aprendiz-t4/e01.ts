@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     'Fibonacci recursivo sem memoização é exponencial; com memoização, linear.',
     'Hanói com n discos exige exatamente 2ⁿ − 1 movimentos.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a transformar uma ideia em pseudocódigo, a escrever a versão recursiva de um algoritmo e a explicar a pilha de chamadas. Peça sempre os casos de borda e o invariante, e teste-os.',
+    pedido:
+      'Estou aprendendo recursão.\n<descreva o problema aqui>\n- Escreva o pseudocódigo e depois a versão recursiva em Java, dizendo o caso base e por que cada chamada diminui o problema.\n- Mostre o rastro das chamadas para uma entrada pequena.\n- Diga a profundidade máxima da pilha e se a versão com laço seria melhor.',
+    erros: [
+      'Escreve o caso base para um único valor que a recursão pode pular.',
+      'Usa recursão de profundidade n para entradas grandes, sem avisar do `StackOverflowError`.',
+      'Esquece de guardar o resultado na memoização e recalcula tudo.',
+    ],
+    conferir: [
+      'Teste os casos 0, 1, negativo e o maior valor esperado.',
+      'Imprima o rastro das chamadas com recuo, como no exemplo do fatorial.',
+      'Conte as chamadas com um contador estático, com e sem memoização.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JVMS 2.5.2: Java Virtual Machine Stacks',
@@ -143,6 +159,96 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'São n! permutações: 3 escolhas para a primeira letra, 2 para a segunda, 1 para a última. A árvore de chamadas tem exatamente esse formato. Com 10 letras já são 3.628.800 linhas, e com 20 seria inviável: é a classe O(n!) do episódio de Big-O. O *backtracking* (marcar, explorar, desmarcar) é a base de solucionadores de sudoku, de labirintos e do problema das oito rainhas.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t4-e01-b01',
+      dificuldade: 1,
+      sintoma: 'Calcular `fatorial(0)` derruba o programa com `StackOverflowError`.',
+      codigo: `public class Fatorial {
+    static long fatorial(int n) {
+        if (n == 1) return 1;
+        return n * fatorial(n - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(fatorial(0));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'StackOverflowError' },
+      correcao: `public class Fatorial {
+    static long fatorial(int n) {
+        if (n <= 1) return 1;
+        return n * fatorial(n - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(fatorial(0));
+    }
+}`,
+      saidaCorrigida: '1',
+      dica: 'Escreva os valores de `n` em cada chamada a partir de 0. O caso base chega a ser atingido?',
+      explicacao: 'Começando em 0, a recursão desce para −1, −2... e nunca passa por 1. O caso base precisa cobrir todos os valores em que a recursão deve parar: `n <= 1` vale para 0 e para 1, e 0! é 1.',
+    },
+    {
+      id: 'aprendiz-t4-e01-b02',
+      dificuldade: 2,
+      sintoma: 'A função de inverter texto devolve o texto na mesma ordem: `java`.',
+      codigo: `public class Inverte {
+    static String inverte(String s) {
+        if (s.isEmpty()) return "";
+        return s.charAt(0) + inverte(s.substring(1));
+    }
+
+    public static void main(String[] args) {
+        System.out.println(inverte("java"));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'java' },
+      correcao: `public class Inverte {
+    static String inverte(String s) {
+        if (s.isEmpty()) return "";
+        return inverte(s.substring(1)) + s.charAt(0);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(inverte("java"));
+    }
+}`,
+      saidaCorrigida: 'avaj',
+      dica: 'Suponha que `inverte(s.substring(1))` já funciona. Onde a primeira letra precisa ficar no resultado?',
+      explicacao: 'Pelo "salto de fé", `inverte("ava")` devolve `"ava"` invertido, `"ava"`. A primeira letra, `j`, precisa ir para o fim, depois do resto invertido. Pondo-a na frente, a função só copia o texto.',
+    },
+    {
+      id: 'aprendiz-t4-e01-b03',
+      dificuldade: 3,
+      sintoma: 'A tabela de fatoriais mostra `13! = 1932053504`, menor que 12! = 479001600 × 13.',
+      codigo: `public class Tabela {
+    static int fatorial(int n) {
+        return n <= 1 ? 1 : n * fatorial(n - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("13! = " + fatorial(13));
+    }
+}`,
+      linha: 2,
+      efeito: { tipo: 'saida', saida: '13! = 1932053504' },
+      correcao: `public class Tabela {
+    static long fatorial(int n) {
+        return n <= 1 ? 1 : n * fatorial(n - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("13! = " + fatorial(13));
+    }
+}`,
+      saidaCorrigida: '13! = 6227020800',
+      dica: 'Quanto vale 13! de verdade? Cabe num `int`?',
+      explicacao: '13! = 6.227.020.800 passa de 2.147.483.647, e a multiplicação em `int` dá a volta sem aviso, produzindo um número plausível e errado. Com `long`, cabe até 20!; daí em diante, só `BigInteger`.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t4-e01-q01',
@@ -157,6 +263,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'O caso base resolve o problema sem chamar a função de novo, e cada chamada recursiva precisa chegar mais perto dele. Sem isso, as chamadas se acumulam até a pilha acabar. Capturar o erro não conserta o algoritmo.',
+      dica: 'Algo que pare as chamadas e algo que se aproxime dele.',
     },
     {
       id: 'aprendiz-t4-e01-q02',
@@ -179,6 +286,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: '10\n1024',
       explicacao: '`somaDigitos` separa o último dígito com `% 10` e chama a si mesma com o resto do número (`/ 10`): 6 + 2 + 0 + 2 = 10. `potencia` multiplica a base `exp` vezes até chegar a 2⁰ = 1: 2¹⁰ = 1024.',
+      dica: 'Some os dígitos um por um; a potência dobra o expoente a cada nível.',
     },
     {
       id: 'aprendiz-t4-e01-q03',
@@ -198,6 +306,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O inverso de "java" é o inverso de "ava" seguido de "j". Descendo até a string vazia e concatenando na volta, sai "avaj". O caso base `isEmpty()` evita chamar `charAt(0)` numa string vazia.',
+      dica: 'A primeira letra vai para o fim do resto invertido.',
     },
     {
       id: 'aprendiz-t4-e01-q04',
@@ -217,6 +326,7 @@ const episodio: EpisodioConteudo = {
     }
 }`,
       explicacao: 'A recorrência M(n) = 2 · M(n − 1) + 1 tem solução 2ⁿ − 1, e 2¹⁰ − 1 = 1023. O 1024 esquece o −1, que vem do movimento do disco maior não ser duplicado.',
+      dica: '2ⁿ − 1.',
     },
     {
       id: 'aprendiz-t4-e01-q05',
@@ -245,6 +355,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'StackOverflowError' },
       explicacao: 'Com −1, as chamadas vão para −2, −3, −4... e nunca chegam ao caso base `n == 0`. A pilha estoura. O caso base mais seguro seria `n <= 1`, ou uma validação que rejeite negativos.',
+      dica: 'Confira o caso base e o valor de `n` passado na chamada.',
     },
     {
       id: 'aprendiz-t4-e01-q06',
@@ -260,6 +371,7 @@ const episodio: EpisodioConteudo = {
       ],
       respostas: [0, 1],
       explicacao: 'Cada chamada tem o seu frame, e é por isso que o `n` de cada nível não se mistura. A JVM não reaproveita frames em chamadas de cauda. Recursão costuma ser mais lenta que laço por causa do custo de cada chamada, e funciona em qualquer método, de instância ou estático.',
+      dica: 'Cada chamada ocupa um frame; a JVM não reaproveita frames.',
     },
     {
       id: 'aprendiz-t4-e01-q07',
@@ -282,6 +394,7 @@ const episodio: EpisodioConteudo = {
 }`,
       resposta: 'ida 3\nida 2\nida 1\nvolta 1\nvolta 2\nvolta 3',
       explicacao: 'O que vem antes da chamada recursiva acontece na descida, em ordem decrescente. O que vem depois só roda quando a chamada interna retorna, ou seja, na subida, em ordem inversa. É a pilha desempilhando.',
+      dica: 'A ida imprime antes da chamada; a volta, depois.',
     },
     {
       id: 'aprendiz-t4-e01-q08',
@@ -303,6 +416,7 @@ const episodio: EpisodioConteudo = {
       respostas: ['-'],
       saida: '120',
       explicacao: 'n! = n × (n − 1)!. Com `n - 1`, cada chamada se aproxima do caso base. Com `n + 1`, a recursão nunca terminaria.',
+      dica: 'O problema precisa diminuir a cada chamada.',
     },
     {
       id: 'aprendiz-t4-e01-q09',
@@ -323,6 +437,7 @@ for (int i = 1; i < v.length; i++) {
       ],
       resposta: 0,
       explicacao: 'O invariante descreve o trabalho feito até aqui: os i primeiros elementos já foram vistos. Ele vale antes da primeira volta (só `v[0]`), continua valendo a cada volta e, quando o laço termina com i = n, vira exatamente o resultado desejado.',
+      dica: 'O que `maior` guarda sobre os elementos já vistos?',
     },
     {
       id: 'aprendiz-t4-e01-q10',
@@ -332,6 +447,7 @@ for (int i = 1; i < v.length; i++) {
       opcoes: ['O(n)', 'O(1)', 'O(log n)', 'O(n²)'],
       resposta: 0,
       explicacao: 'Cada chamada pendente mantém um frame na pilha até retornar. Com n chamadas aninhadas ao mesmo tempo, são n frames. É por isso que a versão com laço, que usa O(1), pode ser preferível para n grande.',
+      dica: 'Um frame por chamada pendente.',
     },
     {
       id: 'aprendiz-t4-e01-q11',
@@ -360,6 +476,7 @@ for (int i = 1; i < v.length; i++) {
 }`,
       resposta: '55 19',
       explicacao: 'Cada valor de 2 a 10 é calculado uma única vez e faz duas chamadas: 9 × 2 = 18, mais a chamada inicial, 19. As chamadas repetidas encontram o valor no `memo` e voltam na hora. Sem memoização seriam 177.',
+      dica: 'Cada valor é calculado uma vez e faz duas chamadas.',
     },
     {
       id: 'aprendiz-t4-e01-q12',
@@ -381,6 +498,7 @@ for (int i = 1; i < v.length; i++) {
 }`,
       resposta: 10,
       explicacao: '`mover` é `void`: não devolve valor, então não pode ser atribuído a um `int`. Para contar os movimentos, o método teria de devolver `int` ou usar um contador `static`.',
+      dica: 'Confira os tipos dos argumentos de cada chamada.',
     },
     {
       id: 'aprendiz-t4-e01-q13',
@@ -390,6 +508,7 @@ for (int i = 1; i < v.length; i++) {
       opcoes: ['2ⁿ − 1', 'n²', '2n', 'n log n', 'n!'],
       resposta: 0,
       explicacao: 'Calculando: 0, 1, 3, 7, 15, 31... cada termo é o dobro do anterior mais 1, ou seja, 2ⁿ − 1, e a indução confirma. É a recorrência da Torre de Hanói, e mostra que duas chamadas recursivas que só diminuem o problema em 1 dão crescimento exponencial.',
+      dica: 'Calcule T(1), T(2), T(3) e ache o padrão.',
     },
     {
       id: 'aprendiz-t4-e01-q14',
@@ -421,6 +540,7 @@ for (int i = 1; i < v.length; i++) {
     }
 }`,
       explicacao: 'As duas primeiras têm caso base e diminuem n. A terceira não tem caso base. A quarta funciona para n ≥ 1, mas com n = 0 pula o caso base e desce para sempre: a pegadinha é o "todo n ≥ 0". A quinta chama `soma(n)` com o mesmo n, sem progresso.',
+      dica: 'Teste cada corpo com n = 0 e n = 1.',
     },
     {
       id: 'aprendiz-t4-e01-q15',
@@ -435,6 +555,7 @@ for (int i = 1; i < v.length; i++) {
       ],
       resposta: 0,
       explicacao: 'fib(n − 1) e fib(n − 2) recalculam quase as mesmas coisas, e a árvore de chamadas cresce exponencialmente. Guardando cada fib(k) calculado, cada valor é feito uma vez: de exponencial para linear. O overflow continua existindo a partir de fib(93) num `long`.',
+      dica: 'O Fibonacci ingênuo recalcula os mesmos valores.',
     },
   ],
 };

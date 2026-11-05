@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'No Java 17, o tipo do padrão precisa ser subtipo estrito do tipo da expressão; o Java 21 aceita o mesmo tipo.',
     '`obj instanceof List<String> l` não compila com `obj` do tipo `Object`: o cast não é seguro.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a trocar pares de `instanceof` e cast pelo padrão de tipo e a reescrever `equals` em uma linha. Confira o escopo da variável, que é onde ela costuma errar.',
+    pedido:
+      'Modernize os testes de tipo deste código Java 21.\n<cole o código aqui>\n- Troque instanceof seguido de cast pelo padrão de tipo.\n- Para cada variável de padrão, diga em que linhas ela existe.\n- Aponte cadeias de else if em que um tipo mais geral é testado antes de um mais específico.',
+    erros: [
+      'Usa a variável de padrão depois de `||` ou no `else`.',
+      'Testa `Number` antes de `Integer` numa cadeia de `else if`.',
+      'Mantém o cast antigo logo depois do padrão, repetindo o tipo.',
+    ],
+    conferir: [
+      'Compile: uso fora do escopo aparece como "cannot find symbol".',
+      'Teste com `null`: o padrão dá `false` sem exceção.',
+      'Passe um objeto de cada tipo da cadeia e confira o ramo escolhido.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Using Pattern Matching, Pattern Matching for instanceof',
@@ -129,6 +145,102 @@ const episodio: EpisodioConteudo = {
     comentarios:
       '10 + 2,5 + 7 dão 19,5, e o array interno soma 1 + 2 + 3 = 6. O `null` não casa com nenhum padrão, porque `instanceof` é falso para `null`, e o `Boolean` não é um `Number`. O padrão também funciona com tipos de array, como `Object[] interno`. No próximo episódio, essa cadeia de `if` vira um único `switch`.',
   },
+  bugs: [
+    {
+      id: 'junior-t5-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: cannot find symbol`, apontando a variável `s`.',
+      codigo: `public class Validador {
+    static boolean textoCurto(Object o) {
+        return o instanceof String s || s.length() < 5;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(textoCurto("oi") + " " + textoCurto(42));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Validador {
+    static boolean textoCurto(Object o) {
+        return o instanceof String s && s.length() < 5;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(textoCurto("oi") + " " + textoCurto(42));
+    }
+}`,
+      saidaCorrigida: 'true false',
+      dica: 'No lado direito do `||`, o teste do `instanceof` deu certo ou falhou?',
+      explicacao: 'O lado direito do `||` só é avaliado quando o lado esquerdo deu `false`, ou seja, quando `o` não é uma `String` e `s` não recebeu valor. Com `&&`, o lado direito roda só se o teste deu certo, e `s` existe ali.',
+    },
+    {
+      id: 'junior-t5-e04-b02',
+      dificuldade: 2,
+      sintoma: 'O relatório deveria mostrar `inteiro: 42`, mas mostra `número: 42.0`.',
+      codigo: `public class Tipos {
+    static String descrever(Object o) {
+        if (o instanceof String s) return "texto: " + s;
+        else if (o instanceof Number n) return "número: " + n.doubleValue();
+        else if (o instanceof Integer i) return "inteiro: " + i;
+        return "outro";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(descrever(42));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'número: 42.0' },
+      correcao: `public class Tipos {
+    static String descrever(Object o) {
+        if (o instanceof String s) return "texto: " + s;
+        else if (o instanceof Integer i) return "inteiro: " + i;
+        else if (o instanceof Number n) return "número: " + n.doubleValue();
+        return "outro";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(descrever(42));
+    }
+}`,
+      saidaCorrigida: 'inteiro: 42',
+      dica: 'Um `Integer` é um `Number`? Qual dos dois testes ele encontra primeiro?',
+      explicacao: '`Integer` é subclasse de `Number`, então o teste mais geral captura o inteiro antes de o específico ser avaliado. Numa cadeia de `else if`, teste os tipos mais específicos primeiro. O `switch` com padrões do próximo episódio recusa essa ordem na compilação.',
+    },
+    {
+      id: 'junior-t5-e04-b03',
+      dificuldade: 3,
+      sintoma: 'Ler a quantidade digitada " 42" lança `NumberFormatException: For input string: " 42"`.',
+      codigo: `public class Formulario {
+    static int quantidade(Object campo) {
+        if (campo instanceof Integer i) return i;
+        if (campo instanceof String s && !s.isBlank()) return Integer.parseInt(s);
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(quantidade(" 42") + quantidade(8));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'excecao', nome: 'NumberFormatException' },
+      correcao: `public class Formulario {
+    static int quantidade(Object campo) {
+        if (campo instanceof Integer i) return i;
+        if (campo instanceof String s && !s.isBlank()) return Integer.parseInt(s.strip());
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(quantidade(" 42") + quantidade(8));
+    }
+}`,
+      saidaCorrigida: '50',
+      dica: 'O padrão converteu o tipo, mas o texto continua o mesmo. O `parseInt` aceita espaços?',
+      explicacao: 'O padrão de tipo só converte a referência: o conteúdo da `String` continua com o espaço, e `Integer.parseInt` não aceita espaços. Normalize o texto com `strip()` antes de converter.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t5-e04-q01',
@@ -143,6 +255,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'É o teste e o cast numa só operação. Se o teste falha, `s` nem existe naquele ponto do código.',
+      dica: 'O padrão junta o teste e o cast.',
     },
     {
       id: 'junior-t5-e04-q02',
@@ -159,6 +272,7 @@ for (Object o : itens) {
 System.out.println(r);`,
       resposta: '28?',
       explicacao: '"oi" tem 2 letras; 7 + 1 é 8, somado antes de virar texto porque `i + 1` está sozinho no lado direito do `+=`. O `Double` não casa com nenhum padrão.',
+      dica: '"oi" tem 2 letras, 7 + 1 é 8, e o `double` cai no `else`.',
     },
     {
       id: 'junior-t5-e04-q03',
@@ -178,6 +292,7 @@ if (o instanceof String s || s.isEmpty()) {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: 'O lado direito do `||` só roda quando o esquerdo deu falso, ou seja, quando `o` não é uma `String`. Nesse caso, `s` não teria valor.',
+      dica: 'No lado direito do `||`, o teste deu certo ou falhou?',
     },
     {
       id: 'junior-t5-e04-q04',
@@ -194,6 +309,7 @@ if (o instanceof String s || s.isEmpty()) {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'A variável vale depois de `&&`, depois de um `if` negado que sai do método, e pode ser reatribuída. Fora de um `if` comum, ou no `else` dele, o teste pode ter falhado, e ela não existe.',
+      dica: '`&&`, a forma negada com `return` e a reatribuição são permitidos.',
     },
     {
       id: 'junior-t5-e04-q05',
@@ -209,6 +325,7 @@ if (s instanceof String t) {
       provas: ['829'],
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: 'No Java 17, o tipo do padrão precisa ser mais específico que o da expressão: um teste de `String` contra `String` nunca falharia. A restrição caiu no Java 21.',
+      dica: 'No Java 17, o tipo do padrão precisa ser mais específico que o da expressão.',
     },
     {
       id: 'junior-t5-e04-q06',
@@ -224,6 +341,7 @@ if (s instanceof String t) {
       provas: ['830', '831'],
       verificar: { tipo: 'saida' },
       explicacao: 'Desde o Java 21, padrões incondicionais são aceitos no `instanceof`. O teste só daria falso para `null`.',
+      dica: 'O Java 21 removeu a restrição do tipo idêntico.',
     },
     {
       id: 'junior-t5-e04-q07',
@@ -241,6 +359,7 @@ if (s instanceof String t) {
       respostas: ['n'],
       saida: '10',
       explicacao: 'O nome depois do tipo declara a variável de padrão. Dentro do `if`, `n` é um `Integer`, e a conta funciona sem cast.',
+      dica: 'Depois do tipo vem o nome da variável usada no corpo.',
     },
     {
       id: 'junior-t5-e04-q08',
@@ -259,6 +378,7 @@ if (s instanceof String t) {
 }`,
       resposta: 7,
       explicacao: 'O `else` roda quando a condição inteira deu falso, o que inclui o caso em que `o` não é um `Integer`. Ali, `i` não existe.',
+      dica: 'No `else`, o teste falhou. A variável existe ali?',
     },
     {
       id: 'junior-t5-e04-q09',
@@ -276,6 +396,7 @@ System.out.println(i);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Como o `if` negado sai do método quando o teste falha, depois dele o teste certamente deu verdadeiro e `i` existe. Variáveis de padrão não são `final` e podem ser reatribuídas.',
+      dica: 'Se o teste falha, o método sai; depois do `if`, `i` existe e não é `final`.',
     },
     {
       id: 'junior-t5-e04-q10',
@@ -292,6 +413,7 @@ if (o instanceof String s) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`instanceof` é sempre falso para `null`, com ou sem padrão, e nunca lança exceção.',
+      dica: '`null instanceof` qualquer coisa é `false`.',
     },
     {
       id: 'junior-t5-e04-q11',
@@ -312,6 +434,7 @@ if (o instanceof String s) {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 3 },
       explicacao: 'A variável de padrão é uma variável local como outra qualquer: não pode repetir o nome de outra local em escopo.',
+      dica: 'Duas variáveis locais com o mesmo nome no mesmo escopo?',
     },
     {
       id: 'junior-t5-e04-q12',
@@ -335,6 +458,7 @@ Moeda brl = new Moeda("BRL");
 System.out.println(brl.equals(new Moeda("BRL")) + " " + brl.equals("BRL") + " " + brl.equals(null));`,
       resposta: 'true false false',
       explicacao: 'O padrão com `&&` resolve o `equals` numa linha: uma `String` não é `Moeda`, e `null instanceof` é falso, sem exceção.',
+      dica: 'O padrão no `equals` trata outro tipo e `null` com `false`.',
     },
     {
       id: 'junior-t5-e04-q13',
@@ -350,6 +474,7 @@ System.out.println(brl.equals(new Moeda("BRL")) + " " + brl.equals("BRL") + " " 
       ],
       respostas: [0, 1],
       explicacao: 'Só onde o teste certamente deu verdadeiro. Nos outros três pontos, o teste pode ter falhado.',
+      dica: 'Onde o teste certamente deu verdadeiro?',
     },
     {
       id: 'junior-t5-e04-q14',
@@ -369,6 +494,7 @@ if (o instanceof List<String> lista) {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: 'Os tipos genéricos são apagados na execução: o objeto é só um `ArrayList`. Um padrão como `List<?> lista` compilaria, porque não promete o tipo dos elementos.',
+      dica: 'Os genéricos são apagados na execução. A JVM consegue conferir o `<String>`?',
     },
     {
       id: 'junior-t5-e04-q15',
@@ -383,6 +509,7 @@ if (o instanceof List<String> lista) {
       ],
       resposta: 0,
       explicacao: 'O recurso é todo do compilador: a análise de escopo garante que a variável só seja usada onde o teste deu certo. Na execução, o custo é o mesmo do código antigo.',
+      dica: 'Nenhuma instrução nova: é o mesmo bytecode do código à mão.',
     },
   ],
 };

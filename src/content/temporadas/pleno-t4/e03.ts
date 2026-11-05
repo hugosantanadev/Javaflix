@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`equals` entre `ZonedDateTime` compara também o fuso; `isEqual`, `isBefore` e `isAfter` comparam só o instante.',
     '`-03:00` está três horas atrás do UTC: 10h em São Paulo são 13h UTC.',
   ],
+  ia: {
+    uso:
+      'Com fusos, a IA ajuda a montar conversões e a explicar um horário que "mudou sozinho". Ela erra no que mais custa caro: guarda momentos em `LocalDateTime`, inventa nomes de fuso, confunde `withZoneSameInstant` com `withZoneSameLocal` e compara `ZonedDateTime` com `equals`, que olha também o fuso.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código com Instant, ZonedDateTime e ZoneId>\n- Converta cada data para UTC e mostre a conta, com o deslocamento em vigor naquela data.\n- Diga se cada conversão mantém o instante ou o horário de parede.\n- Aponte comparações que deveriam usar isEqual em vez de equals.\n- Use só nomes de fuso da IANA, como America/Sao_Paulo, e nada de ZoneId.systemDefault().',
+    erros: [
+      'Guarda o horário de um evento em `LocalDateTime`, sem fuso, e ele significa momentos diferentes em cada servidor.',
+      'Usa `America/Brasilia`, que não existe e lança `ZoneRulesException`.',
+      'Usa `withZoneSameLocal` para mostrar um horário em outro fuso, mudando o instante.',
+      'Compara dois `ZonedDateTime` com `equals` para saber se acontecem ao mesmo tempo.',
+    ],
+    conferir: [
+      'Converta tudo para `Instant` e compare os valores em UTC.',
+      'Rode o teste com `-Duser.timezone` diferente e veja se o resultado muda.',
+      'Teste uma data de 2018, com horário de verão em São Paulo, e uma de 2024.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Instant',
@@ -159,6 +176,109 @@ public class Reuniao {
     comentarios:
       'Em junho, Lisboa e Nova York estão no horário de verão (`+01:00` e `-04:00`), e Auckland, no hemisfério sul, está no horário padrão. Nenhuma dessas regras aparece no código: elas vêm do banco de fusos. O mesmo instante cai em dois dias diferentes, e por isso guardar só a hora de parede de um evento internacional não basta.',
   },
+  bugs: [
+    {
+      id: 'pleno-t4-e03-b01',
+      dificuldade: 1,
+      sintoma: 'A gravação do horário da venda não compila: `method toInstant in interface ChronoLocalDateTime<D> cannot be applied to given types;`, apontando o `toInstant()` sem argumentos.',
+      codigo: `import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
+public class Registro {
+    public static void main(String[] args) {
+        LocalDateTime noCaixa = LocalDateTime.of(2024, 3, 15, 10, 0);
+        Instant gravado = noCaixa.toInstant();
+        System.out.println("gravado como " + gravado);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
+public class Registro {
+    public static void main(String[] args) {
+        LocalDateTime noCaixa = LocalDateTime.of(2024, 3, 15, 10, 0);
+        Instant gravado = noCaixa.toInstant(ZoneOffset.ofHours(-3));
+        System.out.println("gravado como " + gravado);
+    }
+}`,
+      saidaCorrigida: 'gravado como 2024-03-15T13:00:00Z',
+      dica: 'Um `LocalDateTime` sabe onde a venda aconteceu? O que falta para ele virar um ponto na linha do tempo?',
+      explicacao:
+        'Um `LocalDateTime` é só uma data e hora de parede, sem fuso, e por isso `toInstant` exige o deslocamento: `toInstant(ZoneOffset.ofHours(-3))`. Melhor ainda é usar o fuso com regras, `noCaixa.atZone(ZoneId.of("America/Sao_Paulo")).toInstant()`, que acerta o deslocamento até em datas com horário de verão.',
+    },
+    {
+      id: 'pleno-t4-e03-b02',
+      dificuldade: 2,
+      sintoma: 'A agenda marcou uma chamada com Lisboa no mesmo momento de uma reunião em São Paulo e não acusou conflito: `conflito de horário: false`.',
+      codigo: `import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class Agenda {
+    public static void main(String[] args) {
+        ZonedDateTime reuniaoSp = ZonedDateTime.of(LocalDateTime.of(2024, 3, 15, 10, 0), ZoneId.of("America/Sao_Paulo"));
+        ZonedDateTime chamadaLisboa = ZonedDateTime.of(LocalDateTime.of(2024, 3, 15, 13, 0), ZoneId.of("Europe/Lisbon"));
+        boolean conflito = reuniaoSp.equals(chamadaLisboa);
+        System.out.println("conflito de horário: " + conflito);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'conflito de horário: false' },
+      correcao: `import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class Agenda {
+    public static void main(String[] args) {
+        ZonedDateTime reuniaoSp = ZonedDateTime.of(LocalDateTime.of(2024, 3, 15, 10, 0), ZoneId.of("America/Sao_Paulo"));
+        ZonedDateTime chamadaLisboa = ZonedDateTime.of(LocalDateTime.of(2024, 3, 15, 13, 0), ZoneId.of("Europe/Lisbon"));
+        boolean conflito = reuniaoSp.isEqual(chamadaLisboa);
+        System.out.println("conflito de horário: " + conflito);
+    }
+}`,
+      saidaCorrigida: 'conflito de horário: true',
+      dica: '10h em São Paulo e 13h em Lisboa, em março de 2024, são o mesmo momento? O que o `equals` de `ZonedDateTime` compara além do instante?',
+      explicacao:
+        '`equals` compara a data, a hora e o fuso, e dois `ZonedDateTime` do mesmo instante em fusos diferentes não são iguais para ele. Para saber se dois eventos acontecem ao mesmo tempo, use `isEqual`, `isBefore` e `isAfter`, que comparam só o instante, ou converta os dois para `Instant`.',
+    },
+    {
+      id: 'pleno-t4-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O convite enviado ao colega de Lisboa marcou a reunião para as 10h no horário dele, e ele entrou três horas antes de todo mundo: `convite para Lisboa: 10:00 (2024-03-15)`.',
+      codigo: `import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class Convite {
+    public static void main(String[] args) {
+        ZonedDateTime reuniao = ZonedDateTime.of(LocalDateTime.of(2024, 3, 15, 10, 0), ZoneId.of("America/Sao_Paulo"));
+        ZonedDateTime paraLisboa = reuniao.withZoneSameLocal(ZoneId.of("Europe/Lisbon"));
+        System.out.println("convite para Lisboa: " + paraLisboa.toLocalTime() + " (" + paraLisboa.toLocalDate() + ")");
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'convite para Lisboa: 10:00 (2024-03-15)' },
+      correcao: `import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class Convite {
+    public static void main(String[] args) {
+        ZonedDateTime reuniao = ZonedDateTime.of(LocalDateTime.of(2024, 3, 15, 10, 0), ZoneId.of("America/Sao_Paulo"));
+        ZonedDateTime paraLisboa = reuniao.withZoneSameInstant(ZoneId.of("Europe/Lisbon"));
+        System.out.println("convite para Lisboa: " + paraLisboa.toLocalTime() + " (" + paraLisboa.toLocalDate() + ")");
+    }
+}`,
+      saidaCorrigida: 'convite para Lisboa: 13:00 (2024-03-15)',
+      dica: 'A conversão manteve o mesmo momento ou o mesmo horário de parede?',
+      explicacao:
+        '`withZoneSameLocal` mantém a hora de parede, 10h, e só troca o fuso: o resultado é outro instante. Para mostrar a mesma reunião no horário de quem está em outro fuso, use `withZoneSameInstant`, que em 15 de março de 2024 dá 13h em Lisboa. Em convites, guarde o `Instant` e converta só na hora de exibir.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t4-e03-q01',
@@ -181,6 +301,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '86.400 segundos são exatamente um dia depois da época Unix. O `toString` de `Instant` mostra a data e a hora em UTC, com frações quando existem.',
+      dica: '86.400 segundos são um dia; 250 milissegundos aparecem como fração de segundo.',
     },
     {
       id: 'pleno-t4-e03-q02',
@@ -197,6 +318,7 @@ public class Teste {
 }`,
       resposta: '2024-05-31T21:30',
       explicacao: 'São Paulo está três horas atrás do UTC, então 00:30 UTC de 1º de junho ainda é 21:30 de 31 de maio.',
+      dica: 'São Paulo está 3 horas atrás do UTC, e o horário volta para o dia anterior.',
     },
     {
       id: 'pleno-t4-e03-q03',
@@ -222,6 +344,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedTemporalTypeException', saida: '2024-02-01T12:00:00Z' },
       explicacao: 'Para um `Instant`, um dia são sempre 86.400 segundos. Um mês depende de calendário e fuso, que o instante não tem.',
+      dica: '`Instant` aceita dias, mas não meses.',
     },
     {
       id: 'pleno-t4-e03-q04',
@@ -242,6 +365,7 @@ public class Teste {
 }`,
       resposta: 9,
       explicacao: 'Um `LocalDateTime` não sabe onde está. Para virar um instante, ele precisa de um deslocamento, passado como argumento.',
+      dica: '`LocalDateTime` não sabe onde está; `toInstant` precisa do deslocamento.',
     },
     {
       id: 'pleno-t4-e03-q05',
@@ -261,6 +385,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Manaus está uma hora atrás de São Paulo. No mesmo instante, lá são 9h; mantendo a hora de parede, continua 10h, mas num instante diferente.',
+      dica: 'Manaus está uma hora atrás de São Paulo.',
     },
     {
       id: 'pleno-t4-e03-q06',
@@ -280,6 +405,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os dois representam o mesmo instante, então `isEqual` é `true`. `equals` também compara a data, a hora e o fuso, que são diferentes.',
+      dica: '`equals` compara também o fuso; `isEqual`, só o instante.',
     },
     {
       id: 'pleno-t4-e03-q07',
@@ -299,6 +425,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Em UTC, a saída é às 12h (Manaus está em `-04:00`) e a chegada às 16h15 (São Paulo em `-03:00`). A diferença de fuso "come" uma hora da conta ingênua.',
+      dica: 'Converta as duas pontas para UTC antes de subtrair.',
     },
     {
       id: 'pleno-t4-e03-q08',
@@ -317,6 +444,7 @@ public class NoFuso {
       respostas: ['atZone'],
       saida: '2024-03-15T10:00-03:00[America/Sao_Paulo]',
       explicacao: '`atZone` mantém o instante e calcula a data e a hora de parede naquele fuso.',
+      dica: 'É o método que coloca um instante num fuso.',
     },
     {
       id: 'pleno-t4-e03-q09',
@@ -340,6 +468,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'ZoneRulesException', saida: 'America/Sao_Paulo' },
       explicacao: 'O horário de Brasília é representado pelo fuso `America/Sao_Paulo`. Um nome que não existe no banco de fusos é recusado na execução.',
+      dica: 'Os nomes vêm do banco de fusos da IANA.',
     },
     {
       id: 'pleno-t4-e03-q10',
@@ -355,6 +484,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'São Paulo usou `-02:00` nos verões até 2019. `LocalDateTime` não guarda fuso nenhum, e `Instant` não tem métodos de calendário.',
+      dica: 'Uma afirmação fala do `toString` do `Instant`; outra, de deslocamento fixo.',
     },
     {
       id: 'pleno-t4-e03-q11',
@@ -371,6 +501,7 @@ public class Teste {
 }`,
       resposta: '2024-01-01T00:30-03:00 2024-01-01T03:30:00Z',
       explicacao: '`OffsetDateTime` guarda um deslocamento fixo, sem nome de fuso. Para chegar ao UTC, somam-se as três horas.',
+      dica: '`-03:00` está três horas atrás do UTC.',
     },
     {
       id: 'pleno-t4-e03-q12',
@@ -390,6 +521,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Em março, Lisboa está em UTC, então `a` é 12h UTC. As 10h de São Paulo são 13h UTC, um momento posterior, embora a hora de parede seja menor.',
+      dica: 'Compare em UTC: 12h em Lisboa e 10h em São Paulo, em março.',
     },
     {
       id: 'pleno-t4-e03-q13',
@@ -409,6 +541,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Somar uma hora leva a 00:30 do dia 16 em UTC. `truncatedTo(DAYS)` zera tudo abaixo do dia, sempre em UTC para um `Instant`.',
+      dica: 'Somar uma hora passa da meia-noite UTC; `truncatedTo` zera o resto.',
     },
     {
       id: 'pleno-t4-e03-q14',
@@ -423,6 +556,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'As regras vêm embutidas no JDK. Sem a atualização, o Java continua seguindo as regras antigas, e por isso existe o `tzupdater`.',
+      dica: 'As regras de fuso vêm de um banco de dados embutido no JDK.',
     },
     {
       id: 'pleno-t4-e03-q15',
@@ -441,6 +575,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Em dezembro de 2018, São Paulo estava no horário de verão. Em 2024, o fuso já não tem horário de verão, e o deslocamento é o padrão.',
+      dica: 'Em 2018, São Paulo ainda tinha horário de verão.',
     },
   ],
 };

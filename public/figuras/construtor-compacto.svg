@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="280" viewBox="0 0 760 280" role="img" aria-labelledby="t">
+  <title id="t">O caminho de new Email("  Ana@X.COM ") pelo construtor compacto. Primeiro o argumento chega no parâmetro endereco. Depois o corpo do construtor valida e reatribui o parâmetro, que vira "ana@x.com". Por fim, o compilador acrescenta sozinho this.endereco = endereco, e o campo final guarda o valor normalizado</title>
+  <rect width="760" height="280" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <text x="30" y="38">1. o argumento chega</text>
+    <text x="280" y="38">2. o seu código (parâmetro)</text>
+    <text x="530" y="38">3. gerado pelo javac</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <rect x="30" y="52" width="210" height="120" rx="6" fill="#1b1916" stroke="#43403a"/>
+    <text x="44" y="82" fill="#bdb5aa">endereco =</text>
+    <text x="44" y="106" fill="#f3eee7" xml:space="preserve">"  Ana@X.COM "</text>
+    <rect x="280" y="52" width="210" height="120" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="294" y="82" fill="#ff7a1a">valida</text>
+    <text x="294" y="106" fill="#ff7a1a">endereco =</text>
+    <text x="294" y="126" fill="#ff7a1a" xml:space="preserve">  trim, minúsculas</text>
+    <text x="294" y="156" fill="#f3eee7">"ana@x.com"</text>
+    <rect x="530" y="52" width="200" height="120" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="544" y="82" fill="#4fd68b">this.endereco =</text>
+    <text x="544" y="102" fill="#4fd68b" xml:space="preserve">  endereco;</text>
+    <text x="544" y="156" fill="#f3eee7">campo final</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none"><path d="M242 112 L276 112" marker-end="url(#s)"/><path d="M492 112 L526 112" marker-end="url(#s)"/></g>
+  <text x="30" y="214" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">No compacto você mexe só no parâmetro; a atribuição ao campo vem sozinha, no fim, com o valor que o parâmetro tiver.</text>
+  <text x="30" y="236" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Escrever this.endereco = ... no seu código não compila: o campo é final e seria atribuído duas vezes.</text>
+</svg>

@@ -13,6 +13,22 @@ const episodio: EpisodioConteudo = {
     '`~x` inverte todos os 32 bits do `int`, por isso `~0` é -1.',
     'NAND e NOR são universais; AND, OR e XOR sozinhas não são.',
   ],
+  ia: {
+    uso:
+      'A IA é uma boa tutora de lógica booleana: monta tabelas-verdade, explica De Morgan e propõe exercícios. Confira as simplificações que ela fizer com uma tabela-verdade ou um teste das combinações.',
+    pedido:
+      'Estou aprendendo lógica booleana.\n- Me dê 4 expressões com AND, OR e NOT para eu simplificar, sem as respostas.\n- Depois da minha resposta, mostre a tabela-verdade das duas versões lado a lado.\n- Escreva um programa Java que confere a equivalência testando todas as combinações.',
+    erros: [
+      'Aplica De Morgan pela metade, negando as partes sem trocar AND por OR.',
+      'Confunde `&` com `&&` e esquece o curto-circuito.',
+      'Diz que `~5` vale 2, ignorando os 32 bits do `int`.',
+    ],
+    conferir: [
+      'Monte a tabela-verdade completa: com 2 variáveis, são só 4 linhas.',
+      'Rode as duas expressões para todas as combinações e compare.',
+      'Confira os resultados bit a bit com `Integer.toBinaryString`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'JLS 15.22: Bitwise and Logical Operators',
@@ -137,6 +153,92 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Contar de 0 a 2ⁿ − 1 e separar os bits é o jeito clássico de gerar todas as combinações de n variáveis booleanas, e é exatamente o que um gerador de tabela-verdade faz. Repare que a expressão só dá 0 quando C é 1 e A AND B é 0.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t1-e02-b01',
+      dificuldade: 1,
+      sintoma: 'A catraca deveria barrar quem não tem ingresso ou não tem idade, mas deixou passar um menor de idade com ingresso: a saída mostra `barrado: false`.',
+      codigo: `public class Catraca {
+    public static void main(String[] args) {
+        boolean maiorDeIdade = false;
+        boolean temIngresso = true;
+        boolean podeEntrar = maiorDeIdade && temIngresso;
+        boolean barrado = !maiorDeIdade && !temIngresso;
+        System.out.println("pode entrar: " + podeEntrar);
+        System.out.println("barrado: " + barrado);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'pode entrar: false\nbarrado: false' },
+      correcao: `public class Catraca {
+    public static void main(String[] args) {
+        boolean maiorDeIdade = false;
+        boolean temIngresso = true;
+        boolean podeEntrar = maiorDeIdade && temIngresso;
+        boolean barrado = !maiorDeIdade || !temIngresso;
+        System.out.println("pode entrar: " + podeEntrar);
+        System.out.println("barrado: " + barrado);
+    }
+}`,
+      saidaCorrigida: 'pode entrar: false\nbarrado: true',
+      dica: '`barrado` deveria ser exatamente o contrário de `podeEntrar`. Como se nega um AND?',
+      explicacao: 'Pela lei de De Morgan, `!(a && b)` é `!a || !b`: negam-se as partes e troca-se o AND por OR. Com `&&`, só barraria quem não tivesse nem idade nem ingresso. Escrever `!podeEntrar` evita a conta.',
+    },
+    {
+      id: 'aprendiz-t1-e02-b02',
+      dificuldade: 2,
+      sintoma: 'Desligar a permissão de escrita (bit 2) deveria deixar as permissões em `0b011`, mas o resultado é `100`.',
+      codigo: `public class Permissoes {
+    public static void main(String[] args) {
+        int flags = 0b111;
+        int escrita = 0b100;
+        flags = flags & escrita;
+        System.out.println(Integer.toBinaryString(flags));
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: '100' },
+      correcao: `public class Permissoes {
+    public static void main(String[] args) {
+        int flags = 0b111;
+        int escrita = 0b100;
+        flags = flags & ~escrita;
+        System.out.println(Integer.toBinaryString(flags));
+    }
+}`,
+      saidaCorrigida: '11',
+      dica: 'Faça a conta bit a bit: `111 & 100`. Quais bits sobrevivem a um AND com essa máscara?',
+      explicacao: 'O AND com a máscara mantém só os bits que estão ligados nela, e apaga todos os outros. Para desligar um bit, a máscara precisa ter 0 só naquela posição: `~escrita`, que inverte todos os bits da máscara.',
+    },
+    {
+      id: 'aprendiz-t1-e02-b03',
+      dificuldade: 3,
+      sintoma: 'O `javac` recusa o programa com `error: bad operand types for binary operator \'&\'`.',
+      codigo: `public class Paridade {
+    public static void main(String[] args) {
+        int[] numeros = {4, 7, 10};
+        for (int n : numeros) {
+            boolean par = n & 1 == 0;
+            System.out.println(n + " par? " + par);
+        }
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Paridade {
+    public static void main(String[] args) {
+        int[] numeros = {4, 7, 10};
+        for (int n : numeros) {
+            boolean par = (n & 1) == 0;
+            System.out.println(n + " par? " + par);
+        }
+    }
+}`,
+      saidaCorrigida: '4 par? true\n7 par? false\n10 par? true',
+      dica: 'Quem é calculado primeiro: o `&` ou o `==`?',
+      explicacao: 'Em Java, `==` tem precedência maior que `&`, então a expressão vira `n & (1 == 0)`: um `int` com um `boolean`, que não compila. Com parênteses, o AND bit a bit acontece primeiro.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t1-e02-q01',
@@ -148,6 +250,7 @@ const episodio: EpisodioConteudo = {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'XOR é verdadeiro só quando as entradas são diferentes. Com as duas `true`, o resultado é `false`. Em Java, `^` funciona tanto com `boolean` quanto com inteiros.',
+      dica: 'XOR é verdadeiro quando as entradas são diferentes.',
     },
     {
       id: 'aprendiz-t1-e02-q02',
@@ -169,6 +272,7 @@ for (boolean a : v) for (boolean b : v) {
 }
 for (boolean e : equivale) System.out.println(e);`,
       explicacao: 'Pela lei de De Morgan, negar um OR é fazer o AND das negações: `!a && !b`. E OR é comutativo, então trocar a ordem dentro dos parênteses não muda nada. As outras falham em pelo menos uma combinação.',
+      dica: 'De Morgan: negue cada parte e troque OR por AND. A ordem das parcelas importa?',
     },
     {
       id: 'aprendiz-t1-e02-q03',
@@ -180,6 +284,7 @@ System.out.println(6 | 3);
 System.out.println(6 ^ 3);`,
       resposta: '2\n7\n5',
       explicacao: '6 é `110` e 3 é `011`. Bit a bit: AND dá `010` = 2, OR dá `111` = 7 e XOR dá `101` = 5.',
+      dica: 'Escreva 6 = 110 e 3 = 011 e aplique cada operação coluna por coluna.',
     },
     {
       id: 'aprendiz-t1-e02-q04',
@@ -189,6 +294,7 @@ System.out.println(6 ^ 3);`,
       opcoes: ['1', '2', '3', '4', 'É impossível'],
       resposta: 0,
       explicacao: 'Ligando a mesma entrada nos dois pinos, `A NAND A` = NOT (A AND A) = NOT A. Uma porta só.',
+      dica: 'Ligue as duas entradas da NAND no mesmo sinal.',
     },
     {
       id: 'aprendiz-t1-e02-q05',
@@ -198,6 +304,7 @@ System.out.println(6 ^ 3);`,
       opcoes: ['XOR', 'AND', 'OR', 'NAND', 'NOR'],
       resposta: 0,
       explicacao: 'É a definição do ou exclusivo. O OR também dá 1 com entradas diferentes, mas dá 1 com as duas em 1, o que o XOR não faz.',
+      dica: 'É a porta da soma binária sem o vai-um.',
     },
     {
       id: 'aprendiz-t1-e02-q06',
@@ -213,6 +320,7 @@ System.out.println(6 ^ 3);`,
       respostas: ['&'],
       saida: 'true',
       explicacao: '`n & 1` isola o bit da unidade: 0 para pares, 1 para ímpares. É uma máscara de um bit. Faz o mesmo que `n % 2 == 0` para números positivos.',
+      dica: 'O último bit decide a paridade; que operador isola um bit?',
     },
     {
       id: 'aprendiz-t1-e02-q07',
@@ -227,6 +335,7 @@ boolean sempre = true;
 for (boolean a : v) for (boolean b : v) if ((a || (a && b)) != a) sempre = false;
 System.out.println(sempre);`,
       explicacao: 'É a lei da absorção. Se `a` for verdadeiro, o OR já é verdadeiro. Se `a` for falso, `a && b` também é falso, e sobra falso. Nos dois casos, o resultado é o próprio `a`.',
+      dica: 'Lei da absorção.',
     },
     {
       id: 'aprendiz-t1-e02-q08',
@@ -237,6 +346,7 @@ System.out.println(sempre);`,
 System.out.println(~(-1));`,
       resposta: '-1\n0',
       explicacao: '`0` tem os 32 bits desligados; `~0` liga todos, e 32 bits ligados representam -1 em complemento de dois. Invertendo de novo, voltamos a 0.',
+      dica: '`~` inverte os 32 bits; 0 com todos os bits ligados vira -1.',
     },
     {
       id: 'aprendiz-t1-e02-q09',
@@ -248,6 +358,7 @@ System.out.println(~(-1));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '5 é `101` e 3 é `011`. Só o último bit está ligado nos dois, então o AND bit a bit dá `001` = 1. Com inteiros, `&` devolve um número, não um `boolean`.',
+      dica: '101 & 011, coluna por coluna.',
     },
     {
       id: 'aprendiz-t1-e02-q10',
@@ -265,6 +376,7 @@ System.out.println(~(-1));`,
 }`,
       resposta: 6,
       explicacao: 'Em Java, o `!` só se aplica a `boolean`. Diferente de C, um número não vira verdadeiro ou falso sozinho. O certo seria `x == 0`.',
+      dica: 'O `!` funciona com que tipo?',
     },
     {
       id: 'aprendiz-t1-e02-q11',
@@ -274,6 +386,7 @@ System.out.println(~(-1));`,
       opcoes: ['NAND', 'NOR', 'AND', 'OR', 'XOR', 'NOT'],
       respostas: [0, 1],
       explicacao: 'NAND e NOR são universais porque cada uma consegue produzir um NOT (ligando as entradas juntas) e, com ele, o AND e o OR. Só com AND ou só com OR não dá para inverter um sinal, e só com NOT não dá para combinar dois.',
+      dica: 'As portas universais têm a negação embutida.',
     },
     {
       id: 'aprendiz-t1-e02-q12',
@@ -288,6 +401,7 @@ System.out.println(~(-1));`,
       ],
       resposta: 0,
       explicacao: 'NOR é a negação do OR. O OR só dá 0 quando as duas entradas são 0, então o NOR só dá 1 nesse caso. "Pelo menos uma entrada é 0" é a descrição do NAND.',
+      dica: 'NOR é o contrário do OR.',
     },
     {
       id: 'aprendiz-t1-e02-q13',
@@ -307,6 +421,7 @@ System.out.println(~(-1));`,
 }`,
       resposta: 'false\nfalse\ntrue',
       explicacao: 'A primeira linha é um NOT feito com NAND: NOT true = false. A segunda é um AND: true AND false = false. A terceira é um OR, por De Morgan: true OR false = true.',
+      dica: 'Calcule cada combinação de NAND passo a passo, de dentro para fora.',
     },
     {
       id: 'aprendiz-t1-e02-q14',
@@ -329,6 +444,7 @@ for (int idade = 16; idade <= 20; idade++) {
 }
 System.out.println(sempre);`,
       explicacao: 'De Morgan: negar o OR vira AND das negações. A negação de `idade < 18` é `idade >= 18` (com o igual, senão quem tem 18 fica de fora) e a de `semDocumento` é `!semDocumento`.',
+      dica: 'De Morgan, e a negação de `<` é `>=`.',
     },
     {
       id: 'aprendiz-t1-e02-q15',
@@ -341,6 +457,7 @@ System.out.println(x ^ x);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'XOR de um bit com ele mesmo é sempre 0, então `x ^ x` zera qualquer número. Processadores usam esse truque para zerar registradores com uma instrução curta.',
+      dica: 'Todo bit XOR ele mesmo dá 0.',
     },
   ],
 };

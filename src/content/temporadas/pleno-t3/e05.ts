@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`binarySearch` exige lista ordenada; sem achar, devolve `-(ponto de inserção) - 1`.',
     '`Arrays.sort` com `Comparator` só funciona com arrays de objetos, não de primitivos.',
   ],
+  ia: {
+    uso:
+      'Para ordenar, a IA ajuda a montar cadeias de `Comparator` e a explicar a ordem de uma saída. Os erros comuns dela são antigos: comparar com subtração, pôr o `reversed()` no lugar errado, esquecer que a ordem natural de `String` coloca maiúsculas e letras acentuadas fora do lugar e usar lambdas sem tipo dentro de `comparing`.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui a lista e o comparador>\n- Mostre a lista ordenada e explique, critério por critério, por que cada elemento ficou na posição.\n- Diga o alcance de cada reversed() na cadeia.\n- Reescreva comparadores com subtração usando Integer.compare ou comparingInt.\n- Se a lista tiver nomes de pessoas em português, diga se a ordem natural de String serve.',
+    erros: [
+      'Compara números com subtração, `(a, b) -> a - b`, que estoura com valores grandes de sinais opostos.',
+      'Põe o `reversed()` no fim da cadeia achando que inverte só o último critério.',
+      'Escreve `Comparator.comparing(p -> p.nome()).reversed()`, que não compila.',
+      'Ordena nomes com a ordem natural de `String`, que põe "Álvaro" depois de "Zeca".',
+    ],
+    conferir: [
+      'Ordene uma lista com dois elementos que empatam no primeiro critério e veja o desempate.',
+      'Teste o comparador com `Integer.MIN_VALUE` e `Integer.MAX_VALUE`.',
+      'Para nomes, compare a ordem natural com a de um `Collator` do português.',
+    ],
+  },
   recursos: [
     {
       titulo: 'The Java Tutorials: Object Ordering',
@@ -197,6 +214,123 @@ public class Ranking {
     comentarios:
       'A ordem natural pelo nome serve para buscar; o comparador do ranking serve para exibir. Aplicar `reversed()` dentro de cada `thenComparing` inverte só aquele critério, enquanto um `reversed()` no fim inverteria também o desempate pelo nome. Repare que o `compareTo` olha só o nome, então não é coerente com o `equals` do record: dois jogadores com o mesmo nome e pontos diferentes seriam "iguais" para um `TreeSet`.',
   },
+  bugs: [
+    {
+      id: 'pleno-t3-e05-b01',
+      dificuldade: 1,
+      sintoma: 'A ordenação da agenda em ordem alfabética invertida não compila: `cannot find symbol`, apontando o `nome()` dentro da lambda.',
+      codigo: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class Agenda {
+    record Pessoa(String nome, int idade) { }
+
+    public static void main(String[] args) {
+        List<Pessoa> contatos = new ArrayList<>(List.of(new Pessoa("Bia", 30), new Pessoa("Ana", 25)));
+        contatos.sort(Comparator.comparing(p -> p.nome()).reversed());
+        System.out.println(contatos);
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class Agenda {
+    record Pessoa(String nome, int idade) { }
+
+    public static void main(String[] args) {
+        List<Pessoa> contatos = new ArrayList<>(List.of(new Pessoa("Bia", 30), new Pessoa("Ana", 25)));
+        contatos.sort(Comparator.comparing(Pessoa::nome).reversed());
+        System.out.println(contatos);
+    }
+}`,
+      saidaCorrigida: '[Pessoa[nome=Bia, idade=30], Pessoa[nome=Ana, idade=25]]',
+      dica: 'Com o `.reversed()` encadeado, de onde o compilador tira o tipo do parâmetro `p` da lambda?',
+      explicacao:
+        'Com `.reversed()` encadeado, `comparing` não tem um destino que diga o tipo, e a lambda é inferida com `Object`, que não tem `nome()`. A referência de método `Pessoa::nome` carrega o tipo; tipar o parâmetro, `(Pessoa p) -> p.nome()`, também resolve.',
+    },
+    {
+      id: 'pleno-t3-e05-b02',
+      dificuldade: 2,
+      sintoma: 'A chamada deveria vir dos mais velhos para os mais novos e, entre os de mesma idade, em ordem alfabética, mas a Bia aparece antes da Ana: `Bia(18) Ana(18) Caio(17)`.',
+      codigo: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class Chamada {
+    record Aluno(String nome, int idade) { }
+
+    public static void main(String[] args) {
+        List<Aluno> turma = new ArrayList<>(List.of(new Aluno("Caio", 17), new Aluno("Ana", 18), new Aluno("Bia", 18)));
+        turma.sort(Comparator.comparingInt(Aluno::idade).thenComparing(Aluno::nome).reversed());
+        StringBuilder lista = new StringBuilder();
+        for (Aluno a : turma) lista.append(a.nome()).append('(').append(a.idade()).append(") ");
+        System.out.println(lista.toString().trim());
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: 'Bia(18) Ana(18) Caio(17)' },
+      correcao: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class Chamada {
+    record Aluno(String nome, int idade) { }
+
+    public static void main(String[] args) {
+        List<Aluno> turma = new ArrayList<>(List.of(new Aluno("Caio", 17), new Aluno("Ana", 18), new Aluno("Bia", 18)));
+        turma.sort(Comparator.comparingInt(Aluno::idade).reversed().thenComparing(Aluno::nome));
+        StringBuilder lista = new StringBuilder();
+        for (Aluno a : turma) lista.append(a.nome()).append('(').append(a.idade()).append(") ");
+        System.out.println(lista.toString().trim());
+    }
+}`,
+      saidaCorrigida: 'Ana(18) Bia(18) Caio(17)',
+      dica: 'O `reversed()` inverte o quê: só o critério logo antes dele ou toda a cadeia à esquerda?',
+      explicacao:
+        '`reversed()` inverte o comparador inteiro montado até ali: com ele no fim, inverteu a idade **e** o desempate por nome. Para inverter só a idade, chame `reversed()` logo depois dela e encadeie o nome depois. Para inverter só o desempate, passe a ordem a ele: `thenComparing(Aluno::nome, Comparator.reverseOrder())`.',
+    },
+    {
+      id: 'pleno-t3-e05-b03',
+      dificuldade: 3,
+      sintoma: 'Na lista de clientes em ordem alfabética, Álvaro e Érica aparecem depois de Zeca: `[Bia, Zeca, Álvaro, Érica]`.',
+      codigo: `import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+
+public class Clientes {
+    public static void main(String[] args) {
+        List<String> nomes = new ArrayList<>(List.of("Zeca", "Álvaro", "Bia", "Érica"));
+        nomes.sort(Comparator.naturalOrder());
+        System.out.println(nomes);
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: '[Bia, Zeca, Álvaro, Érica]' },
+      correcao: `import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+
+public class Clientes {
+    public static void main(String[] args) {
+        List<String> nomes = new ArrayList<>(List.of("Zeca", "Álvaro", "Bia", "Érica"));
+        nomes.sort(Collator.getInstance(Locale.forLanguageTag("pt-BR")));
+        System.out.println(nomes);
+    }
+}`,
+      saidaCorrigida: '[Álvaro, Bia, Érica, Zeca]',
+      dica: 'A ordem natural de `String` compara o quê? Onde o `Á` fica nessa tabela, em relação ao `Z`?',
+      explicacao:
+        'A ordem natural de `String` compara os códigos dos caracteres, e as letras acentuadas, como `Á` e `É`, têm códigos maiores que todas as letras sem acento. Para ordenar como um dicionário em português, use um `Collator` do idioma, `Collator.getInstance(Locale.forLanguageTag("pt-BR"))`, que ignora acentos e caixa na primeira passada. Toda lista de nomes mostrada a pessoas precisa dele.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t3-e05-q01',
@@ -216,6 +350,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A ordem natural de `String` segue os códigos dos caracteres: dígitos, depois maiúsculas, depois minúsculas.',
+      dica: 'Na ordem natural de `String`, dígitos vêm antes de maiúsculas, e maiúsculas antes de minúsculas.',
     },
     {
       id: 'pleno-t3-e05-q02',
@@ -229,6 +364,7 @@ public class Teste {
 }`,
       resposta: '-2 1 -31',
       explicacao: '`String.compareTo` devolve a diferença entre os primeiros caracteres diferentes (97 - 99 e 66 - 97) ou, se um texto é prefixo do outro, a diferença de tamanho.',
+      dica: '`compareTo` subtrai os códigos do primeiro caractere diferente; se um texto é prefixo do outro, compara os tamanhos.',
     },
     {
       id: 'pleno-t3-e05-q03',
@@ -254,6 +390,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 8 },
       explicacao: 'Como `reversed()` é chamado sobre o resultado de `comparing`, o compilador não usa o destino para inferir o tipo da lambda. `Pessoa::nome` ou `(Pessoa p) -> p.nome()` resolveriam.',
+      dica: 'Sem destino, a lambda dentro de `comparing` é inferida com `Object`.',
     },
     {
       id: 'pleno-t3-e05-q04',
@@ -279,6 +416,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`reversed()` no fim inverte a cadeia inteira: categoria decrescente e, no empate, preço decrescente.',
+      dica: 'O `reversed()` no fim inverte a cadeia inteira.',
     },
     {
       id: 'pleno-t3-e05-q05',
@@ -297,6 +435,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A diferença real, 4 bilhões, não cabe num `int` e dá a volta para um negativo. O comparador diz que 2 bilhões vem antes de menos 2 bilhões. `Integer.compare` não tem esse problema.',
+      dica: 'A subtração estoura com valores grandes de sinais opostos.',
     },
     {
       id: 'pleno-t3-e05-q06',
@@ -306,6 +445,7 @@ public class Teste {
       opcoes: ['`String`', '`Integer`', '`java.time.LocalDate`', '`Object`', '`ArrayList`'],
       respostas: [0, 1, 2],
       explicacao: 'Texto, números e datas têm ordem natural. `Object` e as coleções não, e por isso não podem ser ordenados sem um `Comparator`.',
+      dica: 'Três delas têm uma ordem natural definida.',
     },
     {
       id: 'pleno-t3-e05-q07',
@@ -324,6 +464,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O 30 está no índice 2. O 25 entraria na posição 2, então o resultado é -2 - 1; o 50 entraria na 4, e o resultado é -4 - 1.',
+      dica: 'Sem achar, `binarySearch` devolve `-(inserção) - 1`.',
     },
     {
       id: 'pleno-t3-e05-q08',
@@ -342,6 +483,7 @@ public class PorTamanho {
       respostas: ['comparingInt', 'comparing'],
       saida: '[a, bb, ccc]',
       explicacao: '`comparingInt` recebe uma função que devolve `int` e compara sem autoboxing. `comparing` também funcionaria, embalando o tamanho em `Integer`.',
+      dica: 'É a fábrica de comparador para chaves `int`.',
     },
     {
       id: 'pleno-t3-e05-q09',
@@ -367,6 +509,7 @@ public class Teste {
 }`,
       resposta: 15,
       explicacao: '`Collections.sort(List<T>)` exige `T extends Comparable<? super T>`, conferido na compilação. O `TreeSet<Produto>` compila, porque poderia receber um `Comparator` no construtor; só falharia ao adicionar.',
+      dica: '`Collections.sort` exige um tipo `Comparable` já na compilação.',
     },
     {
       id: 'pleno-t3-e05-q10',
@@ -386,6 +529,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`nullsLast` põe os `null` no fim e usa o comparador recebido para o resto, aqui em ordem inversa.',
+      dica: '`nullsLast` põe os `null` no fim, e o resto segue a ordem inversa.',
     },
     {
       id: 'pleno-t3-e05-q11',
@@ -405,6 +549,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A ordenação de objetos é estável: elementos com o mesmo tamanho mantêm a ordem em que estavam na lista.',
+      dica: 'A ordenação é estável: empates mantêm a ordem anterior.',
     },
     {
       id: 'pleno-t3-e05-q12',
@@ -436,6 +581,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `TreeSet` usa o `compareTo`. "c" tem a mesma prioridade de "a", compara como igual e é recusado, mesmo sendo diferente para o `equals` do record.',
+      dica: 'Para o `TreeSet`, comparar 0 quer dizer o mesmo elemento.',
     },
     {
       id: 'pleno-t3-e05-q13',
@@ -459,6 +605,7 @@ public class Teste {
 }`,
       resposta: 'Ana30;Ana20;Bia30;',
       explicacao: 'O nome fica em ordem crescente, e só o desempate por idade é invertido, porque o comparador inverso foi passado ao `thenComparing`.',
+      dica: 'O desempate por idade é invertido, e só ele.',
     },
     {
       id: 'pleno-t3-e05-q14',
@@ -484,6 +631,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 8 },
       explicacao: 'Comparadores trabalham com objetos. Para um `int[]`, `Arrays.sort` só ordena em ordem crescente; para a inversa, é preciso usar `Integer[]` ou inverter depois.',
+      dica: 'Arrays de primitivos não aceitam comparador.',
     },
     {
       id: 'pleno-t3-e05-q15',
@@ -498,6 +646,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A estabilidade do TimSort permite ordenar em etapas, por exemplo primeiro por nome e depois por idade, mantendo os nomes em ordem dentro de cada idade.',
+      dica: 'Estável fala de elementos empatados.',
     },
   ],
 };

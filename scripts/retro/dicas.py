@@ -19,7 +19,8 @@ feitas = 0
 for marca, bloco in zip(partes[1::2], partes[2::2]):
     qid = bloco[: bloco.index("'")]
     chave = 'q' + qid.split('-q')[-1]
-    fim = bloco.index('\n    },')
+    # o fim do exercício, e não um `    },` dentro do código (corpo de constante de enum, por exemplo)
+    fim = re.search(r'\n    \},(?=\n  \]|$)', bloco).start()
     if chave in dicas and '\n      dica:' not in bloco[:fim]:
         valor = dicas[chave].replace('\\', '\\\\').replace("'", "\\'")
         bloco = bloco[:fim] + f"\n      dica: '{valor}'," + bloco[fim:]

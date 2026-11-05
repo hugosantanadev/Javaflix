@@ -10,7 +10,7 @@
   <text x="62" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="800" fill="#f2c75c">Runtime</text>
   <text x="138" y="104" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#8a8277">(o antigo JRE)</text>
   <text x="62" y="126" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">biblioteca padrão:</text>
-  <text x="62" y="144" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#bdb5aa">java.lang  java.util  java.time  java.io</text>
+  <text x="62" y="144" font-family="Cascadia Code, Consolas, monospace" font-size="12" fill="#bdb5aa" xml:space="preserve">java.lang  java.util  java.time  java.io</text>
 
   <rect x="62" y="162" width="250" height="80" rx="8" fill="#262119" stroke="#4fd68b" stroke-width="1.4"/>
   <text x="80" y="190" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="800" fill="#4fd68b">JVM</text>

@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     '`Content-Length` conta bytes, não caracteres: `"Café"` tem 4 caracteres e 5 bytes em UTF-8.',
     'Erros `4xx` não se resolvem repetindo a requisição igual; `5xx`, às vezes sim, de preferência respeitando o `Retry-After`.',
   ],
+  ia: {
+    uso:
+      'Para HTTP, a IA é uma boa consultora de "qual status, qual método, qual cabeçalho" e explica uma troca de mensagens que você colar. Use-a para revisar o desenho das respostas de uma API. Ela não conhece as convenções do seu time e repete práticas comuns e erradas, como erro com status 200.',
+    pedido:
+      'Revise os status e cabeçalhos desta API de pedidos, feita em Spring Boot 4.1.\n<cole aqui a lista de rotas, com método, caminho, situações e o status que cada uma devolve hoje>\n- Para cada situação, diga o status mais adequado segundo a RFC 9110 e justifique em uma frase.\n- Aponte respostas de erro que hoje saem com status 2xx.\n- Diga quais rotas não são idempotentes e o que acontece se o cliente repetir a requisição.\n- Não cole nem peça tokens ou cookies reais.',
+    erros: [
+      'Usa `400` para tudo, inclusive para regras de negócio que pediam `422`.',
+      'Troca `401` por `403`, ou devolve `403` para quem não está logado.',
+      'Sugere `GET` para operações que alteram dados, como cancelar um pedido.',
+      'Calcula o `Content-Length` com `String.length()`.',
+    ],
+    conferir: [
+      'Confira cada status na seção da RFC 9110 que o define.',
+      'Rode as rotas com `curl -i` e veja o status e os cabeçalhos de verdade.',
+      'Teste com texto acentuado para pegar erros de tamanho em bytes.',
+    ],
+  },
   recursos: [
     {
       titulo: 'MDN: Uma visão geral do HTTP',
@@ -198,6 +215,115 @@ public class LeitorDeRequisicoes {
     comentarios:
       'O cabeçalho é sempre ASCII, mas o corpo não: se o texto inteiro fosse convertido para `String` antes, os índices de caracteres e de bytes deixariam de coincidir depois do `é`, e o `Content-Length` cortaria o corpo no lugar errado. Por isso a busca do fim do cabeçalho e o corte do corpo são feitos sobre os bytes. Um servidor de verdade ainda trata `Transfer-Encoding: chunked`, cabeçalhos repetidos, limites de tamanho e requisições malformadas, que aqui lançariam exceções; e recusa uma requisição com `Content-Length` e `chunked` ao mesmo tempo, a porta de entrada do *request smuggling*.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t2-e01-b01',
+      dificuldade: 1,
+      sintoma: 'Um servidor HTTP escrito à mão manda respostas cortadas quando o nome do produto tem acento: o cliente recebe `{"nome":"Café"`, sem a chave final, e o parser de JSON falha.',
+      codigo: `import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
+public class Tamanho {
+    public static void main(String[] args) {
+        String json = "{\\"nome\\":\\"Café\\"}";
+        int contentLength = json.length();
+        byte[] noFio = json.getBytes(StandardCharsets.UTF_8);
+        byte[] lidos = Arrays.copyOf(noFio, contentLength);
+        System.out.println("recebido: " + new String(lidos, StandardCharsets.UTF_8));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'recebido: {"nome":"Café"' },
+      correcao: `import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
+public class Tamanho {
+    public static void main(String[] args) {
+        String json = "{\\"nome\\":\\"Café\\"}";
+        int contentLength = json.getBytes(StandardCharsets.UTF_8).length;
+        byte[] noFio = json.getBytes(StandardCharsets.UTF_8);
+        byte[] lidos = Arrays.copyOf(noFio, contentLength);
+        System.out.println("recebido: " + new String(lidos, StandardCharsets.UTF_8));
+    }
+}`,
+      saidaCorrigida: 'recebido: {"nome":"Café"}',
+      dica: 'O `Content-Length` conta o quê? Quantos bytes o `é` ocupa em UTF-8?',
+      explicacao:
+        'O JSON tem 15 caracteres e 16 bytes, porque o `é` ocupa dois. O cliente lê exatamente `Content-Length` bytes e para um antes do fim. O tamanho precisa ser calculado sobre os bytes que vão de fato para o fio.',
+    },
+    {
+      id: 'backend-junior-t2-e01-b02',
+      dificuldade: 2,
+      sintoma: 'O cliente da API de estoque ficou repetindo um pedido inválido sem parar, mas desiste na primeira vez que o servidor responde 503: `400 -> tenta de novo`, `503 -> desiste`.',
+      codigo: `public class Retentar {
+    static boolean vaiTentarDeNovo(int status) {
+        return status / 100 == 4;
+    }
+
+    public static void main(String[] args) {
+        for (int status : new int[] {400, 404, 503}) {
+            System.out.println(status + " -> " + (vaiTentarDeNovo(status) ? "tenta de novo" : "desiste"));
+        }
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: '400 -> tenta de novo\n404 -> tenta de novo\n503 -> desiste' },
+      correcao: `public class Retentar {
+    static boolean vaiTentarDeNovo(int status) {
+        return status >= 500;
+    }
+
+    public static void main(String[] args) {
+        for (int status : new int[] {400, 404, 503}) {
+            System.out.println(status + " -> " + (vaiTentarDeNovo(status) ? "tenta de novo" : "desiste"));
+        }
+    }
+}`,
+      saidaCorrigida: '400 -> desiste\n404 -> desiste\n503 -> tenta de novo',
+      dica: 'Qual classe de status diz "repetir igual não vai adiantar"?',
+      explicacao:
+        'Um `4xx` é erro do cliente: a mesma requisição vai falhar do mesmo jeito. Um `5xx` pode ser temporário, e tentar de novo, com espera, faz sentido. O código tinha as duas classes trocadas. Num cliente de verdade, a nova tentativa também respeita o `Retry-After` e tem um limite.',
+    },
+    {
+      id: 'backend-junior-t2-e01-b03',
+      dificuldade: 3,
+      sintoma: 'Depois que o proxy passou a falar HTTP/2 com o serviço, todas as requisições chegam com `formato: desconhecido`, embora o cliente mande `Content-Type: application/json`.',
+      codigo: `import java.util.HashMap;
+import java.util.Map;
+
+public class Cabecalhos {
+    public static void main(String[] args) {
+        String[] recebidos = {"content-type: application/json", "content-length: 26"};
+        Map<String, String> cabecalhos = new HashMap<>();
+        for (String linha : recebidos) {
+            String[] p = linha.split(": ", 2);
+            cabecalhos.put(p[0], p[1]);
+        }
+        System.out.println("formato: " + cabecalhos.getOrDefault("Content-Type", "desconhecido"));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'formato: desconhecido' },
+      correcao: `import java.util.HashMap;
+import java.util.Map;
+
+public class Cabecalhos {
+    public static void main(String[] args) {
+        String[] recebidos = {"content-type: application/json", "content-length: 26"};
+        Map<String, String> cabecalhos = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (String linha : recebidos) {
+            String[] p = linha.split(": ", 2);
+            cabecalhos.put(p[0], p[1]);
+        }
+        System.out.println("formato: " + cabecalhos.getOrDefault("Content-Type", "desconhecido"));
+    }
+}`,
+      saidaCorrigida: 'formato: application/json',
+      dica: 'Os nomes de cabeçalho diferenciam maiúsculas de minúsculas? E as chaves de um `HashMap`?',
+      explicacao:
+        'Nomes de cabeçalho não diferenciam maiúsculas, e o HTTP/2 manda todos em minúsculas. Um `HashMap` comum diferencia. Um `TreeMap` com `String.CASE_INSENSITIVE_ORDER` trata `Content-Type` e `content-type` como a mesma chave; é o que o `HttpHeaders` do Spring e do JDK fazem por dentro.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t2-e01-q01',
@@ -207,6 +333,7 @@ public class LeitorDeRequisicoes {
       opcoes: ['`GET`', '`POST`', '`DELETE`', '`PATCH`'],
       resposta: 0,
       explicacao: 'Métodos seguros podem ser repetidos, pré-carregados e guardados em cache. `HEAD` e `OPTIONS` também são seguros.',
+      dica: 'Seguro quer dizer: só lê, nunca altera nada.',
     },
     {
       id: 'backend-junior-t2-e01-q02',
@@ -216,6 +343,7 @@ public class LeitorDeRequisicoes {
       opcoes: ['`PUT`', '`DELETE`', '`POST`', '`PATCH`, sempre', 'Nenhum método HTTP é idempotente'],
       respostas: [0, 1],
       explicacao: '`PUT` grava o mesmo valor de novo e `DELETE` apaga o que já foi apagado. Dois `POST` criam dois recursos, e um `PATCH` como "some 1 ao estoque" muda o resultado a cada repetição.',
+      dica: 'Repetir a mesma requisição deixa o servidor no mesmo estado. Qual dos métodos cria algo novo a cada vez?',
     },
     {
       id: 'backend-junior-t2-e01-q03',
@@ -225,6 +353,7 @@ public class LeitorDeRequisicoes {
       opcoes: ['`403 Forbidden`', '`401 Unauthorized`', '`400 Bad Request`', '`500 Internal Server Error`'],
       resposta: 0,
       explicacao: 'A API sabe quem ela é, e ela não tem permissão: `403`. O `401` seria para uma requisição sem credenciais válidas. Algumas APIs respondem `404` nesse caso, para nem revelar que o pedido existe.',
+      dica: 'O servidor sabe quem ela é, mas ela não tem permissão para esse recurso.',
     },
     {
       id: 'backend-junior-t2-e01-q04',
@@ -239,6 +368,7 @@ public class LeitorDeRequisicoes {
       ],
       resposta: 0,
       explicacao: 'O `201` diz que algo foi criado, e o `Location` diz onde. O `302` mandaria o cliente fazer outra requisição.',
+      dica: 'Criou um recurso: há um status próprio e um cabeçalho que diz onde ele está.',
     },
     {
       id: 'backend-junior-t2-e01-q05',
@@ -248,6 +378,7 @@ public class LeitorDeRequisicoes {
       opcoes: ['`400 Bad Request`', '`422 Unprocessable Content`', '`404 Not Found`', '`500 Internal Server Error`'],
       resposta: 0,
       explicacao: 'A requisição está malformada: nem dá para ler o JSON. O `422` é para um JSON legível com dados inválidos. E nunca `500`: o erro é do cliente.',
+      dica: 'O JSON nem chega a virar um objeto.',
     },
     {
       id: 'backend-junior-t2-e01-q06',
@@ -262,6 +393,7 @@ public class LeitorDeRequisicoes {
       ],
       resposta: 0,
       explicacao: 'O servidor está temporariamente indisponível e disse quando voltar. Repetir em rajada só aumenta a sobrecarga.',
+      dica: 'O 503 é temporário, e o cabeçalho diz quanto esperar.',
     },
     {
       id: 'backend-junior-t2-e01-q07',
@@ -276,6 +408,7 @@ public class LeitorDeRequisicoes {
       ],
       resposta: 0,
       explicacao: '`Content-Type` descreve o que vai na mensagem; `Accept`, o que se aceita de volta. Se o servidor não souber gerar CSV, responde `406 Not Acceptable`.',
+      dica: 'Um cabeçalho fala do que vai; o outro, do que o cliente quer receber.',
     },
     {
       id: 'backend-junior-t2-e01-q08',
@@ -292,6 +425,7 @@ public class Teste {
 }`,
       resposta: '4 5',
       explicacao: 'O `é` ocupa dois bytes em UTF-8. Um `Content-Length: 4` cortaria o último byte, e o cliente receberia um caractere inválido.',
+      dica: 'Conte caracteres e bytes de "Café": o `é` ocupa dois bytes em UTF-8.',
     },
     {
       id: 'backend-junior-t2-e01-q09',
@@ -310,6 +444,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O limite 3 no `split` deixa a frase inteira na última parte, mesmo com espaços. E a divisão inteira por 100 dá a classe do status.',
+      dica: 'Leia o que o programa imprime para cada status e caminho.',
     },
     {
       id: 'backend-junior-t2-e01-q10',
@@ -324,6 +459,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'No HTTP/2, aliás, todos os nomes de cabeçalho trafegam em minúsculas.',
+      dica: 'Os nomes de cabeçalho diferenciam maiúsculas de minúsculas?',
     },
     {
       id: 'backend-junior-t2-e01-q11',
@@ -338,6 +474,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O cliente já tem a versão atual em cache. O `304` economiza o corpo inteiro na rede.',
+      dica: 'Se o cliente já tem a versão atual, o servidor não precisa reenviar o corpo.',
     },
     {
       id: 'backend-junior-t2-e01-q12',
@@ -352,6 +489,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O estado viaja com a requisição. IPs mudam e são compartilhados, e uma conexão pode fechar a qualquer momento.',
+      dica: 'O que viaja em cada requisição e identifica o usuário?',
     },
     {
       id: 'backend-junior-t2-e01-q13',
@@ -361,6 +499,7 @@ public class Teste {
       opcoes: ['`307 Temporary Redirect`', '`302 Found`', '`301 Moved Permanently`', '`304 Not Modified`'],
       resposta: 0,
       explicacao: 'Com `301` e `302`, clientes podem trocar o `POST` por `GET`. O `307` e o `308`, permanente, garantem o mesmo método.',
+      dica: 'Entre os redirecionamentos temporários, um garante que o método e o corpo não mudam.',
     },
     {
       id: 'backend-junior-t2-e01-q14',
@@ -375,6 +514,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O TLS cifra a mensagem HTTP inteira. Mesmo assim, dados sensíveis não devem ir na URL: ela aparece em logs e no histórico do navegador.',
+      dica: 'O TLS cifra a mensagem HTTP inteira, inclusive o caminho e a query string.',
     },
     {
       id: 'backend-junior-t2-e01-q15',
@@ -390,6 +530,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'Um `GET` não tem corpo, e por isso dispensa `Content-Type`. O `Host` é obrigatório porque um IP pode servir muitos sites.',
+      dica: 'A primeira linha é obrigatória, e o HTTP/1.1 exige um cabeçalho específico.',
     },
   ],
 };

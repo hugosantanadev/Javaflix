@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Repositório remoto e local: no servidor, a branch main; na sua máquina, a branch remota origin/main, que é uma cópia de onde a main do servidor estava no último fetch, e a sua main local; git fetch atualiza origin/main, git pull faz o fetch e mescla em main, git push envia a sua main para o servidor</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+    <marker id="v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker>
+    <marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a1a"/></marker>
+  </defs>
+  <rect x="20" y="40" width="200" height="200" rx="8" fill="#1b1916" stroke="#8a8277"/>
+  <text x="120" y="66" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="700" fill="#f3eee7" text-anchor="middle">Servidor (GitHub)</text>
+  <rect x="300" y="40" width="440" height="200" rx="8" fill="#1b1916" stroke="#8a8277"/>
+  <text x="520" y="66" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="700" fill="#f3eee7" text-anchor="middle">Sua máquina</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="700" text-anchor="middle">
+    <rect x="60" y="130" width="120" height="36" rx="4" fill="#13221a" stroke="#4fd68b"/>
+    <text x="120" y="153" fill="#4fd68b">main</text>
+    <rect x="330" y="130" width="140" height="36" rx="4" fill="#1b1916" stroke="#bdb5aa" stroke-dasharray="4 3"/>
+    <text x="400" y="153" fill="#bdb5aa">origin/main</text>
+    <rect x="580" y="130" width="120" height="36" rx="4" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="640" y="153" fill="#ff7a1a">main</text>
+  </g>
+  <path d="M180 140 L327 140" stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+  <path d="M470 148 L577 148" stroke="#4fd68b" stroke-width="1.6" fill="none" marker-end="url(#v)"/>
+  <path d="M640 166 C 640 230, 160 230, 120 169" stroke="#ff7a1a" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#l)"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12" font-weight="700">
+    <text x="215" y="128" fill="#bdb5aa">git fetch</text>
+    <text x="478" y="138" fill="#4fd68b">merge/rebase</text>
+    <text x="370" y="226" fill="#ff7a1a">git push</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277" text-anchor="middle">
+    <text x="400" y="186">cópia do servidor no</text>
+    <text x="400" y="200">último fetch</text>
+    <text x="640" y="186">onde você commita</text>
+  </g>
+  <text x="20" y="276" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">git pull = git fetch + o merge (ou rebase) de origin/main na sua main.</text>
+</svg>

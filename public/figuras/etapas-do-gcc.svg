@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="270" viewBox="0 0 760 270" role="img" aria-labelledby="t">
+  <title id="t">As quatro etapas do gcc em fila. O arquivo ola.c passa pelo pré-processador e vira C expandido; o compilador gera o assembly ola.s; o montador gera o código objeto ola.o, ainda com um buraco no lugar de printf; o ligador junta ola.o com a biblioteca C, tapa o buraco e gera o executável ola</title>
+  <rect width="760" height="270" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" text-anchor="middle">
+    <rect x="20" y="60" width="100" height="50" rx="6" fill="#1b1916" stroke="#43403a"/><text x="70" y="90" fill="#f3eee7">ola.c</text>
+    <rect x="170" y="60" width="100" height="50" rx="6" fill="#1b1916" stroke="#43403a"/><text x="220" y="84" fill="#f3eee7">C</text><text x="220" y="100" fill="#8a8277" font-size="11">expandido</text>
+    <rect x="320" y="60" width="100" height="50" rx="6" fill="#1b1916" stroke="#43403a"/><text x="370" y="90" fill="#f3eee7">ola.s</text>
+    <rect x="470" y="60" width="100" height="50" rx="6" fill="#1b1916" stroke="#ff7a1a"/><text x="520" y="84" fill="#f3eee7">ola.o</text><text x="520" y="100" fill="#ff7a1a" font-size="11">printf = ?</text>
+    <rect x="640" y="60" width="100" height="50" rx="6" fill="#1b1916" stroke="#4fd68b"/><text x="690" y="90" fill="#4fd68b">ola</text>
+    <rect x="470" y="170" width="100" height="44" rx="6" fill="#1b1916" stroke="#43403a"/><text x="520" y="190" fill="#bdb5aa">libc</text><text x="520" y="205" fill="#8a8277" font-size="11">printf</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none">
+    <path d="M122 85 L166 85" marker-end="url(#s)"/><path d="M272 85 L316 85" marker-end="url(#s)"/><path d="M422 85 L466 85" marker-end="url(#s)"/><path d="M572 85 L636 85" marker-end="url(#s)"/>
+    <path d="M572 192 L604 192 L604 92" />
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11.5" fill="#bdb5aa" text-anchor="middle">
+    <text x="144" y="44">pré-proc.</text><text x="294" y="44">compilador</text><text x="444" y="44">montador</text><text x="604" y="44">ligador</text>
+    <text x="144" y="134" fill="#8a8277">-E</text><text x="294" y="134" fill="#8a8277">-S</text><text x="444" y="134" fill="#8a8277">-c</text>
+  </g>
+  <text x="20" y="252" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">O código objeto já é código de máquina, mas com buracos; o ligador os preenche com os endereços reais.</text>
+</svg>

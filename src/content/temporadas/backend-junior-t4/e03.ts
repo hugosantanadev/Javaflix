@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Receber a entidade do banco no `@RequestBody` deixa o cliente preencher campos que não devia.',
     'O `Location` com caminho relativo funciona; para a URL completa, use `ServletUriComponentsBuilder`.',
   ],
+  ia: {
+    uso:
+      'Gerar o esqueleto de um controller a partir da tabela de rotas é trabalho repetitivo, e a IA o faz bem. O cuidado é com o que ela coloca dentro: regras de negócio no controller, entidades no `@RequestBody` e status genéricos.',
+    pedido:
+      'Escreva o ProdutoController de uma API Spring Boot 4.1, em Java 25.\n<cole aqui a tabela de rotas, com status de sucesso e de erro, e os records NovoProduto e ProdutoResposta>\n- O controller só traduz HTTP: chama o ProdutoService e não tem regras de negócio.\n- POST responde 201 com Location; DELETE responde 204; produto inexistente é tratado por exceção, não por if.\n- Use DTOs no @RequestBody, nunca a entidade.\n- Escreva também os testes com @WebMvcTest e @MockitoBean para cada status.',
+    erros: [
+      'Põe cálculo de preço, validação de estoque ou acesso a repositório dentro do controller.',
+      'Recebe a entidade JPA no `@RequestBody`.',
+      'Devolve `200` na criação, sem `Location`.',
+      'Usa `@MockBean`, que não existe no Spring Boot 4, nos testes.',
+    ],
+    conferir: [
+      'Rode cada rota com `curl -i` e confira status e cabeçalhos com a tabela.',
+      'Mande parâmetros inválidos, um método não mapeado e um `Content-Type` errado.',
+      'Leia o controller procurando qualquer coisa além de chamar o serviço e montar a resposta.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Spring Framework: Annotated Controllers',
@@ -237,6 +254,147 @@ public class Despachante {
     comentarios:
       'Cada linha corresponde a uma resposta real do Spring na aula. O `/produtos/busca` chegou à busca porque a rota literal tem zero variáveis contra uma do `/{id}`, a mesma preferência por caminhos mais específicos do `RequestMappingHandlerMapping`. A ordenação explícita importa: a ordem dos métodos devolvida pela reflexão não é especificada, e um despachante que dependesse dela poderia mudar de comportamento entre duas versões do Java. O Spring calcula essa especificidade de forma mais refinada, contando também curingas e o comprimento dos trechos, e monta a tabela de rotas uma vez só, na inicialização.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t4-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O aplicativo trava ao abrir um produto removido: a API responde `GET /produtos/99 -> 200 null`, e o cliente tenta ler um produto que não existe.',
+      codigo: `import java.util.Map;
+import java.util.Optional;
+
+public class Responder {
+    static final Map<Long, String> PRODUTOS = Map.of(1L, "Teclado", 2L, "Mouse");
+
+    static String buscar(long id) {
+        Optional<String> produto = Optional.ofNullable(PRODUTOS.get(id));
+        return produto.map(nome -> "200 " + nome).orElse("200 null");
+    }
+
+    public static void main(String[] args) {
+        System.out.println("GET /produtos/2 -> " + buscar(2));
+        System.out.println("GET /produtos/99 -> " + buscar(99));
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'GET /produtos/2 -> 200 Mouse\nGET /produtos/99 -> 200 null' },
+      correcao: `import java.util.Map;
+import java.util.Optional;
+
+public class Responder {
+    static final Map<Long, String> PRODUTOS = Map.of(1L, "Teclado", 2L, "Mouse");
+
+    static String buscar(long id) {
+        Optional<String> produto = Optional.ofNullable(PRODUTOS.get(id));
+        return produto.map(nome -> "200 " + nome).orElse("404");
+    }
+
+    public static void main(String[] args) {
+        System.out.println("GET /produtos/2 -> " + buscar(2));
+        System.out.println("GET /produtos/99 -> " + buscar(99));
+    }
+}`,
+      saidaCorrigida: 'GET /produtos/2 -> 200 Mouse\nGET /produtos/99 -> 404',
+      dica: 'Que status a API deveria dar quando o `Optional` vem vazio?',
+      explicacao:
+        'Um recurso que não existe é `404`, não `200` com o corpo vazio ou `null`. O cliente decide o que fazer pelo status; com `200`, ele acredita que recebeu um produto. É o `map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build())` da aula.',
+    },
+    {
+      id: 'backend-junior-t4-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O roteador caseiro de um projeto de estudo derruba a requisição de itens de pedido com `ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 5`.',
+      codigo: `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Variaveis {
+    static Map<String, String> extrair(String modelo, String caminho) {
+        String[] m = modelo.split("/"), c = caminho.split("/");
+        Map<String, String> vars = new LinkedHashMap<>();
+        for (int i = 0; i < m.length; i++) {
+            if (m[i].startsWith("{")) vars.put(m[i].substring(1, m[i].length() - 1), c[i + 1]);
+        }
+        return vars;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(extrair("/pedidos/{pedido}/itens/{item}", "/pedidos/42/itens/3"));
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
+      correcao: `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Variaveis {
+    static Map<String, String> extrair(String modelo, String caminho) {
+        String[] m = modelo.split("/"), c = caminho.split("/");
+        Map<String, String> vars = new LinkedHashMap<>();
+        for (int i = 0; i < m.length; i++) {
+            if (m[i].startsWith("{")) vars.put(m[i].substring(1, m[i].length() - 1), c[i]);
+        }
+        return vars;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(extrair("/pedidos/{pedido}/itens/{item}", "/pedidos/42/itens/3"));
+    }
+}`,
+      saidaCorrigida: '{pedido=42, item=3}',
+      dica: 'O modelo e o caminho foram quebrados do mesmo jeito. O trecho do caminho que corresponde a `m[i]` está em qual posição?',
+      explicacao:
+        'Modelo e caminho têm as mesmas partes nas mesmas posições: a variável `m[i]` corresponde a `c[i]`. O `i + 1` pegava o trecho seguinte e, na última variável, passava do fim do vetor. Repare que, antes de estourar, o `pedido` já teria recebido "itens" em vez de 42.',
+    },
+    {
+      id: 'backend-junior-t4-e03-b03',
+      dificuldade: 3,
+      sintoma: 'A busca por nome responde 400 "Failed to convert \'id\' with value: \'busca\'": a requisição caiu no método errado, `/produtos/busca -> buscar por id`.',
+      codigo: `import java.util.Comparator;
+import java.util.List;
+
+public class Prioridade {
+    record Rota(String modelo, String acao) {
+        boolean casa(String caminho) {
+            String[] m = modelo.split("/"), c = caminho.split("/");
+            if (m.length != c.length) return false;
+            for (int i = 0; i < m.length; i++) if (!m[i].startsWith("{") && !m[i].equals(c[i])) return false;
+            return true;
+        }
+    }
+
+    public static void main(String[] args) {
+        List<Rota> rotas = List.of(new Rota("/produtos/{id}", "buscar por id"), new Rota("/produtos/busca", "buscar por nome"));
+        List<Rota> ordem = rotas;
+        String caminho = "/produtos/busca";
+        System.out.println(caminho + " -> " + ordem.stream().filter(r -> r.casa(caminho)).findFirst().map(Rota::acao).orElse("404"));
+    }
+}`,
+      linha: 16,
+      efeito: { tipo: 'saida', saida: '/produtos/busca -> buscar por id' },
+      correcao: `import java.util.Comparator;
+import java.util.List;
+
+public class Prioridade {
+    record Rota(String modelo, String acao) {
+        boolean casa(String caminho) {
+            String[] m = modelo.split("/"), c = caminho.split("/");
+            if (m.length != c.length) return false;
+            for (int i = 0; i < m.length; i++) if (!m[i].startsWith("{") && !m[i].equals(c[i])) return false;
+            return true;
+        }
+    }
+
+    public static void main(String[] args) {
+        List<Rota> rotas = List.of(new Rota("/produtos/{id}", "buscar por id"), new Rota("/produtos/busca", "buscar por nome"));
+        List<Rota> ordem = rotas.stream().sorted(Comparator.comparingLong((Rota r) -> r.modelo().chars().filter(ch -> ch == '{').count())).toList();
+        String caminho = "/produtos/busca";
+        System.out.println(caminho + " -> " + ordem.stream().filter(r -> r.casa(caminho)).findFirst().map(Rota::acao).orElse("404"));
+    }
+}`,
+      saidaCorrigida: '/produtos/busca -> buscar por nome',
+      dica: 'As duas rotas casam com `/produtos/busca`. Qual o roteador escolhe, e por quê?',
+      explicacao:
+        'O roteador pegava a primeira rota que casava, na ordem da declaração, e `/produtos/{id}` casa com qualquer coisa. O Spring ordena os candidatos pelo mais específico, com menos variáveis e mais trechos literais, e é isso que a correção reproduz: `/produtos/busca` vence `/produtos/{id}`.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t4-e03-q01',
@@ -251,6 +409,7 @@ public class Despachante {
       ],
       resposta: 0,
       explicacao: 'O `@RestController` é um `@Controller` com `@ResponseBody` em todos os métodos. O `@Controller` puro é usado com modelos de página, como o Thymeleaf.',
+      dica: 'Num deles, o retorno vira o corpo da resposta; no outro, o nome de uma página.',
     },
     {
       id: 'backend-junior-t4-e03-q02',
@@ -265,6 +424,7 @@ public class Despachante {
       ],
       resposta: 0,
       explicacao: 'Retornar o objeto direto dá `200`. O `@ResponseStatus` acerta o status, mas não cria o cabeçalho `Location`.',
+      dica: '`ResponseEntity` tem um atalho para o `201` que recebe a URI do recurso criado.',
     },
     {
       id: 'backend-junior-t4-e03-q03',
@@ -279,6 +439,7 @@ public class Despachante {
       ],
       resposta: 0,
       explicacao: 'Com `defaultValue` ou `required = false`, a ausência passa a ser aceita.',
+      dica: 'Sem `defaultValue` nem `required = false`, o parâmetro é obrigatório.',
     },
     {
       id: 'backend-junior-t4-e03-q04',
@@ -293,6 +454,7 @@ public class Despachante {
       ],
       resposta: 0,
       explicacao: 'A conversão falha antes de o método ser chamado, e o Spring trata isso como erro do cliente.',
+      dica: '"abc" não vira `long`: é um erro do cliente.',
     },
     {
       id: 'backend-junior-t4-e03-q05',
@@ -307,6 +469,7 @@ public class Despachante {
       ],
       resposta: 0,
       explicacao: 'O caminho existe; o método é que não. O Spring monta o `Allow` a partir dos mapeamentos do caminho.',
+      dica: 'O caminho existe, com outros métodos.',
     },
     {
       id: 'backend-junior-t4-e03-q06',
@@ -316,6 +479,7 @@ public class Despachante {
       opcoes: ['`415 Unsupported Media Type`', '`406 Not Acceptable`', '`400 Bad Request`', '`201 Created`'],
       resposta: 0,
       explicacao: 'O Spring não tem conversor de texto puro para `NovoProduto`. O `406` é o contrário: o cliente pede uma resposta num formato que a API não produz.',
+      dica: 'O servidor não aceita o formato que o cliente mandou.',
     },
     {
       id: 'backend-junior-t4-e03-q07',
@@ -325,6 +489,7 @@ public class Despachante {
       opcoes: ['`406 Not Acceptable`', '`415 Unsupported Media Type`', '`200`, em JSON mesmo assim', '`404 Not Found`'],
       resposta: 0,
       explicacao: 'A negociação de conteúdo falhou: não há conversor que produza XML. Com o módulo de XML do Jackson no classpath, a API passaria a responder XML.',
+      dica: 'O servidor não consegue produzir o formato que o cliente pediu.',
     },
     {
       id: 'backend-junior-t4-e03-q08',
@@ -340,6 +505,7 @@ public class Despachante {
       ],
       respostas: [0, 1],
       explicacao: '`@RequestParam` lê a query string (ou um formulário); `@RequestHeader`, um cabeçalho; `@CookieValue`, um cookie.',
+      dica: 'Caminho, corpo, query string e cabeçalho: cada um tem a sua anotação.',
     },
     {
       id: 'backend-junior-t4-e03-q09',
@@ -354,6 +520,7 @@ public class Despachante {
       ],
       resposta: 0,
       explicacao: 'Por isso a busca funcionou na aula. A ordem de declaração não importa para essa escolha.',
+      dica: 'Entre dois caminhos que casam, o mais específico vence.',
     },
     {
       id: 'backend-junior-t4-e03-q10',
@@ -363,6 +530,7 @@ public class Despachante {
       opcoes: ['`204`, sem corpo', '`200`, com corpo vazio', '`404`', '`201`'],
       resposta: 0,
       explicacao: 'É o padrão de um `DELETE` bem-sucedido: o recurso foi removido e não há nada a devolver no corpo.',
+      dica: '`void` sem corpo, com o status da anotação.',
     },
     {
       id: 'backend-junior-t4-e03-q11',
@@ -377,6 +545,7 @@ public class Despachante {
       ],
       resposta: 0,
       explicacao: 'O controller traduz HTTP e delega. O serviço concentra a regra e pode ser chamado por um controller, por uma fila ou por um teste comum.',
+      dica: 'O que acontece se a mesma criação precisar ser feita por uma fila ou um job?',
     },
     {
       id: 'backend-junior-t4-e03-q12',
@@ -405,6 +574,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem `@Retention`, a retenção padrão é `CLASS`: a anotação fica no bytecode mas não aparece na reflexão. Por isso todas as anotações do Spring são `RUNTIME`.',
+      dica: 'Siga a lógica de casamento do programa para os dois caminhos.',
     },
     {
       id: 'backend-junior-t4-e03-q13',
@@ -429,6 +599,7 @@ public class Teste {
 }`,
       resposta: '{pedido=42, item=3}',
       explicacao: 'Cada trecho entre chaves do modelo recebe o trecho na mesma posição do caminho. O Spring ainda converte cada valor para o tipo do parâmetro.',
+      dica: 'As variáveis do modelo correspondem aos trechos do caminho na mesma posição.',
     },
     {
       id: 'backend-junior-t4-e03-q14',
@@ -443,6 +614,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `map` só roda com o `Optional` cheio. É um jeito compacto de evitar o `if (p == null)` no controller.',
+      dica: 'O `map` só roda se houver valor; o `orElse`, se não houver.',
     },
     {
       id: 'backend-junior-t4-e03-q15',
@@ -457,6 +629,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O parent do Spring Boot liga o `-parameters` no plugin do compilador. Sem ele, o Spring só conhece os tipos dos parâmetros, não os nomes.',
+      dica: 'Os nomes dos parâmetros só existem no bytecode com uma opção do compilador.',
     },
   ],
 };

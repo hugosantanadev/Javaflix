@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     '`git reset --hard` descarta mudanças não commitadas sem volta, e nem o reflog as recupera.',
     'Para desfazer um commit que já está na `main` compartilhada, use `git revert`, que não reescreve o histórico.',
   ],
+  ia: {
+    uso:
+      'Rebase é o comando do Git em que mais vale perguntar antes de rodar. A IA explica bem o que uma sequência de rebase vai fazer com o histórico, monta a lista do rebase interativo a partir do `git log` e ajuda a recuperar trabalho pelo reflog. O cuidado é com comandos que reescrevem histórico compartilhado.',
+    pedido:
+      'Minha branch feature/pix tem 4 commits locais e já foi enviada para abrir um pull request; só eu trabalho nela. A main andou 3 commits.\n<cole aqui o git log --oneline --graph --all>\n- Mostre os comandos para atualizar a branch com rebase e juntar os commits de correção.\n- Diga o que acontece com os hashes e por que o push comum vai ser recusado.\n- Use git push --force-with-lease, nunca --force.\n- Explique como desfaço tudo pelo reflog se algo der errado.',
+    erros: [
+      'Sugere `git push --force` em vez de `--force-with-lease`.',
+      'Propõe rebase da `main` ou de uma branch que outras pessoas usam.',
+      'Usa `git reset --hard` para "limpar" sem avisar que descarta mudanças não commitadas.',
+      'Confunde os lados do conflito: no rebase, o `HEAD` é a `main`, não a sua branch.',
+    ],
+    conferir: [
+      'Antes do rebase, anote o hash da ponta da branch, ou crie uma branch de segurança com `git branch backup`.',
+      'Depois, compare com `git diff backup` que o conteúdo final é o esperado.',
+      'Confira com `git log --oneline --graph --all` que só os seus commits mudaram de hash.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Pro Git: Rebase',
@@ -177,6 +194,145 @@ public class Autosquash {
     comentarios:
       'A lista de grupos preserva a ordem dos `pick`, e o mapa liga cada mensagem ao seu grupo; o `putIfAbsent` faz um ajuste ir para o **primeiro** commit com aquela mensagem, como o Git faz. O `fixup! Ajusta o login` não tem alvo na branch, e o Git o deixa como `pick` no mesmo lugar, o que é um bom lembrete: o autosquash só junta commits que estão no trecho que está sendo reaplicado. O Git de verdade também aceita como alvo o começo do hash e encadeamentos como `fixup! fixup! Cria o carrinho`, que ficam como exercício extra.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t1-e03-b01',
+      dificuldade: 1,
+      sintoma: 'A ferramenta que desenha o histórico previsto depois de um rebase mostra os commits da branch **antes** dos da `main`: `feature depois do rebase: [C\', D\', A, B, M]`.',
+      codigo: `import java.util.List;
+import java.util.stream.Stream;
+
+public class Reaplicar {
+    public static void main(String[] args) {
+        List<String> main = List.of("A", "B", "M");
+        List<String> branch = List.of("C", "D");
+        List<String> copias = branch.stream().map(c -> c + "'").toList();
+        List<String> resultado = Stream.concat(copias.stream(), main.stream()).toList();
+        System.out.println("feature depois do rebase: " + resultado);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: "feature depois do rebase: [C', D', A, B, M]" },
+      correcao: `import java.util.List;
+import java.util.stream.Stream;
+
+public class Reaplicar {
+    public static void main(String[] args) {
+        List<String> main = List.of("A", "B", "M");
+        List<String> branch = List.of("C", "D");
+        List<String> copias = branch.stream().map(c -> c + "'").toList();
+        List<String> resultado = Stream.concat(main.stream(), copias.stream()).toList();
+        System.out.println("feature depois do rebase: " + resultado);
+    }
+}`,
+      saidaCorrigida: "feature depois do rebase: [A, B, M, C', D']",
+      dica: 'O rebase põe as cópias em cima de quê?',
+      explicacao:
+        'O rebase reaplica os commits da branch **depois** da ponta da `main`: primeiro vem todo o histórico da `main`, depois as cópias. `Stream.concat` mantém a ordem dos argumentos, então a ordem deles decide o resultado.',
+    },
+    {
+      id: 'backend-junior-t1-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O script que prepara a lista do rebase interativo deixou o `fixup!` no fim, como um `pick` comum, em vez de juntá-lo ao commit que ele corrige.',
+      codigo: `import java.util.ArrayList;
+import java.util.List;
+
+public class Autosquash {
+    public static void main(String[] args) {
+        List<String> commits = List.of("Cria pagamento por Pix", "Valida a chave Pix", "fixup! Cria pagamento por Pix");
+        List<String> ordem = new ArrayList<>();
+        for (String c : commits) {
+            if (!c.startsWith("fixup! ")) ordem.add("pick " + c);
+        }
+        for (String c : commits) {
+            if (c.startsWith("fixup! ")) {
+                String alvo = c.substring(6);
+                int i = ordem.indexOf("pick " + alvo);
+                if (i >= 0) ordem.add(i + 1, "fixup " + c);
+                else ordem.add("pick " + c);
+            }
+        }
+        ordem.forEach(System.out::println);
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'saida', saida: 'pick Cria pagamento por Pix\npick Valida a chave Pix\npick fixup! Cria pagamento por Pix' },
+      correcao: `import java.util.ArrayList;
+import java.util.List;
+
+public class Autosquash {
+    public static void main(String[] args) {
+        List<String> commits = List.of("Cria pagamento por Pix", "Valida a chave Pix", "fixup! Cria pagamento por Pix");
+        List<String> ordem = new ArrayList<>();
+        for (String c : commits) {
+            if (!c.startsWith("fixup! ")) ordem.add("pick " + c);
+        }
+        for (String c : commits) {
+            if (c.startsWith("fixup! ")) {
+                String alvo = c.substring(7);
+                int i = ordem.indexOf("pick " + alvo);
+                if (i >= 0) ordem.add(i + 1, "fixup " + c);
+                else ordem.add("pick " + c);
+            }
+        }
+        ordem.forEach(System.out::println);
+    }
+}`,
+      saidaCorrigida: 'pick Cria pagamento por Pix\nfixup fixup! Cria pagamento por Pix\npick Valida a chave Pix',
+      dica: 'Conte os caracteres de `"fixup! "`, com o espaço. O que sobra no começo do alvo?',
+      explicacao:
+        '`"fixup! "` tem 7 caracteres, e `substring(6)` deixa um espaço no começo do alvo. `" Cria pagamento por Pix"` nunca é encontrado, e o código cai no caminho de reserva sem nenhum aviso. Usar `c.substring("fixup! ".length())` evita contar à mão.',
+    },
+    {
+      id: 'backend-junior-t1-e03-b03',
+      dificuldade: 3,
+      sintoma: 'A simulação de rebase deixou a branch quebrada: o segundo commit reaplicado tem como pai `28f1fa9`, a base **antiga**, e não a cópia do primeiro commit.',
+      codigo: `import java.util.List;
+
+public class Cascata {
+    record Commit(String mensagem, String pai) {}
+
+    static String hash(String mensagem, String pai) {
+        return Integer.toHexString((mensagem + "|" + pai).hashCode());
+    }
+
+    public static void main(String[] args) {
+        List<Commit> branch = List.of(new Commit("Cria cupons", "28f1fa9"), new Commit("Cupom de frete", "2301874"));
+        String pai = "3edf437";
+        for (Commit c : branch) {
+            String h = hash(c.mensagem(), pai);
+            System.out.println(h + " " + c.mensagem() + " (pai " + pai + ")");
+            pai = c.pai();
+        }
+    }
+}`,
+      linha: 16,
+      efeito: { tipo: 'saida', saida: '8cbb4b57 Cria cupons (pai 3edf437)\n7d53b900 Cupom de frete (pai 28f1fa9)' },
+      correcao: `import java.util.List;
+
+public class Cascata {
+    record Commit(String mensagem, String pai) {}
+
+    static String hash(String mensagem, String pai) {
+        return Integer.toHexString((mensagem + "|" + pai).hashCode());
+    }
+
+    public static void main(String[] args) {
+        List<Commit> branch = List.of(new Commit("Cria cupons", "28f1fa9"), new Commit("Cupom de frete", "2301874"));
+        String pai = "3edf437";
+        for (Commit c : branch) {
+            String h = hash(c.mensagem(), pai);
+            System.out.println(h + " " + c.mensagem() + " (pai " + pai + ")");
+            pai = h;
+        }
+    }
+}`,
+      saidaCorrigida: '8cbb4b57 Cria cupons (pai 3edf437)\n7adece48 Cupom de frete (pai 8cbb4b57)',
+      dica: 'Depois de reaplicar um commit, quem deve ser o pai do próximo: o pai antigo dele ou a cópia recém-criada?',
+      explicacao:
+        'No rebase, cada cópia aponta para a cópia anterior, e é isso que faz os hashes mudarem em cascata. O código voltava ao pai original do commit, misturando o histórico novo com o antigo. Os hashes deste exemplo usam `hashCode` só para a simulação; o Git usa SHA-1.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t1-e03-q01',
@@ -191,6 +347,7 @@ public class Autosquash {
       ],
       resposta: 0,
       explicacao: 'O rebase muda a base da branch atual. A `main` não é alterada; para levá-la até a branch, ainda é preciso um merge, que vira fast-forward.',
+      dica: 'O rebase não junta as pontas: ele leva os commits da branch para outro lugar.',
     },
     {
       id: 'backend-junior-t1-e03-q02',
@@ -205,6 +362,7 @@ public class Autosquash {
       ],
       resposta: 0,
       explicacao: 'O hash é o SHA-1 do texto do commit, que tem a árvore, o pai, o autor, o committer e a mensagem. Trocar o pai já basta, e a mudança se propaga para todos os commits seguintes.',
+      dica: 'O hash de um commit inclui o hash do pai. O pai mudou?',
     },
     {
       id: 'backend-junior-t1-e03-q03',
@@ -220,6 +378,7 @@ public class Autosquash {
       ],
       respostas: [0, 1],
       explicacao: 'O rebase é o que reescreve histórico, e por isso exige cuidado com branches compartilhadas. Conflitos existem nos dois, e no rebase podem aparecer em cada commit reaplicado.',
+      dica: 'Compare o que cada um faz com os commits que já existem e com o histórico.',
     },
     {
       id: 'backend-junior-t1-e03-q04',
@@ -234,6 +393,7 @@ public class Autosquash {
       ],
       resposta: 0,
       explicacao: 'É a regra de ouro: não faça rebase de commits que outras pessoas já têm. Pior ainda, o `--force` pode apagar commits que alguém enviou depois do seu último pull.',
+      dica: 'Os outros três têm os commits antigos. O que acontece quando o histórico do servidor muda por baixo deles?',
     },
     {
       id: 'backend-junior-t1-e03-q05',
@@ -248,6 +408,7 @@ public class Autosquash {
       ],
       resposta: 0,
       explicacao: 'Assim, um commit que um colega enviou para a sua branch nesse meio-tempo não é apagado em silêncio.',
+      dica: 'Um dos dois confere se o servidor ainda está como você o viu da última vez.',
     },
     {
       id: 'backend-junior-t1-e03-q06',
@@ -262,6 +423,7 @@ public class Autosquash {
       ],
       resposta: 0,
       explicacao: 'O `pull` comum faria um merge, com aquele commit de merge que não diz nada. Com `--rebase`, só os seus commits locais mudam, então a regra de ouro continua respeitada.',
+      dica: 'O `pull` baixa os commits novos; com `--rebase`, o que acontece com os seus?',
     },
     {
       id: 'backend-junior-t1-e03-q07',
@@ -271,6 +433,7 @@ public class Autosquash {
       opcoes: ['`fixup`', '`squash`', '`reword`', '`drop`'],
       resposta: 0,
       explicacao: 'O `squash` também junta, mas combina as mensagens e abre o editor. O `drop` apaga o commit, mudanças e tudo.',
+      dica: 'Entre `squash` e `fixup`, um mantém a mensagem e o outro a descarta.',
     },
     {
       id: 'backend-junior-t1-e03-q08',
@@ -286,6 +449,7 @@ public class Autosquash {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Desfazer sem reescrever é papel do `git revert`. E mudanças que nunca foram commitadas não estão em lugar nenhum do Git para serem recuperadas.',
+      dica: 'Veja a tabela de ações do rebase interativo: juntar, mudar mensagem, apagar, reordenar.',
     },
     {
       id: 'backend-junior-t1-e03-q09',
@@ -300,6 +464,7 @@ public class Autosquash {
       ],
       resposta: 0,
       explicacao: 'No rebase, o Git está "em cima" da `main` aplicando os seus commits, então o `HEAD` é a base nova e o seu commit é o outro lado. No merge é o inverso.',
+      dica: 'No rebase, a inversão: o `HEAD` é a branch em cima da qual você está reaplicando.',
     },
     {
       id: 'backend-junior-t1-e03-q10',
@@ -309,6 +474,7 @@ public class Autosquash {
       opcoes: ['`git rebase --continue`', '`git commit -m "Resolve conflito"`', '`git merge --continue`', '`git rebase --skip`'],
       resposta: 0,
       explicacao: 'O `--continue` cria o commit reaplicado e segue para o próximo. O `--skip` jogaria fora o seu commit inteiro.',
+      dica: 'Depois de resolver e preparar, você pede ao rebase para seguir para o próximo commit.',
     },
     {
       id: 'backend-junior-t1-e03-q11',
@@ -323,6 +489,7 @@ public class Autosquash {
       ],
       resposta: 0,
       explicacao: 'O `revert` acrescenta história em vez de reescrevê-la, então ninguém do time é afetado. As outras opções reescrevem commits compartilhados.',
+      dica: 'O commit já foi compartilhado: o jeito seguro não reescreve o histórico.',
     },
     {
       id: 'backend-junior-t1-e03-q12',
@@ -337,6 +504,7 @@ public class Autosquash {
       ],
       resposta: 0,
       explicacao: 'O commit original continua no banco de objetos, e o reflog guarda por onde o `HEAD` passou. O `--abort` só funciona com um rebase ainda em andamento.',
+      dica: 'Existe um registro de todas as posições pelas quais o `HEAD` passou.',
     },
     {
       id: 'backend-junior-t1-e03-q13',
@@ -357,6 +525,7 @@ public class Teste {
 }`,
       resposta: "[A, B, M, C', D']",
       explicacao: "Os commits da branch vêm depois do `M`, em linha reta, e são cópias (`C'`, `D'`), não os originais.",
+      dica: 'Os commits da main ficam como estão; os da branch viram cópias, depois do último da main.',
     },
     {
       id: 'backend-junior-t1-e03-q14',
@@ -383,6 +552,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `fixup!` e o `squash!` do carrinho e do total têm alvo na lista. O `fixup! Ajusta o login` não tem, e por isso continua como um commit separado.',
+      dica: 'Conte as mensagens que começam com `fixup!` e cujo alvo existe na lista.',
     },
     {
       id: 'backend-junior-t1-e03-q15',
@@ -392,6 +562,7 @@ public class Teste {
       opcoes: ['`git reset --soft HEAD~1`', '`git reset --hard HEAD~1`', '`git revert HEAD`', '`git restore .`'],
       resposta: 0,
       explicacao: 'O `--soft` só move a branch para trás, e as mudanças continuam na área de preparação. O `--hard` as descartaria. Para só trocar a mensagem, `git commit --amend` também resolve.',
+      dica: 'Um dos modos do `reset` mantém as mudanças já preparadas.',
     },
   ],
 };

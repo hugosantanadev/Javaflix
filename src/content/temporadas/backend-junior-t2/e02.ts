@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'Erro com `200 OK` e `{"erro": ...}` no corpo engana clientes, proxies e o monitoramento.',
     'Remover, renomear ou mudar o tipo de um campo quebra quem já usa a API, mesmo que seja "só um detalhe".',
   ],
+  ia: {
+    uso:
+      'Desenhar uma API é decidir nomes, métodos e status, e a IA é uma boa revisora dessas decisões, porque conhece as convenções. Ela é fraca nas regras do seu negócio e tende a desenhar rotas no formato que mais viu, inclusive as ruins, como verbos no caminho.',
+    pedido:
+      'Revise o desenho desta API REST de uma loja, que vai ser feita em Spring Boot 4.1.\n<cole aqui a lista de rotas e os casos de uso>\n- Aponte rotas com verbos no caminho, singular misturado com plural e ações que deveriam ser sub-recursos.\n- Diga o status de sucesso e os de erro de cada rota, incluindo 404 e 405.\n- Indique onde falta paginação e onde um POST precisa de Idempotency-Key.\n- Não mude regras de negócio; se algo estiver ambíguo, escreva a pergunta.',
+    erros: [
+      'Propõe caminhos com verbos, como `/pedidos/42/cancelar` com `GET`.',
+      'Esquece a paginação nas listagens.',
+      'Devolve erro com `200` e um campo `erro` no corpo.',
+      'Inclui o *stack trace* no corpo da resposta de erro.',
+    ],
+    conferir: [
+      'Monte o mapa da coleção (GET, POST, GET por id, PUT, PATCH, DELETE) e veja se cada rota cabe nele.',
+      'Para cada rota de listagem, procure os parâmetros de página e tamanho, com máximo.',
+      'Mande um método não aceito com `curl -i -X PATCH` e confira o `405` com `Allow`.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Microsoft: Práticas recomendadas de design de API Web',
@@ -174,6 +191,137 @@ public class Idempotencia {
     comentarios:
       'A segunda chamada devolve exatamente a primeira resposta, e só duas cobranças acontecem em cinco requisições. Comparar o corpo protege contra um cliente que reaproveita a chave por engano para outra operação. Num servidor real faltam três coisas: as chaves vão para um armazenamento compartilhado, como o Redis ou o banco, porque há várias cópias do servidor; elas expiram depois de algumas horas ou dias; e uma requisição com a chave ainda em processamento recebe `409`, o que exige marcar a chave como "em andamento" antes de cobrar, de forma atômica.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t2-e02-b01',
+      dificuldade: 1,
+      sintoma: 'O aplicativo mostra "pedido não encontrado" quando o usuário tenta editar o pedido 42, que existe. O roteador responde `PATCH /pedidos/42 -> 404`.',
+      codigo: `public class Roteador {
+    static int status(boolean caminhoExiste, boolean metodoAceito) {
+        if (!caminhoExiste) return 404;
+        if (!metodoAceito) return 404;
+        return 200;
+    }
+
+    public static void main(String[] args) {
+        System.out.println("GET /clientes/1 -> " + status(false, false));
+        System.out.println("PATCH /pedidos/42 -> " + status(true, false));
+        System.out.println("GET /pedidos/42 -> " + status(true, true));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'GET /clientes/1 -> 404\nPATCH /pedidos/42 -> 404\nGET /pedidos/42 -> 200' },
+      correcao: `public class Roteador {
+    static int status(boolean caminhoExiste, boolean metodoAceito) {
+        if (!caminhoExiste) return 404;
+        if (!metodoAceito) return 405;
+        return 200;
+    }
+
+    public static void main(String[] args) {
+        System.out.println("GET /clientes/1 -> " + status(false, false));
+        System.out.println("PATCH /pedidos/42 -> " + status(true, false));
+        System.out.println("GET /pedidos/42 -> " + status(true, true));
+    }
+}`,
+      saidaCorrigida: 'GET /clientes/1 -> 404\nPATCH /pedidos/42 -> 405\nGET /pedidos/42 -> 200',
+      dica: 'O caminho `/pedidos/42` existe. O que falta é o recurso ou o método?',
+      explicacao:
+        'O `404` diz que o recurso não existe, e o cliente conclui que o pedido sumiu. O `405` diz que o recurso existe mas não aceita aquele método, e o cabeçalho `Allow` lista os que aceita. São respostas que levam o cliente a ações bem diferentes.',
+    },
+    {
+      id: 'backend-junior-t2-e02-b02',
+      dificuldade: 2,
+      sintoma: 'Um cliente pediu 100.000 pedidos de uma vez e a API caiu por falta de memória. E quem pede 10 recebe 100: `tamanho=10 -> 100 itens`, `tamanho=100000 -> 100000 itens`.',
+      codigo: `public class Pagina {
+    static final int MAXIMO = 100;
+
+    static int tamanhoEfetivo(int pedido) {
+        return Math.max(pedido, MAXIMO);
+    }
+
+    public static void main(String[] args) {
+        for (int pedido : new int[] {10, 100_000}) {
+            System.out.println("tamanho=" + pedido + " -> " + tamanhoEfetivo(pedido) + " itens");
+        }
+    }
+}`,
+      linha: 5,
+      efeito: { tipo: 'saida', saida: 'tamanho=10 -> 100 itens\ntamanho=100000 -> 100000 itens' },
+      correcao: `public class Pagina {
+    static final int MAXIMO = 100;
+
+    static int tamanhoEfetivo(int pedido) {
+        return Math.min(pedido, MAXIMO);
+    }
+
+    public static void main(String[] args) {
+        for (int pedido : new int[] {10, 100_000}) {
+            System.out.println("tamanho=" + pedido + " -> " + tamanhoEfetivo(pedido) + " itens");
+        }
+    }
+}`,
+      saidaCorrigida: 'tamanho=10 -> 10 itens\ntamanho=100000 -> 100 itens',
+      dica: 'Um teto é o menor ou o maior entre o pedido e o máximo?',
+      explicacao:
+        'Para limitar por cima, o valor é o **menor** entre o pedido e o máximo: `Math.min`. O `max` fazia o contrário, e o limite de proteção virava um piso. Uma API de verdade também recusa tamanhos zero ou negativos com `400`.',
+    },
+    {
+      id: 'backend-junior-t2-e02-b03',
+      dificuldade: 3,
+      sintoma: 'Um cliente reaproveitou, por engano, a `Idempotency-Key` de um pagamento de R$ 50 num de R$ 900. A API respondeu `201` com o pagamento antigo, e o de R$ 900 nunca foi feito, sem ninguém perceber.',
+      codigo: `import java.util.HashMap;
+import java.util.Map;
+
+public class Idempotencia {
+    static final Map<String, String[]> salvas = new HashMap<>();
+    static int pagamentos = 0;
+
+    static String pagar(String chave, String corpo) {
+        String[] anterior = salvas.get(chave);
+        if (anterior != null) return anterior[1];
+        pagamentos++;
+        String resposta = "201 pagamento " + pagamentos + " de " + corpo;
+        salvas.put(chave, new String[] {corpo, resposta});
+        return resposta;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(pagar("7f3c", "R$ 50,00"));
+        System.out.println(pagar("7f3c", "R$ 50,00"));
+        System.out.println(pagar("7f3c", "R$ 900,00"));
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: '201 pagamento 1 de R$ 50,00\n201 pagamento 1 de R$ 50,00\n201 pagamento 1 de R$ 50,00' },
+      correcao: `import java.util.HashMap;
+import java.util.Map;
+
+public class Idempotencia {
+    static final Map<String, String[]> salvas = new HashMap<>();
+    static int pagamentos = 0;
+
+    static String pagar(String chave, String corpo) {
+        String[] anterior = salvas.get(chave);
+        if (anterior != null) return anterior[0].equals(corpo) ? anterior[1] : "422 chave reutilizada com outro corpo";
+        pagamentos++;
+        String resposta = "201 pagamento " + pagamentos + " de " + corpo;
+        salvas.put(chave, new String[] {corpo, resposta});
+        return resposta;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(pagar("7f3c", "R$ 50,00"));
+        System.out.println(pagar("7f3c", "R$ 50,00"));
+        System.out.println(pagar("7f3c", "R$ 900,00"));
+    }
+}`,
+      saidaCorrigida: '201 pagamento 1 de R$ 50,00\n201 pagamento 1 de R$ 50,00\n422 chave reutilizada com outro corpo',
+      dica: 'O corpo da primeira requisição foi guardado junto com a resposta. Alguém o compara?',
+      explicacao:
+        'A chave só identifica uma repetição quando o corpo também é o mesmo. Com outro corpo, devolver a resposta antiga esconde um erro do cliente e perde a operação nova. A proposta da IETF manda responder `422` nesse caso, para o cliente perceber o engano.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t2-e02-q01',
@@ -183,6 +331,7 @@ public class Idempotencia {
       opcoes: ['`GET /clientes/7/pedidos`', '`GET /listarPedidosDoCliente?id=7`', '`POST /clientes/7/pedidos/listar`', '`GET /Cliente/7/Pedido`'],
       resposta: 0,
       explicacao: 'Pedidos são um sub-recurso do cliente. `GET /pedidos?cliente=7` também seria uma boa opção, como filtro da coleção.',
+      dica: 'O recurso é a coleção de pedidos; o cliente é um filtro dela.',
     },
     {
       id: 'backend-junior-t2-e02-q02',
@@ -192,6 +341,7 @@ public class Idempotencia {
       opcoes: ['`GET /pedidos/42/cancelar`', '`POST /pedidos/42/cancelamento`', '`POST /pedidos/42:cancelar`', '`DELETE /pedidos/42`'],
       resposta: 0,
       explicacao: 'Um `GET` não pode alterar dados: navegadores, proxies e robôs o disparam sem pedir. As duas formas com `POST` são convenções aceitas para ações.',
+      dica: 'Uma das rotas faz um `GET` mudar alguma coisa no servidor.',
     },
     {
       id: 'backend-junior-t2-e02-q03',
@@ -206,6 +356,7 @@ public class Idempotencia {
       ],
       resposta: 0,
       explicacao: 'O recurso existe; o método é que não é aceito. O `Allow` diz ao cliente o que ele pode usar.',
+      dica: 'O caminho existe; o que não existe é o método.',
     },
     {
       id: 'backend-junior-t2-e02-q04',
@@ -235,6 +386,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `LinkedHashMap` mantém a ordem em que as variáveis aparecem no modelo. O segundo caminho tem mais partes que o modelo e não casa.',
+      dica: 'Siga o roteador: primeiro o caminho casa com algum modelo? Depois, o método é aceito?',
     },
     {
       id: 'backend-junior-t2-e02-q05',
@@ -249,6 +401,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O caminho identifica o recurso; a query refina a listagem. Corpo em `GET` não tem significado definido e muitos intermediários o descartam.',
+      dica: 'Tudo o que refina uma listagem vai no mesmo lugar.',
     },
     {
       id: 'backend-junior-t2-e02-q06',
@@ -263,6 +416,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Os pedidos novos empurram todos os outros três posições para trás. A paginação por cursor ("depois do pedido X") não tem esse problema.',
+      dica: 'Com deslocamento, a página 2 começa no item 21 da lista atual, que agora tem três itens novos no topo.',
     },
     {
       id: 'backend-junior-t2-e02-q07',
@@ -272,6 +426,7 @@ public class Teste {
       opcoes: ['`application/problem+json`', '`application/error+json`', '`text/plain`', '`application/json; erro=true`'],
       resposta: 0,
       explicacao: 'O tipo diz ao cliente que o corpo segue o formato padrão, com `type`, `title`, `status`, `detail` e `instance`.',
+      dica: 'É o JSON comum com um sufixo que identifica o formato de problema.',
     },
     {
       id: 'backend-junior-t2-e02-q08',
@@ -287,6 +442,7 @@ public class Teste {
       ],
       respostas: [0, 1],
       explicacao: 'Quem lia `total` passa a receber nada, e quem não enviava `cupom` passa a receber erro. As mudanças aditivas são ignoradas por clientes que seguem o leitor tolerante.',
+      dica: 'Mudanças aditivas são seguras; remover ou mudar o significado de algo, não.',
     },
     {
       id: 'backend-junior-t2-e02-q09',
@@ -301,6 +457,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A chave torna o `POST` seguro para repetir. O `409` é só para quando a primeira requisição com a chave ainda está sendo processada.',
+      dica: 'A mesma chave com o mesmo corpo é uma repetição.',
     },
     {
       id: 'backend-junior-t2-e02-q10',
@@ -310,6 +467,7 @@ public class Teste {
       opcoes: ['`422 Unprocessable Content`', '`201 Created`, com o pagamento antigo', '`201 Created`, com um pagamento novo', '`404 Not Found`'],
       resposta: 0,
       explicacao: 'Devolver o pagamento antigo esconderia o erro, e criar um novo violaria o contrato da chave. O `422` avisa o cliente.',
+      dica: 'A mesma chave com outro corpo indica um erro do cliente.',
     },
     {
       id: 'backend-junior-t2-e02-q11',
@@ -319,6 +477,7 @@ public class Teste {
       opcoes: ['Nível 0', 'Nível 1', 'Nível 2', 'Nível 3'],
       resposta: 0,
       explicacao: 'Nenhum recurso tem URI própria, e o HTTP é só um transporte. É o estilo das antigas APIs SOAP e de muitas APIs RPC.',
+      dica: 'Um endereço só e a ação no corpo: nem recursos o modelo tem.',
     },
     {
       id: 'backend-junior-t2-e02-q12',
@@ -333,6 +492,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Painéis de taxa de erro, novas tentativas automáticas e o próprio código do cliente dependem do status. O erro deve vir com `4xx` ou `5xx`.',
+      dica: 'Quem olha o status para decidir se deu certo?',
     },
     {
       id: 'backend-junior-t2-e02-q13',
@@ -356,6 +516,7 @@ public class Teste {
 }`,
       resposta: '3 101 103',
       explicacao: 'Seis requisições, mas só três chaves distintas: só três recursos são criados. As repetições recebem o id guardado da primeira vez.',
+      dica: 'Conte quantas chaves diferentes chegaram; repetições devolvem a resposta guardada.',
     },
     {
       id: 'backend-junior-t2-e02-q14',
@@ -370,6 +531,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `PUT` substitui a representação inteira. Para alterar só alguns campos, o método é o `PATCH`.',
+      dica: 'O `PUT` substitui o recurso inteiro pelo que foi enviado.',
     },
     {
       id: 'backend-junior-t2-e02-q15',
@@ -384,6 +546,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Sem estado na memória do servidor, um balanceador distribui as requisições livremente. O estado fica no banco, num cache compartilhado ou na própria requisição.',
+      dica: 'Sem estado guardado, qualquer cópia do servidor atende qualquer requisição.',
     },
   ],
 };

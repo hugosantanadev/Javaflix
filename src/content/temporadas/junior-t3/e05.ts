@@ -15,6 +15,22 @@ const episodio: EpisodioConteudo = {
     'Classes abstratas têm construtores, que rodam pela cadeia de `super(...)`.',
     'Uma classe abstrata pode não ter nenhum método abstrato.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a decidir o que fica concreto e o que fica abstrato numa superclasse, e a montar um Template Method. Use-a para revisar se um método com corpo "padrão" não deveria ser abstrato.',
+    pedido:
+      'Revise esta classe abstrata Java 21 e suas subclasses.\n<cole o código aqui>\n- Aponte métodos concretos com valor padrão vazio (0, null, "") que deveriam ser abstract.\n- Confira se cada subclasse concreta implementa todos os métodos abstratos herdados.\n- Aponte construtores que chamam métodos abstratos.',
+    erros: [
+      'Dá corpo "padrão" a métodos que deveriam ser abstratos, escondendo subclasses incompletas.',
+      'Chama um método abstrato no construtor da classe abstrata.',
+      'Combina `abstract` com `private`, `final` ou `static`.',
+    ],
+    conferir: [
+      'Compile depois de criar uma subclasse vazia: o erro deve listar os métodos pendentes.',
+      'Tente um `new` da classe abstrata: precisa ser recusado.',
+      'Teste cada subclasse pelo tipo da superclasse.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Abstract Methods and Classes',
@@ -173,6 +189,140 @@ public class Relatorios {
     comentarios:
       'É o Template Method: o roteiro (`gerar`) fica fixo e protegido por `final`, o passo obrigatório (`corpo`) é abstrato, e o passo opcional (`rodape`) tem uma versão padrão que as subclasses podem trocar. Um terceiro relatório seria só mais uma subclasse com um `corpo()`, e o compilador garantiria que ele não fosse esquecido.',
   },
+  bugs: [
+    {
+      id: 'junior-t3-e05-b01',
+      dificuldade: 1,
+      sintoma: 'O `javac` recusa o programa com `error: Veiculo is abstract; cannot be instantiated`.',
+      codigo: `abstract class Veiculo {
+    abstract int rodas();
+}
+
+class Moto extends Veiculo {
+    int rodas() { return 2; }
+}
+
+public class Garagem {
+    public static void main(String[] args) {
+        Veiculo v = new Veiculo();
+        System.out.println(v.rodas() + " rodas");
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `abstract class Veiculo {
+    abstract int rodas();
+}
+
+class Moto extends Veiculo {
+    int rodas() { return 2; }
+}
+
+public class Garagem {
+    public static void main(String[] args) {
+        Veiculo v = new Moto();
+        System.out.println(v.rodas() + " rodas");
+    }
+}`,
+      saidaCorrigida: '2 rodas',
+      dica: 'Quantas rodas teria "um veículo qualquer"? Que classe da hierarquia sabe responder?',
+      explicacao: 'Uma classe abstrata pode ser o tipo da variável, mas não o do objeto: ela tem métodos sem corpo. O `new` precisa ser de uma subclasse concreta, e a variável `Veiculo` continua aceitando qualquer uma.',
+    },
+    {
+      id: 'junior-t3-e05-b02',
+      dificuldade: 2,
+      sintoma: 'O cliente VIP deveria ter 20% de desconto, mas paga o preço cheio: `200.0`.',
+      codigo: `abstract class Cliente {
+    double desconto() { return 0; }
+
+    double pagar(double valor) {
+        return valor * (1 - desconto());
+    }
+}
+
+class ClienteVip extends Cliente {
+    double descontos() { return 0.2; }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        Cliente c = new ClienteVip();
+        System.out.println(c.pagar(200));
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: '200.0' },
+      correcao: `abstract class Cliente {
+    abstract double desconto();
+
+    double pagar(double valor) {
+        return valor * (1 - desconto());
+    }
+}
+
+class ClienteVip extends Cliente {
+    double desconto() { return 0.2; }
+}
+
+public class Loja {
+    public static void main(String[] args) {
+        Cliente c = new ClienteVip();
+        System.out.println(c.pagar(200));
+    }
+}`,
+      saidaCorrigida: '160.0',
+      dica: 'O `pagar` chama qual método? A subclasse sobrescreve esse mesmo método?',
+      explicacao: '`descontos()` é um método novo, e `pagar` continua usando o `desconto()` padrão, que devolve 0. Com `desconto()` abstrato na superclasse, o engano de nome vira erro de compilação em vez de um desconto que some em silêncio.',
+    },
+    {
+      id: 'junior-t3-e05-b03',
+      dificuldade: 3,
+      sintoma: 'Gerar o relatório de vendas derruba o programa com `StackOverflowError`.',
+      codigo: `abstract class Relatorio {
+    String gerar() {
+        return "[" + corpo() + "]";
+    }
+
+    abstract String corpo();
+}
+
+class Vendas extends Relatorio {
+    String corpo() {
+        return gerar().toUpperCase();
+    }
+}
+
+public class Sistema {
+    public static void main(String[] args) {
+        System.out.println(new Vendas().gerar());
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'excecao', nome: 'StackOverflowError' },
+      correcao: `abstract class Relatorio {
+    String gerar() {
+        return "[" + corpo() + "]";
+    }
+
+    abstract String corpo();
+}
+
+class Vendas extends Relatorio {
+    String corpo() {
+        return "vendas".toUpperCase();
+    }
+}
+
+public class Sistema {
+    public static void main(String[] args) {
+        System.out.println(new Vendas().gerar());
+    }
+}`,
+      saidaCorrigida: '[VENDAS]',
+      dica: 'Siga as chamadas: `gerar` chama `corpo`, e `corpo` chama...?',
+      explicacao: 'No Template Method, o roteiro (`gerar`) chama o passo (`corpo`). Se o passo chamar o roteiro de volta, as duas chamadas se alternam até estourar a pilha. O passo deve produzir só a sua parte, sem chamar o método que o chamou.',
+    },
+  ],
   exercicios: [
     {
       id: 'junior-t3-e05-q01',
@@ -187,6 +337,7 @@ public class Relatorios {
       ],
       resposta: 0,
       explicacao: 'Ela pode ter tudo o que uma classe comum tem, e ser usada como tipo. Só não pode ser instanciada diretamente: os objetos são sempre de subclasses concretas.',
+      dica: 'Variável do tipo abstrato pode; objeto do tipo abstrato, não.',
     },
     {
       id: 'junior-t3-e05-q02',
@@ -211,6 +362,7 @@ Bebida b = new Cafe();
 System.out.println(b.servir());`,
       resposta: 'servindo café a 70 graus',
       explicacao: 'O método concreto da classe abstrata chama os abstratos, e o polimorfismo executa as versões de `Cafe`.',
+      dica: '`servir` é concreto e chama os dois métodos que `Cafe` implementa.',
     },
     {
       id: 'junior-t3-e05-q03',
@@ -236,6 +388,7 @@ class ContaCorrente extends Conta {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 6 },
       explicacao: 'Uma classe concreta precisa implementar todos os métodos abstratos que herdou. A alternativa seria declarar `ContaCorrente` como `abstract`.',
+      dica: 'A primeira classe concreta precisa implementar quantos dos métodos abstratos?',
     },
     {
       id: 'junior-t3-e05-q04',
@@ -252,6 +405,7 @@ class ContaCorrente extends Conta {
       respostas: [0, 1, 3],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'Classes abstratas podem ser vazias e ter construtores e métodos `static`. Um método abstrato exige uma classe abstrata e não pode ter corpo, nem vazio.',
+      dica: 'Método abstrato só em classe abstrata e sem corpo; o resto é livre.',
     },
     {
       id: 'junior-t3-e05-q05',
@@ -268,6 +422,7 @@ System.out.println(a.nome);`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'Mesmo sem nenhum método abstrato, uma classe `abstract` não pode ser instanciada. Uma subclasse, ainda que vazia, poderia.',
+      dica: 'Existe `new` de classe abstrata?',
     },
     {
       id: 'junior-t3-e05-q06',
@@ -293,6 +448,7 @@ public class Musica {
       respostas: ['abstract'],
       saida: 'fiu',
       explicacao: 'Uma classe com método abstrato precisa ser declarada `abstract`. A variável do tipo abstrato aponta para um objeto concreto, a flauta.',
+      dica: 'Uma classe com método abstrato precisa de qual modificador?',
     },
     {
       id: 'junior-t3-e05-q07',
@@ -312,6 +468,7 @@ public class Musica {
 }`,
       resposta: 6,
       explicacao: 'Um método `private` não é visível para as subclasses, que nunca poderiam implementá-lo. `abstract` e `private` são uma combinação proibida.',
+      dica: 'Um método abstrato que a subclasse não enxerga poderia ser implementado?',
     },
     {
       id: 'junior-t3-e05-q08',
@@ -339,6 +496,7 @@ new Concreta();`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O construtor da classe abstrata roda antes dos inicializadores da subclasse, mas a chamada já vai para a versão de `Concreta`, que lê o campo ainda com `null`.',
+      dica: 'O construtor de `Base` roda antes do inicializador do campo `nome` de `Concreta`.',
     },
     {
       id: 'junior-t3-e05-q09',
@@ -367,6 +525,7 @@ System.out.println(x.f() + " " + x.g() + " " + y.h());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`B` implementou `f()` e deixou `h()` para `C`, que ainda sobrescreveu `g()`. `C` é concreta porque, somando a herança, todos os abstratos têm implementação.',
+      dica: '`B` implementa `f`, `C` implementa `h` e sobrescreve `g`.',
     },
     {
       id: 'junior-t3-e05-q10',
@@ -380,6 +539,7 @@ System.out.println(x.f() + " " + x.g() + " " + y.h());`,
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 2 },
       explicacao: '`final` proíbe sobrescrever, e um método abstrato só existe para ser sobrescrito. A combinação é contraditória.',
+      dica: '`final` impede a sobrescrita; `abstract` exige.',
     },
     {
       id: 'junior-t3-e05-q11',
@@ -389,6 +549,7 @@ System.out.println(x.f() + " " + x.g() + " " + y.h());`,
       opcoes: ['`private`', '`final`', '`static`', '`protected`', '`public`'],
       respostas: [0, 1, 2],
       explicacao: 'Os três impedem a sobrescrita: `private` esconde o método, `final` a proíbe e `static` não participa dela. `protected` e `public` são comuns em métodos abstratos.',
+      dica: 'Quais modificadores impedem ou dispensam a sobrescrita?',
     },
     {
       id: 'junior-t3-e05-q12',
@@ -413,6 +574,7 @@ System.out.println(s.gritar());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `new Saudacao() { ... }` não instancia a classe abstrata: cria uma subclasse anônima concreta, que implementa `texto()`.',
+      dica: 'A anônima implementa `texto()`; `gritar` faz o resto.',
     },
     {
       id: 'junior-t3-e05-q13',
@@ -427,6 +589,7 @@ System.out.println(s.gritar());`,
       ],
       resposta: 0,
       explicacao: 'O construtor inicializa a parte comum do objeto, que existe em toda subclasse. Ele nunca é chamado com `new` diretamente, só pela cadeia de construtores.',
+      dica: 'A parte comum do objeto precisa ser inicializada por alguém.',
     },
     {
       id: 'junior-t3-e05-q14',
@@ -451,6 +614,7 @@ System.out.println(b.f());`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'É permitido "reabstrair" um método: `Meio` declara `f()` abstrato de novo, obrigando as subclasses concretas a escrever a sua versão. `Fim` implementa, e é ela que roda.',
+      dica: 'Um método abstrato pode redeclarar um concreto; `Fim` implementa de novo.',
     },
     {
       id: 'junior-t3-e05-q15',
@@ -465,6 +629,7 @@ System.out.println(b.f());`,
       ],
       resposta: 0,
       explicacao: 'A classe tem a flag `ACC_ABSTRACT`, que a JVM também confere. A proteção não depende de o código ter passado pelo `javac`.',
+      dica: 'A JVM também confere a proibição, com um erro próprio.',
     },
   ],
 };

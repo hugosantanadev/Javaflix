@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="280" viewBox="0 0 760 280" role="img" aria-labelledby="t">
+  <title id="t">O caminho da entrega: um push dispara o CI, que roda mvn verify com testes e Testcontainers; se passa, gera o jar com a versão 1.0.0; o deploy sobe o jar com as variáveis de ambiente do servidor; e o health check em /actuator/health confirma que a API está UP</title>
+  <rect width="760" height="280" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#f3eee7" text-anchor="middle">
+    <rect x="20" y="60" width="120" height="70" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="80" y="90">git push</text>
+    <rect x="170" y="60" width="140" height="70" rx="8" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="240" y="90">CI</text>
+    <rect x="340" y="60" width="120" height="70" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="400" y="90">Artefato</text>
+    <rect x="490" y="60" width="120" height="70" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="550" y="90">Deploy</text>
+    <rect x="640" y="60" width="105" height="70" rx="8" fill="#13221a" stroke="#4fd68b"/>
+    <text x="692" y="90">Saúde</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#bdb5aa" text-anchor="middle">
+    <text x="80" y="112">tag v1.0.0</text>
+    <text x="240" y="112">mvn verify</text>
+    <text x="400" y="112">pedidos-1.0.0.jar</text>
+    <text x="550" y="112">java -jar</text>
+    <text x="692" y="112" fill="#4fd68b">"UP"</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M140 95 L167 95"/>
+    <path d="M310 95 L337 95"/>
+    <path d="M460 95 L487 95"/>
+    <path d="M610 95 L637 95"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">
+    <text x="170" y="160">testes, Testcontainers,</text>
+    <text x="170" y="176">cobertura e OpenAPI</text>
+    <text x="490" y="160">DB_URL, DB_SENHA e o</text>
+    <text x="490" y="176">profile vêm do ambiente</text>
+  </g>
+  <path d="M240 130 L240 145" stroke="#ff7a1a" stroke-width="1.6"/>
+  <path d="M550 130 L550 145" stroke="#8a8277" stroke-width="1.6"/>
+  <text x="20" y="226" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#ff7a1a">Se o CI falha, nada segue: o artefato só existe para código que passou nos testes.</text>
+  <text x="20" y="252" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8a8277">O mesmo jar vai para homologação e produção; só o ambiente muda.</text>
+</svg>

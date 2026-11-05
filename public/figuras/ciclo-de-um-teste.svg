@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">O ciclo de vida de uma classe de teste no JUnit: o @BeforeAll, estático, roda uma vez; depois, para cada método de teste, o JUnit cria um objeto novo da classe, roda o @BeforeEach, o teste e o @AfterEach; no fim, o @AfterAll roda uma vez; como cada teste tem o seu objeto, os campos não passam de um teste para outro</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="20" y="40" width="130" height="40" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="32" y="58" fill="#ff7a1a" font-weight="700">@BeforeAll</text>
+    <text x="32" y="72" fill="#bdb5aa">static, 1 vez</text>
+
+    <rect x="610" y="40" width="130" height="40" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="622" y="58" fill="#ff7a1a" font-weight="700">@AfterAll</text>
+    <text x="622" y="72" fill="#bdb5aa">static, 1 vez</text>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700">
+    <text x="190" y="30" fill="#bdb5aa">Para cada método @Test</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="190" y="40" width="380" height="72" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="202" y="60" fill="#f3eee7" font-weight="700">teste 1</text>
+    <text x="202" y="80" fill="#4fd68b">new CarrinhoTest()</text>
+    <text x="360" y="80" fill="#bdb5aa">@BeforeEach</text>
+    <text x="450" y="80" fill="#f3eee7">@Test</text>
+    <text x="500" y="80" fill="#bdb5aa">@AfterEach</text>
+    <text x="202" y="100" fill="#6b645b">objeto 58ce9668</text>
+
+    <rect x="190" y="124" width="380" height="72" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="202" y="144" fill="#f3eee7" font-weight="700">teste 2</text>
+    <text x="202" y="164" fill="#4fd68b">new CarrinhoTest()</text>
+    <text x="360" y="164" fill="#bdb5aa">@BeforeEach</text>
+    <text x="450" y="164" fill="#f3eee7">@Test</text>
+    <text x="500" y="164" fill="#bdb5aa">@AfterEach</text>
+    <text x="202" y="184" fill="#6b645b">objeto 38089a5a</text>
+
+    <rect x="190" y="208" width="380" height="72" rx="8" fill="#1b1916" stroke="#8a8277"/>
+    <text x="202" y="228" fill="#f3eee7" font-weight="700">teste 3</text>
+    <text x="202" y="248" fill="#4fd68b">new CarrinhoTest()</text>
+    <text x="360" y="248" fill="#bdb5aa">@BeforeEach</text>
+    <text x="450" y="248" fill="#f3eee7">@Test</text>
+    <text x="500" y="248" fill="#bdb5aa">@AfterEach</text>
+    <text x="202" y="268" fill="#6b645b">objeto 6581dc0a</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M150 60 L187 60"/>
+    <path d="M380 112 L380 121"/>
+    <path d="M380 196 L380 205"/>
+    <path d="M570 244 C 600 244, 675 200, 675 83"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#8a8277">
+    <text x="20" y="130">Ordem entre os testes:</text>
+    <text x="20" y="146">determinística, mas</text>
+    <text x="20" y="162">difícil de prever.</text>
+    <text x="20" y="190">Um teste não deve</text>
+    <text x="20" y="206">depender de outro.</text>
+  </g>
+  <text x="20" y="306" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Cada teste ganha um objeto novo: os campos começam do zero. Só o que é static passa de um teste para outro.</text>
+</svg>

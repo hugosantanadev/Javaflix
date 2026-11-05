@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">O enum Operacao declara o campo simbolo, o construtor e o método abstrato aplicar. Cada constante com corpo vira uma subclasse anônima: SOMA é Operacao$1, SUBTRACAO é Operacao$2 e MULTIPLICACAO é Operacao$3, cada uma com a sua versão de aplicar</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <rect x="220" y="24" width="320" height="104" rx="8" fill="#1b1916" stroke="#ff7a1a"/>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13">
+    <text x="238" y="50" fill="#f3eee7" font-weight="700">enum Operacao</text>
+    <text x="238" y="74" fill="#bdb5aa">final String simbolo</text>
+    <text x="238" y="94" fill="#bdb5aa">Operacao(String simbolo)</text>
+    <text x="238" y="114" fill="#ff7a1a">abstract int aplicar(a, b)</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12.5">
+    <rect x="30" y="190" width="220" height="70" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="44" y="212" fill="#f3eee7" font-weight="700">SOMA</text><text x="236" y="212" fill="#8a8277" text-anchor="end">Operacao$1</text>
+    <text x="44" y="240" fill="#4fd68b">aplicar: a + b</text>
+    <rect x="270" y="190" width="220" height="70" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="284" y="212" fill="#f3eee7" font-weight="700">SUBTRACAO</text><text x="476" y="212" fill="#8a8277" text-anchor="end">Operacao$2</text>
+    <text x="284" y="240" fill="#4fd68b">aplicar: a - b</text>
+    <rect x="510" y="190" width="220" height="70" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="524" y="212" fill="#f3eee7" font-weight="700">MULTIPLICACAO</text><text x="716" y="212" fill="#8a8277" text-anchor="end">$3</text>
+    <text x="524" y="240" fill="#4fd68b">aplicar: a * b</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none">
+    <path d="M140 186 L300 132" marker-end="url(#s)"/><path d="M380 186 L380 132" marker-end="url(#s)"/><path d="M620 186 L460 132" marker-end="url(#s)"/>
+  </g>
+  <text x="30" y="290" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">Cada constante com corpo é uma subclasse anônima do enum; o método abstrato obriga todas a implementar.</text>
+</svg>

@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     'Dentro de um método genérico, `cond ? a : b` com operandos `T` não sofre promoção numérica.',
     '`List<Integer> l = Arrays.asList(1, 2.5);` não compila; com `List<Number>` à esquerda, compila.',
   ],
+  ia: {
+    uso:
+      'A IA explica bem por que uma chamada genérica inferiu certo tipo e gera variações para treinar a posição do `<T>`. Ela erra em detalhes que a prova cobra: esquece o `<T>` de métodos estáticos, cria a sombra de um `T` da classe e escreve a testemunha explícita sem o qualificador, como `<String>primeiro(lista)`.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o método genérico e as chamadas>\n- Para cada chamada, diga qual tipo o compilador infere para T e de onde ele tirou essa informação: argumentos, destino ou lambda.\n- Aponte se algum <T> esconde o da classe ou se um método static usa o T da classe.\n- Mostre a mesma chamada com testemunha explícita, do jeito que compila.\n- Não acrescente casts nem @SuppressWarnings para fazer compilar.',
+    erros: [
+      'Declara uma fábrica `static Caixa<T> de(T valor)` sem o `<T>` próprio, que não compila.',
+      'Repete `<T>` num método de instância de uma classe genérica e cria um tipo novo, que esconde o da classe.',
+      'Escreve a testemunha sem qualificador, `<String>primeiro(lista)`, que não compila.',
+      'Diz que a inferência usa o tipo real do objeto na execução, e não os tipos estáticos.',
+    ],
+    conferir: [
+      'Compile cada versão: posição do `<T>`, sombra e testemunha são regras de compilação.',
+      'Use `Ctrl+Shift+P` no IntelliJ sobre a chamada para ver o tipo inferido.',
+      'Atribua o resultado a uma variável do tipo esperado e veja se o compilador aceita sem cast.',
+    ],
+  },
   recursos: [
     {
       titulo: 'The Java Tutorials: Generic Methods',
@@ -176,6 +193,159 @@ public class Genericos {
     comentarios:
       'Os dois métodos funcionam para qualquer tipo porque só usam o que todo objeto tem: `equals` e `hashCode`, por meio do `HashMap`. Como `melhor` só muda quando uma contagem **supera** a dele, o empate fica com quem chegou primeiro. Na última linha, a testemunha `<Object>` faz `List.of("a")` e `List.of(1)` serem lidas como `List<Object>`. Sem ela, a inferência também resolveria, chegando a um tipo interseção de `String` e `Integer`.',
   },
+  bugs: [
+    {
+      id: 'pleno-t2-e02-b01',
+      dificuldade: 1,
+      sintoma: 'A fábrica estática `Resultado.ok` não compila: `non-static type variable T cannot be referenced from a static context`.',
+      codigo: `public class Resultados {
+    static class Resultado<T> {
+        final T valor;
+        final String erro;
+
+        Resultado(T valor, String erro) {
+            this.valor = valor;
+            this.erro = erro;
+        }
+
+        static Resultado<T> ok(T valor) { return new Resultado<>(valor, null); }
+
+        boolean sucesso() {
+            return erro == null;
+        }
+    }
+
+    public static void main(String[] args) {
+        Resultado<Integer> r = Resultado.ok(42);
+        System.out.println(r.sucesso() + " " + r.valor);
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `public class Resultados {
+    static class Resultado<T> {
+        final T valor;
+        final String erro;
+
+        Resultado(T valor, String erro) {
+            this.valor = valor;
+            this.erro = erro;
+        }
+
+        static <T> Resultado<T> ok(T valor) { return new Resultado<>(valor, null); }
+
+        boolean sucesso() {
+            return erro == null;
+        }
+    }
+
+    public static void main(String[] args) {
+        Resultado<Integer> r = Resultado.ok(42);
+        System.out.println(r.sucesso() + " " + r.valor);
+    }
+}`,
+      saidaCorrigida: 'true 42',
+      dica: 'Um método `static` pertence a qual `Resultado`: ao de `Integer`, ao de `String`, a nenhum?',
+      explicacao:
+        'O `T` da classe só existe para uma instância parametrizada, e um método `static` não pertence a nenhuma. A fábrica precisa declarar o próprio parâmetro de tipo, `static <T> Resultado<T> ok(T valor)`, como fazem `List.of` e `Optional.of`. O `T` do método é outro `T`, que só tem o mesmo nome por convenção.',
+    },
+    {
+      id: 'pleno-t2-e02-b02',
+      dificuldade: 2,
+      sintoma: 'O recibo deveria mostrar o total em reais, com duas casas, mas mostra o número cru: `total: 45`.',
+      codigo: `import java.math.BigDecimal;
+import java.util.List;
+
+public class Recibo {
+    static String formatar(Object valor) {
+        return String.valueOf(valor);
+    }
+
+    static String formatar(BigDecimal valor) {
+        return "R$ " + valor.setScale(2);
+    }
+
+    static <T> T ultimo(List<T> itens) {
+        return itens.get(itens.size() - 1);
+    }
+
+    public static void main(String[] args) {
+        List<Object> totais = List.of(new BigDecimal("19.9"), new BigDecimal("45"));
+        System.out.println("total: " + formatar(ultimo(totais)));
+    }
+}`,
+      linha: 18,
+      efeito: { tipo: 'saida', saida: 'total: 45' },
+      correcao: `import java.math.BigDecimal;
+import java.util.List;
+
+public class Recibo {
+    static String formatar(Object valor) {
+        return String.valueOf(valor);
+    }
+
+    static String formatar(BigDecimal valor) {
+        return "R$ " + valor.setScale(2);
+    }
+
+    static <T> T ultimo(List<T> itens) {
+        return itens.get(itens.size() - 1);
+    }
+
+    public static void main(String[] args) {
+        List<BigDecimal> totais = List.of(new BigDecimal("19.9"), new BigDecimal("45"));
+        System.out.println("total: " + formatar(ultimo(totais)));
+    }
+}`,
+      saidaCorrigida: 'total: R$ 45.00',
+      dica: 'Qual `formatar` o compilador escolhe depende do tipo que ele infere para `ultimo(totais)`. Que tipo é esse?',
+      explicacao:
+        'A sobrecarga é escolhida na compilação, pelo tipo estático do argumento. Com `List<Object>`, o `T` de `ultimo` é inferido como `Object`, e o compilador chama `formatar(Object)`, mesmo que o objeto seja um `BigDecimal`. Com `List<BigDecimal>`, o `T` vira `BigDecimal`, e a sobrecarga certa é escolhida.',
+    },
+    {
+      id: 'pleno-t2-e02-b03',
+      dificuldade: 3,
+      sintoma: 'A aplicação não sobe: `ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer`, apontando a linha que lê o timeout, e não o método que leu a configuração.',
+      codigo: `import java.util.Map;
+
+public class Configuracao {
+    static final Map<String, Object> VALORES = Map.of("timeout", "30", "tentativas", 3);
+
+    @SuppressWarnings("unchecked")
+    static <T> T valor(String chave) {
+        return (T) VALORES.get(chave);
+    }
+
+    public static void main(String[] args) {
+        int tentativas = valor("tentativas");
+        int timeout = valor("timeout");
+        System.out.println("tentativas: " + tentativas + ", timeout: " + timeout + "s");
+    }
+}`,
+      linha: 13,
+      efeito: { tipo: 'excecao', nome: 'ClassCastException' },
+      correcao: `import java.util.Map;
+
+public class Configuracao {
+    static final Map<String, Object> VALORES = Map.of("timeout", "30", "tentativas", 3);
+
+    @SuppressWarnings("unchecked")
+    static <T> T valor(String chave) {
+        return (T) VALORES.get(chave);
+    }
+
+    public static void main(String[] args) {
+        int tentativas = valor("tentativas");
+        int timeout = Integer.parseInt(valor("timeout"));
+        System.out.println("tentativas: " + tentativas + ", timeout: " + timeout + "s");
+    }
+}`,
+      saidaCorrigida: 'tentativas: 3, timeout: 30s',
+      dica: 'O cast `(T)` dentro de `valor` confere alguma coisa? Onde está o cast que de fato falhou?',
+      explicacao:
+        'O `(T)` é um cast sem verificação: depois do apagamento, `valor` devolve `Object`, e quem confere é o `checkcast` que o compilador põe na chamada, com o tipo inferido pelo destino, aqui `Integer` por causa do `int`. Como o timeout está guardado como texto, o erro estoura longe da causa. A correção converte o texto; um projeto melhor recebe o tipo esperado, `valor(chave, Integer.class)`, e usa `tipo.cast(...)` para falhar com uma mensagem clara.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t2-e02-q01',
@@ -192,6 +362,7 @@ public class Genericos {
       respostas: [0, 1, 2],
       verificar: { tipo: 'opcoesCompilam' },
       explicacao: 'O `<T>` fica entre os modificadores e o tipo de retorno. A ordem dos modificadores entre si é livre, e métodos de instância também podem ser genéricos.',
+      dica: 'O `<T>` vem depois dos modificadores e antes do tipo de retorno; a ordem dos modificadores é livre.',
     },
     {
       id: 'pleno-t2-e02-q02',
@@ -211,6 +382,7 @@ public class Genericos {
 }`,
       resposta: '8z',
       explicacao: 'Para 3 elementos, o índice é 1; para 4, é 2. O primeiro operando é um `Integer` e o segundo, uma `String`, então o `+` concatena.',
+      dica: 'O meio de um array de tamanho 3 é o índice 1; de tamanho 4, o índice 2.',
     },
     {
       id: 'pleno-t2-e02-q03',
@@ -240,6 +412,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 11 },
       explicacao: 'A linha 10 é válida. Na 11, `<String>primeiro(...)` sem `Teste.` antes é erro de sintaxe.',
+      dica: 'A testemunha explícita precisa de algo antes do ponto.',
     },
     {
       id: 'pleno-t2-e02-q04',
@@ -261,6 +434,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'No método genérico, os operandos são do tipo `T`, e o `Integer` 1 é devolvido como está. Na expressão direta, `1` e `2.5` são numéricos, e o resultado é promovido a `double`.',
+      dica: 'Dentro do método, a expressão opera sobre `T`; fora, sobre números.',
     },
     {
       id: 'pleno-t2-e02-q05',
@@ -285,6 +459,7 @@ public class Teste {
 }`,
       resposta: 13,
       explicacao: 'O `<T>` de `substituir` cria um tipo novo que esconde o `T` da classe. `valor` é do `T` da classe e não pode ser atribuído ao `T` do método.',
+      dica: 'O `<T>` do método esconde o da classe: `valor` é de outro `T`.',
     },
     {
       id: 'pleno-t2-e02-q06',
@@ -310,6 +485,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 8 },
       explicacao: 'O tipo inferido é a interseção dos supertipos comuns de `String` e `Integer`, como `Serializable` e `Comparable`. `length()` não está entre eles.',
+      dica: 'Com `var`, o tipo de `x` é a interseção de `String` e `Integer`.',
     },
     {
       id: 'pleno-t2-e02-q07',
@@ -330,6 +506,7 @@ public class Lista {
       respostas: ['<T>'],
       saida: 'Ana 3',
       explicacao: 'A declaração do parâmetro de tipo fica logo antes do tipo de retorno.',
+      dica: 'O método precisa declarar o próprio parâmetro de tipo.',
     },
     {
       id: 'pleno-t2-e02-q08',
@@ -360,6 +537,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Um método de instância pode declarar parâmetros de tipo além dos da classe. A cadeia vai de `Caixa<String>` para `Caixa<Integer>` com 3 e depois para 9.',
+      dica: 'Cada `mapear` cria uma caixa nova, com o resultado da função.',
     },
     {
       id: 'pleno-t2-e02-q09',
@@ -390,6 +568,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Construtores podem declarar parâmetros de tipo, mesmo numa classe comum. A testemunha explícita vai logo depois do `new`.',
+      dica: 'Construtores também podem ser genéricos, com a testemunha depois do `new`.',
     },
     {
       id: 'pleno-t2-e02-q10',
@@ -405,6 +584,7 @@ public class Teste {
       ],
       respostas: [0, 1, 2],
       explicacao: 'A inferência é feita na compilação, a partir dos argumentos e do destino. Desde o Java 8, o destino inclui o parâmetro de outro método. Nada da execução participa.',
+      dica: 'A inferência é feita na compilação, com informações estáticas.',
     },
     {
       id: 'pleno-t2-e02-q11',
@@ -424,6 +604,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`emptyList()` devolve sempre a mesma instância, que serve a qualquer `T` porque o tipo não existe na execução. O cast para `Object` evita o erro de tipos incomparáveis.',
+      dica: 'O tipo não existe na execução, então uma só lista vazia serve a todos.',
     },
     {
       id: 'pleno-t2-e02-q12',
@@ -448,6 +629,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 7 },
       explicacao: 'O compilador sabe que nenhum objeto poderia ser ao mesmo tempo as duas parametrizações e recusa a comparação, mesmo que na execução as referências sejam iguais.',
+      dica: 'O compilador sabe que `List<String>` e `List<Integer>` são tipos distintos.',
     },
     {
       id: 'pleno-t2-e02-q13',
@@ -471,6 +653,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 5 },
       explicacao: 'O destino fixa `T` como `Integer`, e um `Double` não cabe. Com `List<Number>` à esquerda, compilaria.',
+      dica: 'O tipo esperado à esquerda fixa o `T` de `asList`.',
     },
     {
       id: 'pleno-t2-e02-q14',
@@ -496,6 +679,7 @@ public class Teste {
 }`,
       resposta: '[ab, ab]3abab',
       explicacao: 'O mesmo método gera uma `List<String>` e uma `List<Integer>`. `String.join` cola os elementos sem separador.',
+      dica: '`a` tem dois elementos, e `b`, três.',
     },
     {
       id: 'pleno-t2-e02-q15',
@@ -524,6 +708,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'naoCompila', linha: 9 },
       explicacao: 'Um método `static` não pertence a nenhuma parametrização da classe. Ele precisa declarar o próprio parâmetro: `static <T> Caixa<T> de(T valor)`.',
+      dica: 'Um método `static` não pertence a nenhuma instância parametrizada.',
     },
   ],
 };

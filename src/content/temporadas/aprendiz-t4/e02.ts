@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     '`List.contains` e `indexOf` são buscas lineares, O(n).',
     'Busca binária numa `LinkedList` não compensa: chegar ao meio já é O(n).',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a escrever variantes da busca binária e a explicar o invariante. Como é o algoritmo em que pequenos erros de limite mais aparecem, peça os testes de borda junto com o código e rode todos.',
+    pedido:
+      'Escreva uma busca binária em Java que devolve a primeira posição de um valor num array ordenado com repetidos.\n- Diga o invariante do laço e por que ele vale em cada volta.\n- Explique cada escolha: < ou <=, meio + 1 ou meio, arredondamento do meio.\n- Escreva testes com array vazio, um elemento, alvo no começo, no fim, ausente e repetido.',
+    erros: [
+      'Usa `inicio < fim` com `fim = meio - 1`, e o último candidato nunca é testado.',
+      'Começa com `fim = v.length` e acessa uma posição fora do array.',
+      'Calcula o meio com `(inicio + fim) / 2`.',
+    ],
+    conferir: [
+      'Teste com 0, 1 e 2 elementos, e com o alvo no primeiro e no último.',
+      'Compare o resultado com `Arrays.binarySearch` para muitos valores.',
+      'Confira que o array está ordenado antes de qualquer busca binária.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de Arrays.binarySearch',
@@ -175,6 +191,124 @@ const episodio: EpisodioConteudo = {
     comentarios:
       'Contar quantas vezes um valor aparece num array ordenado com duas buscas binárias custa O(log n), contra O(n) de percorrer tudo. Essas variações (*lower bound* e *upper bound*) são as que as bibliotecas de C++ e Python oferecem, e aparecem muito em entrevistas. Repare que o laço não para ao achar: o invariante muda para "a resposta, se existir, está entre `inicio` e `fim` ou já está guardada em `achou`".',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t4-e02-b01',
+      dificuldade: 1,
+      sintoma: 'A busca pelo 91, que é o último elemento do array, devolve `-1`.',
+      codigo: `public class Busca {
+    static int busca(int[] v, int alvo) {
+        int inicio = 0, fim = v.length - 1;
+        while (inicio < fim) {
+            int meio = (inicio + fim) >>> 1;
+            if (v[meio] == alvo) return meio;
+            if (v[meio] < alvo) inicio = meio + 1;
+            else fim = meio - 1;
+        }
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        int[] v = {2, 5, 8, 12, 16, 23, 38, 56, 72, 91};
+        System.out.println(busca(v, 91));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: '-1' },
+      correcao: `public class Busca {
+    static int busca(int[] v, int alvo) {
+        int inicio = 0, fim = v.length - 1;
+        while (inicio <= fim) {
+            int meio = (inicio + fim) >>> 1;
+            if (v[meio] == alvo) return meio;
+            if (v[meio] < alvo) inicio = meio + 1;
+            else fim = meio - 1;
+        }
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        int[] v = {2, 5, 8, 12, 16, 23, 38, 56, 72, 91};
+        System.out.println(busca(v, 91));
+    }
+}`,
+      saidaCorrigida: '9',
+      dica: 'Quando `inicio` e `fim` apontam para a mesma posição, ainda existe um candidato. O laço o testa?',
+      explicacao: 'Com `fim = v.length - 1`, o intervalo inclui as duas pontas, e um intervalo de um só elemento tem `inicio == fim`. Com `<`, o laço para antes de testar esse último candidato. A condição precisa ser `inicio <= fim`.',
+    },
+    {
+      id: 'aprendiz-t4-e02-b02',
+      dificuldade: 2,
+      sintoma: '`Arrays.binarySearch` diz que o 23 não está no array (`-1`), mas ele está lá.',
+      codigo: `import java.util.Arrays;
+
+public class Estoque {
+    public static void main(String[] args) {
+        int[] codigos = {38, 2, 91, 23, 5, 12};
+        // os códigos vieram do arquivo nesta ordem
+        System.out.println(Arrays.binarySearch(codigos, 23));
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: '-1' },
+      correcao: `import java.util.Arrays;
+
+public class Estoque {
+    public static void main(String[] args) {
+        int[] codigos = {38, 2, 91, 23, 5, 12};
+        Arrays.sort(codigos);
+        System.out.println(Arrays.binarySearch(codigos, 23));
+    }
+}`,
+      saidaCorrigida: '3',
+      dica: 'Qual é a condição para a busca binária funcionar? O array a cumpre?',
+      explicacao: 'A busca binária só funciona com dados ordenados: cada corte supõe que tudo à esquerda do meio é menor. Num array desordenado, o resultado é indefinido. Ordene antes, ou use uma busca linear se for buscar uma vez só.',
+    },
+    {
+      id: 'aprendiz-t4-e02-b03',
+      dificuldade: 3,
+      sintoma: 'Procurar um código maior que todos os do array lança `ArrayIndexOutOfBoundsException: Index 4 out of bounds for length 4`.',
+      codigo: `public class Busca {
+    static int busca(int[] v, int alvo) {
+        int inicio = 0, fim = v.length;
+        while (inicio <= fim) {
+            int meio = (inicio + fim) >>> 1;
+            if (v[meio] == alvo) return meio;
+            if (v[meio] < alvo) inicio = meio + 1;
+            else fim = meio - 1;
+        }
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        int[] v = {2, 5, 8, 12};
+        System.out.println(busca(v, 99));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'excecao', nome: 'ArrayIndexOutOfBoundsException' },
+      correcao: `public class Busca {
+    static int busca(int[] v, int alvo) {
+        int inicio = 0, fim = v.length - 1;
+        while (inicio <= fim) {
+            int meio = (inicio + fim) >>> 1;
+            if (v[meio] == alvo) return meio;
+            if (v[meio] < alvo) inicio = meio + 1;
+            else fim = meio - 1;
+        }
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        int[] v = {2, 5, 8, 12};
+        System.out.println(busca(v, 99));
+    }
+}`,
+      saidaCorrigida: '-1',
+      dica: 'Qual é o último índice válido de um array de 4 posições? E o valor inicial de `fim`?',
+      explicacao: 'O invariante diz que o alvo, se existir, está entre `inicio` e `fim`, inclusive. Começar com `fim = v.length` põe no intervalo uma posição que não existe; quando o alvo é maior que todos, o meio chega a ela. Com `<=` no laço, o intervalo começa em `v.length - 1`.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t4-e02-q01',
@@ -189,6 +323,7 @@ const episodio: EpisodioConteudo = {
       ],
       resposta: 0,
       explicacao: 'A busca binária descarta metade do array a cada comparação partindo do princípio de que tudo à esquerda do meio é menor e tudo à direita é maior. Sem ordem, essa conclusão é falsa.',
+      dica: 'Cada corte supõe algo sobre os valores à esquerda e à direita do meio.',
     },
     {
       id: 'aprendiz-t4-e02-q02',
@@ -201,6 +336,7 @@ System.out.println(Arrays.binarySearch(v, 7));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O 7 não está no array e deveria entrar na posição 3, entre o 5 e o 9. O método devolve −(3) − 1 = −4. O −1 é o que muita gente espera, mas só vale quando o ponto de inserção é 0.',
+      dica: 'Siga as variáveis volta a volta, como no rastro da aula.',
     },
     {
       id: 'aprendiz-t4-e02-q03',
@@ -218,6 +354,7 @@ while (inicio <= fim) {
 }`,
       resposta: '3\n5',
       explicacao: 'Primeiro meio: (0 + 6) / 2 = 3, valor 40, menor que 60, então `inicio` vira 4. Segundo: (4 + 6) / 2 = 5, valor 60. Duas comparações num array de 7.',
+      dica: 'Calcule o meio de cada intervalo e veja para que lado o alvo está.',
     },
     {
       id: 'aprendiz-t4-e02-q04',
@@ -227,6 +364,7 @@ while (inicio <= fim) {
       opcoes: ['1.000', '500', '10', '1', '1.000.000'],
       resposta: 0,
       explicacao: 'O pior caso é o alvo ser o último ou não estar no array: as 1.000 posições são examinadas. 500 é o caso médio quando o alvo está presente; 10 seria a busca binária.',
+      dica: 'No pior caso, o alvo está no fim ou não está.',
     },
     {
       id: 'aprendiz-t4-e02-q05',
@@ -243,6 +381,7 @@ while (inicio <= fim) {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Listas e strings são percorridas elemento a elemento. O `HashSet` vai direto ao balde do hash (O(1) em média), o `TreeSet` desce uma árvore balanceada (O(log n)) e o `binarySearch` corta ao meio (O(log n)).',
+      dica: 'Métodos que percorrem a coleção do começo ao fim.',
     },
     {
       id: 'aprendiz-t4-e02-q06',
@@ -269,6 +408,7 @@ while (inicio <= fim) {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O intervalo encolhe até `inicio == fim == 4`, justamente a posição do 50. Mas com `<`, o laço para antes de examiná-la e devolve −1. Com `<=`, o último candidato seria testado.',
+      dica: 'Confira a condição do laço e os cortes com um intervalo de um elemento.',
     },
     {
       id: 'aprendiz-t4-e02-q07',
@@ -286,6 +426,7 @@ while (inicio <= fim) {
       respostas: ['/'],
       saida: '1750000000',
       explicacao: '`fim - inicio` nunca estoura porque os dois são índices válidos, e somar metade dessa distância a `inicio` não passa de `fim`. É a correção "matemática" do bug; `(inicio + fim) >>> 1` é a correção "de bits".',
+      dica: 'Some ao início metade da distância.',
     },
     {
       id: 'aprendiz-t4-e02-q08',
@@ -300,6 +441,7 @@ while (inicio <= fim) {
       ],
       resposta: 0,
       explicacao: 'Ordenar custa O(n log n), mais caro que olhar cada elemento uma vez. Montar um `TreeSet` também custa O(n log n). Ordenar só compensa quando vão ser feitas muitas buscas nos mesmos dados.',
+      dica: 'Ordenar custa mais que uma busca linear.',
     },
     {
       id: 'aprendiz-t4-e02-q09',
@@ -325,6 +467,7 @@ while (inicio <= fim) {
 }`,
       resposta: '7\n7\n0',
       explicacao: 'A função acha o maior x com x² ≤ n, por busca binária na resposta. 7² = 49 ≤ 50 e 8² = 64 > 50, então raiz(50) = 7; raiz(49) também é 7. Com n = 0, o laço nem roda.',
+      dica: 'Quando não acha, o retorno é −(ponto de inserção) − 1.',
     },
     {
       id: 'aprendiz-t4-e02-q10',
@@ -334,6 +477,7 @@ while (inicio <= fim) {
       opcoes: ['Cerca de 10', 'Cerca de 500', 'Cerca de 100', 'Cerca de 1.000', 'Cerca de 3'],
       resposta: 0,
       explicacao: 'Cada teste divide os candidatos ao meio, e 2¹⁰ = 1024: com 10 testes sobra um commit. É a busca binária fora do código, num problema do dia a dia.',
+      dica: 'Cada teste corta pela metade: log₂ 1.000.',
     },
     {
       id: 'aprendiz-t4-e02-q11',
@@ -346,6 +490,7 @@ System.out.println(Collections.binarySearch(nomes, "caio"));`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A lista está em ordem alfabética e "caio" está na posição 2 (contando do 0). Quando acha, o método devolve o índice; o negativo é só para quando não acha.',
+      dica: 'Calcule o ponto de inserção a partir do retorno negativo.',
     },
     {
       id: 'aprendiz-t4-e02-q12',
@@ -365,6 +510,7 @@ public class Busca {
 }`,
       resposta: 9,
       explicacao: '`Arrays.binarySearch` só aceita arrays. Para listas existe `Collections.binarySearch`, como na linha 8. O compilador não encontra nenhuma versão de `Arrays.binarySearch` que receba uma `List`.',
+      dica: 'Confira o tipo de cada argumento de `binarySearch`.',
     },
     {
       id: 'aprendiz-t4-e02-q13',
@@ -379,6 +525,7 @@ public class Busca {
       ],
       resposta: 0,
       explicacao: 'No começo, o intervalo é o array inteiro. Cada corte só descarta posições onde o alvo não pode estar, porque o array é ordenado. Quando o intervalo fica vazio (`inicio > fim`), o invariante prova que o alvo não existe.',
+      dica: 'Se o alvo existe, onde ele com certeza está?',
     },
     {
       id: 'aprendiz-t4-e02-q14',
@@ -403,6 +550,7 @@ novo[p] = 25;
 System.arraycopy(v, p, novo, p + 1, v.length - p);
 System.out.println(r + " " + p + " " + Arrays.equals(novo, new int[] {10, 20, 25, 30, 40}));`,
       explicacao: 'O negativo significa "não achei", e ainda carrega o ponto de inserção: `-r - 1`. O método não verifica se o array está ordenado; com dados desordenados, o resultado simplesmente não tem garantia.',
+      dica: 'O retorno negativo codifica o ponto de inserção.',
     },
     {
       id: 'aprendiz-t4-e02-q15',
@@ -417,6 +565,7 @@ System.out.println(r + " " + p + " " + Arrays.equals(novo, new int[] {10, 20, 25
       ],
       resposta: 0,
       explicacao: 'A busca binária faz O(log n) comparações, mas cada uma pressupõe acesso direto à posição do meio. Numa lista ligada, `get(meio)` caminha até lá, e as caminhadas somam O(n). É o que a documentação de `Collections.binarySearch` avisa.',
+      dica: 'Acessar o meio de uma lista ligada é uma caminhada.',
     },
   ],
 };

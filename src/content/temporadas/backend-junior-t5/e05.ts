@@ -179,6 +179,119 @@ public class Versoes {
     comentarios:
       'Os estados são os nomes que o Flyway usa: com estes mesmos arquivos e as versões 1 e 2 aplicadas, a API `flyway.info()` devolveu `Success` para 1 e 2, `Ignored` para 1.1 e `Pending` para 3 e 10. A migração 1.1 é a que faz a validação falhar com "Detected resolved migration not applied to database". Repare que o `record` guarda um `int[]`, e o `equals` gerado compara vetores por referência: por isso o código compara as versões pelo texto ou pelo `compareTo`, e nunca com `equals`. O Flyway real também aceita versões com zeros à esquerda, prefixos e sufixos configuráveis e migrações escritas em Java, e trata repetíveis aplicadas e alteradas com o estado `Outdated`.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t5-e05-b01',
+      dificuldade: 1,
+      sintoma: 'A ferramenta de migração caseira do time falha na subida com "Column EMAIL already exists", porque tenta aplicar de novo uma versão que já rodou: `versão atual: 3, a aplicar: [3, 4]`.',
+      codigo: `import java.util.List;
+
+public class Pendentes {
+    public static void main(String[] args) {
+        List<Integer> noBanco = List.of(1, 2, 3);
+        List<Integer> noProjeto = List.of(1, 2, 3, 4);
+        int atual = noBanco.getLast();
+        List<Integer> pendentes = noProjeto.stream().filter(v -> v >= atual).toList();
+        System.out.println("versão atual: " + atual + ", a aplicar: " + pendentes);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'versão atual: 3, a aplicar: [3, 4]' },
+      correcao: `import java.util.List;
+
+public class Pendentes {
+    public static void main(String[] args) {
+        List<Integer> noBanco = List.of(1, 2, 3);
+        List<Integer> noProjeto = List.of(1, 2, 3, 4);
+        int atual = noBanco.getLast();
+        List<Integer> pendentes = noProjeto.stream().filter(v -> v > atual).toList();
+        System.out.println("versão atual: " + atual + ", a aplicar: " + pendentes);
+    }
+}`,
+      saidaCorrigida: 'versão atual: 3, a aplicar: [4]',
+      dica: 'A versão atual já está aplicada. Ela deveria entrar na lista?',
+      explicacao:
+        'As pendentes são as versões **maiores** que a atual; com `>=`, a própria versão 3, já aplicada, entrou de novo, e o `alter table` falhou porque a coluna já existe. É o mesmo erro de limite que aparece em paginação e em laços: decida se o extremo entra ou não, e teste com o caso exato da fronteira.',
+    },
+    {
+      id: 'backend-junior-t5-e05-b02',
+      dificuldade: 2,
+      sintoma: 'Num banco vazio, a ferramenta caseira tenta criar o índice da V10 antes de existir a tabela da V1: `ordem de aplicação: [V10, V1, V2, V3]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class OrdemDosArquivos {
+    public static void main(String[] args) {
+        List<String> arquivos = new ArrayList<>(List.of("V2__criar_tags.sql", "V10__indice_email.sql",
+                "V1__criar_tabelas.sql", "V3__adicionar_email_cliente.sql"));
+        arquivos.sort(Comparator.naturalOrder());
+        System.out.println("ordem de aplicação: " + arquivos.stream().map(a -> a.substring(0, a.indexOf("__"))).toList());
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'ordem de aplicação: [V10, V1, V2, V3]' },
+      correcao: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class OrdemDosArquivos {
+    public static void main(String[] args) {
+        List<String> arquivos = new ArrayList<>(List.of("V2__criar_tags.sql", "V10__indice_email.sql",
+                "V1__criar_tabelas.sql", "V3__adicionar_email_cliente.sql"));
+        arquivos.sort(Comparator.comparingInt(a -> Integer.parseInt(a.substring(1, a.indexOf("__")))));
+        System.out.println("ordem de aplicação: " + arquivos.stream().map(a -> a.substring(0, a.indexOf("__"))).toList());
+    }
+}`,
+      saidaCorrigida: 'ordem de aplicação: [V1, V2, V3, V10]',
+      dica: 'Como o texto "V10__" se compara com "V1__", caractere por caractere?',
+      explicacao:
+        'A ordem natural de `String` compara caractere por caractere: depois de `V1`, o `0` vem antes do `_`, e a V10 passa na frente de todas. O Flyway extrai a versão do nome e compara os números, parte por parte, como a correção faz com `comparingInt`. Ordenar números guardados como texto é um erro clássico, em nomes de arquivo, em versões e em colunas `varchar`.',
+    },
+    {
+      id: 'backend-junior-t5-e05-b03',
+      dificuldade: 3,
+      sintoma: 'Depois que uma pessoa do time, no Windows, fez o *checkout* do projeto, a validação passou a acusar que uma migração aplicada foi editada, sem ninguém ter mexido nela: `mesmo checksum nos dois sistemas: false`.',
+      codigo: `import java.nio.charset.StandardCharsets;
+import java.util.zip.CRC32;
+
+public class Checksum {
+    static int checksum(String sql) {
+        CRC32 crc = new CRC32();
+        crc.update(sql.getBytes(StandardCharsets.UTF_8));
+        return (int) crc.getValue();
+    }
+
+    public static void main(String[] args) {
+        String noLinux = "alter table clientes add column email varchar(120);\\ncreate unique index ux_clientes_email on clientes (email);\\n";
+        String noWindows = noLinux.replace("\\n", "\\r\\n");
+        System.out.println("mesmo checksum nos dois sistemas: " + (checksum(noLinux) == checksum(noWindows)));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'mesmo checksum nos dois sistemas: false' },
+      correcao: `import java.nio.charset.StandardCharsets;
+import java.util.zip.CRC32;
+
+public class Checksum {
+    static int checksum(String sql) {
+        CRC32 crc = new CRC32();
+        sql.lines().forEach(linha -> crc.update(linha.getBytes(StandardCharsets.UTF_8)));
+        return (int) crc.getValue();
+    }
+
+    public static void main(String[] args) {
+        String noLinux = "alter table clientes add column email varchar(120);\\ncreate unique index ux_clientes_email on clientes (email);\\n";
+        String noWindows = noLinux.replace("\\n", "\\r\\n");
+        System.out.println("mesmo checksum nos dois sistemas: " + (checksum(noLinux) == checksum(noWindows)));
+    }
+}`,
+      saidaCorrigida: 'mesmo checksum nos dois sistemas: true',
+      dica: 'O que o Git pode mudar num arquivo de texto entre o Linux e o Windows, sem mudar o SQL?',
+      explicacao:
+        'O Git pode converter as quebras de linha para o padrão do Windows, com um caractere `\\r` antes de cada `\\n`. Um checksum calculado sobre os bytes do arquivo inteiro inclui esses caracteres, e o número muda. O Flyway calcula o CRC32 linha por linha, sem as quebras, e por isso o mesmo SQL tem o mesmo checksum nos dois sistemas. A correção faz igual, com `sql.lines()`.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t5-e05-q01',
@@ -193,6 +306,7 @@ public class Versoes {
       ],
       resposta: 0,
       explicacao: 'Renomear um atributo vira uma coluna nova, vazia, ao lado da antiga. Migrações deixam cada mudança explícita, revisada e registrada.',
+      dica: 'O `update` só acrescenta. E quem revisa o que ele faz?',
     },
     {
       id: 'backend-junior-t5-e05-q02',
@@ -202,6 +316,7 @@ public class Versoes {
       opcoes: ['`V3__adicionar_email.sql`', '`V3_adicionar_email.sql`', '`v3-adicionar-email.sql`', '`adicionar_email_V3.sql`'],
       resposta: 0,
       explicacao: 'O padrão é `V`, a versão, dois sublinhados e a descrição. Com um sublinhado só, o Flyway não sabe onde a versão termina.',
+      dica: 'A letra V, a versão e dois sublinhados antes da descrição.',
     },
     {
       id: 'backend-junior-t5-e05-q03',
@@ -211,6 +326,7 @@ public class Versoes {
       opcoes: ['1, 1.1, 2, 10', '10, 1.1, 1, 2', '1, 2, 10, 1.1', '1.1, 1, 10, 2'],
       resposta: 0,
       explicacao: 'As versões são comparadas como números, parte por parte. `V1_1` é a versão 1.1, que vem logo depois da 1.',
+      dica: 'As versões são comparadas como números, parte por parte.',
     },
     {
       id: 'backend-junior-t5-e05-q04',
@@ -230,6 +346,7 @@ public class Teste {
 }`,
       resposta: '[V10__a.sql, V1_1__c.sql, V1__d.sql, V2__b.sql]',
       explicacao: 'Em ordem de texto, `0` vem antes de `_`, e `1` também. Por isso o Flyway lê a versão como números, e não confia na ordem alfabética.',
+      dica: 'Como texto, a comparação é caractere por caractere, e o `0` vem antes do `_`.',
     },
     {
       id: 'backend-junior-t5-e05-q05',
@@ -244,6 +361,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O checksum do arquivo não bate com o do histórico. Desfaça a edição e escreva uma nova versão com o `alter table`.',
+      dica: 'O Flyway guardou um número calculado a partir do arquivo.',
     },
     {
       id: 'backend-junior-t5-e05-q06',
@@ -258,6 +376,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O Flyway não achou nada para aplicar, e o banco ficou vazio. O erro do Hibernate é consequência; a causa está no caminho.',
+      dica: 'Leia o log do Flyway antes do erro do Hibernate.',
     },
     {
       id: 'backend-junior-t5-e05-q07',
@@ -272,6 +391,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A V2_1 foi escrita sem conhecer a V3. Como V4, ela entra depois, na ordem em que vai de fato rodar.',
+      dica: 'Uma versão menor que a atual é recusada.',
     },
     {
       id: 'backend-junior-t5-e05-q08',
@@ -286,6 +406,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A cada subida, o Flyway recalcula o checksum dos arquivos e compara com o histórico, na validação.',
+      dica: 'É um número calculado a partir do conteúdo do arquivo.',
     },
     {
       id: 'backend-junior-t5-e05-q09',
@@ -318,6 +439,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Linha a linha, as quebras ficam de fora, e os dois textos dão o mesmo resultado. É assim que o Flyway calcula: um arquivo com `\\r\\n` ou `\\n` tem o mesmo checksum.',
+      dica: 'Uma das formas ignora as quebras de linha; a outra não.',
     },
     {
       id: 'backend-junior-t5-e05-q10',
@@ -332,6 +454,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O checksum decide: mudou, roda de novo. Por isso ela serve para *views* e funções, recriadas inteiras com `create or replace`.',
+      dica: 'As repetíveis não têm versão: o que faz o Flyway rodá-las de novo?',
     },
     {
       id: 'backend-junior-t5-e05-q11',
@@ -347,6 +470,7 @@ public class Teste {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Apagar o histórico faria o Flyway tentar recriar tudo, e o `update` faria mudanças fora das migrações, sem registro.',
+      dica: 'Procure as que mantêm o histórico confiável e o esquema conferido.',
     },
     {
       id: 'backend-junior-t5-e05-q12',
@@ -361,6 +485,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O PostgreSQL executa DDL dentro de transações; o MySQL, como o H2 da aula, confirma cada comando na hora.',
+      dica: 'Um dos bancos aceita DDL dentro de uma transação.',
     },
     {
       id: 'backend-junior-t5-e05-q13',
@@ -375,6 +500,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `validate` descobriu que o código e o banco divergem. A correção é levar o banco junto, com uma migração.',
+      dica: 'A entidade mudou: o banco precisa de uma versão nova.',
     },
     {
       id: 'backend-junior-t5-e05-q14',
@@ -400,6 +526,7 @@ public class Teste {
 }`,
       resposta: 'pendentes: [3, 10]',
       explicacao: 'Só as versões maiores que 2.1 estão pendentes. Comparando números, 10 é maior que 3, ao contrário da comparação de texto.',
+      dica: 'Compare cada versão com a atual parte por parte, como números.',
     },
     {
       id: 'backend-junior-t5-e05-q15',
@@ -414,6 +541,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Durante o deploy, versões antiga e nova convivem, e a antiga ainda lê `nome`. É a técnica de expandir e contrair.',
+      dica: 'Durante o deploy, versões antigas e novas da aplicação rodam ao mesmo tempo.',
     },
   ],
 };

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">A linha int x = 2 + 3 * 4 atravessando o compilador. A análise léxica gera os tokens int, x, igual, 2, mais, 3, vezes, 4 e ponto e vírgula. A sintática monta a árvore com a soma na raiz e a multiplicação abaixo. A semântica confere que os tipos são int. A otimização dobra a conta para 14. A geração de código produz bipush 14 e istore</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker></defs>
+  <text x="30" y="34" font-family="Cascadia Code, Consolas, monospace" font-size="15" font-weight="700" fill="#f3eee7">int x = 2 + 3 * 4;</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#ff7a1a">
+    <text x="30" y="74">1. léxica</text><text x="30" y="134">2. sintática</text><text x="30" y="214">3. semântica</text><text x="420" y="214">4. otimização</text><text x="420" y="264">5. geração</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="12.5" fill="#bdb5aa">
+    <text x="130" y="74">[int] [x] [=] [2] [+] [3] [*] [4] [;]</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#f3eee7" text-anchor="middle">
+    <text x="200" y="120">+</text><text x="160" y="150">2</text><text x="240" y="150">*</text><text x="210" y="180">3</text><text x="270" y="180">4</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.2"><path d="M194 124 L166 140"/><path d="M206 124 L234 140"/><path d="M236 154 L214 170"/><path d="M244 154 L266 170"/></g>
+  <text x="130" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="12.5" fill="#bdb5aa" xml:space="preserve">x: int, 2: int, 3 * 4: int  ✓</text>
+  <text x="530" y="214" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#4fd68b">x = 14</text>
+  <text x="530" y="264" font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#4fd68b">bipush 14 / istore_1</text>
+  <g stroke="#8a8277" stroke-width="1.4" fill="none">
+    <path d="M340 205 L410 205" marker-end="url(#s)"/><path d="M470 222 L470 248" marker-end="url(#s)"/>
+  </g>
+  <text x="30" y="290" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa">A precedência mora na forma da árvore; a conta some na otimização e o bytecode só empilha 14.</text>
+</svg>

@@ -14,6 +14,23 @@ const episodio: EpisodioConteudo = {
     'No SQL Server, `AVG` de uma coluna inteira devolve um inteiro truncado.',
     'No Java, `getInt` de um `NULL` devolve 0 sem avisar; confira com `wasNull()` ou use `getObject`.',
   ],
+  ia: {
+    uso:
+      'Relatórios são o território preferido da IA em SQL: "faturamento por mês", "clientes que mais compraram". Ela acerta a forma quase sempre e erra nos detalhes que mudam o número: contagens depois de junções, nulos nas somas e médias calculadas em dois níveis.',
+    pedido:
+      'Banco PostgreSQL com as tabelas clientes, pedidos e itens_pedido:\n<cole aqui os CREATE TABLE>\n- Escreva a consulta: para cada cliente, inclusive os sem pedidos, o número de pedidos não cancelados e o total gasto, com zero em vez de nulo.\n- Use COUNT(DISTINCT p.id) se houver junção com itens, e COALESCE nas somas.\n- Explique o que vai no WHERE e o que vai no HAVING.\n- Monte 6 linhas de teste e o resultado esperado calculado à mão.',
+    erros: [
+      'Usa `COUNT(*)` depois de um LEFT JOIN e conta 1 para quem não tem nada.',
+      'Põe uma agregação no `WHERE` em vez do `HAVING`.',
+      'Calcula a média geral como a média das médias de cada grupo.',
+      'Deixa colunas no `SELECT` que não estão no `GROUP BY`.',
+    ],
+    conferir: [
+      'Rode a consulta com os dados de teste e compare com a conta feita à mão.',
+      'Inclua um cliente sem pedidos e um pedido com vários itens nos testes.',
+      'Troque `COUNT(*)` por `COUNT(coluna)` e veja se algum número muda.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Documentação do PostgreSQL: Aggregate Functions',
@@ -170,6 +187,109 @@ public class Faturamento {
     comentarios:
       'O resultado coincide com o do banco, linha por linha. A Ana gastou 989,50 e fica de fora pelo filtro de grupo; a Carla só tem um pedido cancelado e nem chega a formar grupo, porque o filtro de linha vem antes. O `Set` de ids é o `COUNT(DISTINCT p.id)`: sem ele, o Bruno apareceria com três pedidos, um por item. E o `BigDecimal` mantém os centavos exatos, o que um `double` não garantiria numa soma de muitos valores. Em produção, essa conta fica no banco: trazer todos os itens para a memória da aplicação só para somá-los é desperdício de rede e de memória.',
   },
+  bugs: [
+    {
+      id: 'backend-junior-t3-e03-b01',
+      dificuldade: 1,
+      sintoma: 'O painel mostra `média de estoque: 11` para produtos com 10, 11, 12 e 13 unidades; a planilha do time de compras diz 11,5.',
+      codigo: `public class MediaDeEstoque {
+    public static void main(String[] args) {
+        int[] estoques = {10, 11, 12, 13};
+        int soma = 0;
+        for (int e : estoques) soma += e;
+        System.out.println("média de estoque: " + soma / estoques.length);
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'saida', saida: 'média de estoque: 11' },
+      correcao: `public class MediaDeEstoque {
+    public static void main(String[] args) {
+        int[] estoques = {10, 11, 12, 13};
+        int soma = 0;
+        for (int e : estoques) soma += e;
+        System.out.println("média de estoque: " + (double) soma / estoques.length);
+    }
+}`,
+      saidaCorrigida: 'média de estoque: 11.5',
+      dica: 'Qual é o tipo de `soma` e de `estoques.length`? E o da divisão entre eles?',
+      explicacao:
+        'Dividir dois `int` dá um `int`, e a parte decimal é descartada: 46 ÷ 4 vira 11. É o mesmo efeito do `AVG` de uma coluna inteira em alguns bancos. Converter um dos lados para `double` antes de dividir faz a conta com casas decimais.',
+    },
+    {
+      id: 'backend-junior-t3-e03-b02',
+      dificuldade: 2,
+      sintoma: 'O relatório diz que a Elisa fez um pedido, mas ela nunca comprou: `{Ana=2, Bruno=1, Elisa=1}`.',
+      codigo: `import java.util.List;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+public class ContarPedidos {
+    record Linha(String cliente, Integer pedido) {}
+
+    public static void main(String[] args) {
+        List<Linha> leftJoin = List.of(new Linha("Ana", 101), new Linha("Ana", 103), new Linha("Bruno", 102), new Linha("Elisa", null));
+        var porCliente = leftJoin.stream()
+                .collect(Collectors.groupingBy(Linha::cliente, TreeMap::new, Collectors.counting()));
+        System.out.println(porCliente);
+    }
+}`,
+      linha: 11,
+      efeito: { tipo: 'saida', saida: '{Ana=2, Bruno=1, Elisa=1}' },
+      correcao: `import java.util.List;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+public class ContarPedidos {
+    record Linha(String cliente, Integer pedido) {}
+
+    public static void main(String[] args) {
+        List<Linha> leftJoin = List.of(new Linha("Ana", 101), new Linha("Ana", 103), new Linha("Bruno", 102), new Linha("Elisa", null));
+        var porCliente = leftJoin.stream()
+                .collect(Collectors.groupingBy(Linha::cliente, TreeMap::new, Collectors.filtering(l -> l.pedido() != null, Collectors.counting())));
+        System.out.println(porCliente);
+    }
+}`,
+      saidaCorrigida: '{Ana=2, Bruno=1, Elisa=0}',
+      dica: 'A linha da Elisa existe por causa da junção à esquerda. O que está sendo contado: linhas ou pedidos?',
+      explicacao:
+        'Contar linhas do LEFT JOIN conta também a linha que existe só para manter a Elisa, com o pedido nulo. É o `COUNT(*)` da aula; o certo é contar só os pedidos não nulos, o `COUNT(p.id)`, aqui com `Collectors.filtering`.',
+    },
+    {
+      id: 'backend-junior-t3-e03-b03',
+      dificuldade: 3,
+      sintoma: 'O ticket médio do mês aparece como `ticket médio: 90.0`, mas o faturamento de R$ 540 em 10 pedidos dá R$ 54.',
+      codigo: `import java.util.List;
+import java.util.Map;
+
+public class TicketMedio {
+    public static void main(String[] args) {
+        Map<String, List<Integer>> pedidosPorCliente = Map.of(
+                "Ana", List.of(100, 200),
+                "Bruno", List.of(30, 30, 30, 30, 30, 30, 30, 30));
+        double ticket = pedidosPorCliente.values().stream().mapToDouble(l -> l.stream().mapToInt(Integer::intValue).average().orElse(0)).average().orElse(0);
+        System.out.println("ticket médio: " + ticket);
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'ticket médio: 90.0' },
+      correcao: `import java.util.List;
+import java.util.Map;
+
+public class TicketMedio {
+    public static void main(String[] args) {
+        Map<String, List<Integer>> pedidosPorCliente = Map.of(
+                "Ana", List.of(100, 200),
+                "Bruno", List.of(30, 30, 30, 30, 30, 30, 30, 30));
+        double ticket = pedidosPorCliente.values().stream().flatMap(List::stream).mapToInt(Integer::intValue).average().orElse(0);
+        System.out.println("ticket médio: " + ticket);
+    }
+}`,
+      saidaCorrigida: 'ticket médio: 54.0',
+      dica: 'A média de cada cliente pesa o mesmo na conta final, não importa quantos pedidos ele fez?',
+      explicacao:
+        'A média das médias dá o mesmo peso à Ana, com 2 pedidos, e ao Bruno, com 8. O ticket médio é a soma de todos os pedidos dividida pelo número de pedidos: junte todos os valores antes de tirar a média. No SQL, é o erro de fazer `AVG` sobre uma subconsulta que já tinha um `AVG` por cliente.',
+    },
+  ],
   exercicios: [
     {
       id: 'backend-junior-t3-e03-q01',
@@ -179,6 +299,7 @@ public class Faturamento {
       opcoes: ['4', '5', '1', '0'],
       resposta: 0,
       explicacao: '`COUNT(coluna)` ignora os nulos. `COUNT(*)` contaria as 5 linhas.',
+      dica: '`COUNT(coluna)` só conta os valores que não são nulos.',
     },
     {
       id: 'backend-junior-t3-e03-q02',
@@ -193,6 +314,7 @@ public class Faturamento {
       ],
       resposta: 0,
       explicacao: 'A contagem só existe depois do agrupamento, e por isso o filtro vai no `HAVING`. O `WHERE` atua sobre linhas e não aceita agregações.',
+      dica: 'Filtro sobre grupos, depois de agrupar.',
     },
     {
       id: 'backend-junior-t3-e03-q03',
@@ -207,6 +329,7 @@ public class Faturamento {
       ],
       resposta: 0,
       explicacao: 'Para cada grupo, o banco precisaria escolher um status entre vários. Ou `status` entra no `GROUP BY`, formando grupos por cliente e status, ou vai para uma agregação, como `MAX(status)`.',
+      dica: 'Um cliente com vários pedidos pode ter vários status. Qual mostrar na linha do grupo?',
     },
     {
       id: 'backend-junior-t3-e03-q04',
@@ -216,6 +339,7 @@ public class Faturamento {
       opcoes: ['1 e 0', '0 e 0', '1 e 1', '0 e 1'],
       resposta: 0,
       explicacao: 'O LEFT JOIN gera uma linha para ela, com `p.id` nulo. `COUNT(*)` conta a linha; `COUNT(p.id)` ignora o nulo.',
+      dica: 'O LEFT JOIN cria uma linha para a Elisa, com o pedido nulo.',
     },
     {
       id: 'backend-junior-t3-e03-q05',
@@ -225,6 +349,7 @@ public class Faturamento {
       opcoes: ['`NULL`', '0', '1', 'A consulta dá erro'],
       resposta: 0,
       explicacao: 'A soma de nenhum valor é `NULL`. Para mostrar zero, `COALESCE(SUM(pr.estoque), 0)`.',
+      dica: 'A soma de nenhum valor não é zero.',
     },
     {
       id: 'backend-junior-t3-e03-q06',
@@ -239,6 +364,7 @@ public class Faturamento {
       ],
       resposta: 0,
       explicacao: 'A junção repete o pedido uma vez por item. Contar os ids distintos de pedido devolve o número certo, seja qual for a quantidade de itens.',
+      dica: 'A junção com itens repete o pedido: conte pedidos distintos.',
     },
     {
       id: 'backend-junior-t3-e03-q07',
@@ -253,6 +379,7 @@ public class Faturamento {
       ],
       resposta: 0,
       explicacao: 'Por isso o `WHERE` não vê agregações, e o `ORDER BY` pode usar os apelidos do `SELECT`.',
+      dica: 'Os grupos só existem depois do `GROUP BY`; o `SELECT` vem depois do `HAVING`.',
     },
     {
       id: 'backend-junior-t3-e03-q08',
@@ -268,6 +395,7 @@ public class Faturamento {
       ],
       respostas: [0, 1],
       explicacao: 'Só o `COUNT(*)` olha as linhas inteiras. `SUM` de nenhum valor é `NULL`, e `MAX` funciona com texto, pela ordem alfabética.',
+      dica: 'Todas as agregações, menos `COUNT(*)`, ignoram nulos.',
     },
     {
       id: 'backend-junior-t3-e03-q09',
@@ -287,6 +415,7 @@ public class Teste {
 }`,
       resposta: '{CANCELADO=1, ENTREGUE=1, PAGO=3}',
       explicacao: 'O `TreeMap` ordena as chaves, como um `ORDER BY status`. Com o `HashMap` padrão do `groupingBy`, a ordem não seria garantida, como num `GROUP BY` sem `ORDER BY`.',
+      dica: 'Conte quantas vezes cada status aparece; o `TreeMap` imprime em ordem alfabética.',
     },
     {
       id: 'backend-junior-t3-e03-q10',
@@ -308,6 +437,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'É exatamente o que o SQL faz: `COUNT(*)` conta 4 linhas, `COUNT(estoque)` conta 2 valores, e `AVG(estoque)` divide 30 por 2, ignorando os nulos.',
+      dica: 'Siga o programa: contagem de linhas, de não nulos e a média só dos presentes.',
     },
     {
       id: 'backend-junior-t3-e03-q11',
@@ -322,6 +452,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'Um `int` primitivo não pode ser nulo. Para distinguir "zero" de "sem valor", use `wasNull()`, `getObject("unidades", Integer.class)` ou um `COALESCE` na consulta.',
+      dica: 'O `getInt` não pode devolver `null`, então devolve outro valor e marca o nulo à parte.',
     },
     {
       id: 'backend-junior-t3-e03-q12',
@@ -336,6 +467,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O `GROUP BY` não permite as outras colunas, e o `LIMIT 1` traria um pedido só, de um cliente só. A função de janela numera dentro de cada cliente.',
+      dica: 'Numere os pedidos de cada cliente do mais novo para o mais antigo e fique com o primeiro.',
     },
     {
       id: 'backend-junior-t3-e03-q13',
@@ -350,6 +482,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'As funções de janela calculam sobre um conjunto de linhas sem eliminá-las do resultado.',
+      dica: 'Uma junta as linhas; a outra mantém todas e calcula sobre uma janela delas.',
     },
     {
       id: 'backend-junior-t3-e03-q14',
@@ -359,6 +492,7 @@ public class Teste {
       opcoes: ['`ROUND(AVG(preco), 2)`', '`AVG(ROUND(preco))`', '`AVG(preco, 2)`', '`CAST(AVG(preco) AS INT)`'],
       resposta: 0,
       explicacao: 'Arredonde o resultado, não os valores de entrada: `AVG(ROUND(preco))` arredonda cada preço antes da média e muda o resultado.',
+      dica: 'Arredonde o resultado da média, não cada preço.',
     },
     {
       id: 'backend-junior-t3-e03-q15',
@@ -373,6 +507,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'O resultado é o mesmo, mas o custo não. O banco faz a conta perto dos dados, muitas vezes usando índices, e transfere só o resumo.',
+      dica: 'Compare o tamanho do que viaja pela rede nos dois casos.',
     },
   ],
 };

@@ -14,6 +14,22 @@ const episodio: EpisodioConteudo = {
     '`addAll`, `retainAll` e `removeAll` alteram o próprio conjunto. Copie antes se precisar do original.',
     'Na lógica, p ∧ q ≡ q ∧ p. No Java, a ordem dos lados de `&&` decide o que chega a ser avaliado.',
   ],
+  ia: {
+    uso:
+      'A IA ajuda a montar tabelas-verdade, simplificar condições e traduzir regras de negócio em lógica. Confira toda simplificação testando as combinações, porque negações e implicações são onde ela mais erra.',
+    pedido:
+      'Simplifique esta condição Java sem mudar o comportamento.\n<cole a condição aqui>\n- Mostre cada passo, dizendo a lei usada (De Morgan, absorção, distributiva).\n- Monte a tabela-verdade das duas versões.\n- Escreva um teste Java que confere a equivalência para todas as combinações das variáveis booleanas.',
+    erros: [
+      'Nega `>=` como `<=`, deixando o valor de fronteira dos dois lados.',
+      'Confunde a recíproca com a contrapositiva.',
+      'Chama `retainAll` ou `removeAll` no conjunto original, sem cópia.',
+    ],
+    conferir: [
+      'Rode as duas versões para todas as combinações de entrada.',
+      'Teste os valores de fronteira, como exatamente 18 anos.',
+      'Imprima os conjuntos originais depois das operações.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Javadoc de Set',
@@ -153,6 +169,108 @@ public class Tautologias {
     comentarios:
       'É um provador de teoremas por força bruta: com n variáveis, testa 2ⁿ linhas. Para duas ou três variáveis é instantâneo. Com 60 variáveis já seriam mais de um quintilhão de linhas, e é por isso que verificar fórmulas grandes é um problema difícil de verdade (o famoso problema SAT). A segunda fórmula surpreende: entre duas proposições quaisquer, sempre uma implica a outra.',
   },
+  bugs: [
+    {
+      id: 'aprendiz-t3-e01-b01',
+      dificuldade: 1,
+      sintoma: 'A regra "se o pedido passa de 200, o frete é grátis" acusa violação num pedido de 50 que ganhou frete grátis por cupom: imprime `regra cumprida: false`.',
+      codigo: `public class Regra {
+    static boolean implica(boolean p, boolean q) {
+        return p || !q;
+    }
+
+    public static void main(String[] args) {
+        double total = 50;
+        boolean freteGratis = true;
+        System.out.println("regra cumprida: " + implica(total > 200, freteGratis));
+    }
+}`,
+      linha: 3,
+      efeito: { tipo: 'saida', saida: 'regra cumprida: false' },
+      correcao: `public class Regra {
+    static boolean implica(boolean p, boolean q) {
+        return !p || q;
+    }
+
+    public static void main(String[] args) {
+        double total = 50;
+        boolean freteGratis = true;
+        System.out.println("regra cumprida: " + implica(total > 200, freteGratis));
+    }
+}`,
+      saidaCorrigida: 'regra cumprida: true',
+      dica: 'Em que única linha da tabela-verdade a implicação p → q é falsa?',
+      explicacao: 'A implicação só falha com p verdadeiro e q falso, e por isso é `!p || q`. A fórmula escrita, `p || !q`, é a recíproca (q → p): ela acusa erro quando o frete é grátis e o pedido é pequeno, como num cupom, um caso sobre o qual a regra não diz nada.',
+    },
+    {
+      id: 'aprendiz-t3-e01-b02',
+      dificuldade: 2,
+      sintoma: 'Depois de calcular quem só faz Java, a turma de Java inteira perdeu os alunos que também fazem SQL: imprime `[Ana, Bruno] [Ana, Bruno]`.',
+      codigo: `import java.util.Set;
+import java.util.TreeSet;
+
+public class Turmas {
+    public static void main(String[] args) {
+        Set<String> java = new TreeSet<>(Set.of("Ana", "Bruno", "Carla"));
+        Set<String> sql = Set.of("Carla", "Davi");
+        Set<String> soJava = java;
+        soJava.removeAll(sql);
+        System.out.println(java + " " + soJava);
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: '[Ana, Bruno] [Ana, Bruno]' },
+      correcao: `import java.util.Set;
+import java.util.TreeSet;
+
+public class Turmas {
+    public static void main(String[] args) {
+        Set<String> java = new TreeSet<>(Set.of("Ana", "Bruno", "Carla"));
+        Set<String> sql = Set.of("Carla", "Davi");
+        Set<String> soJava = new TreeSet<>(java);
+        soJava.removeAll(sql);
+        System.out.println(java + " " + soJava);
+    }
+}`,
+      saidaCorrigida: '[Ana, Bruno, Carla] [Ana, Bruno]',
+      dica: '`soJava` é um conjunto novo ou outro nome para o mesmo objeto?',
+      explicacao: 'A atribuição `soJava = java` copia a referência, não o conjunto: as duas variáveis apontam para o mesmo `TreeSet`, e o `removeAll` altera os dois. Para a diferença A − B sem estragar A, crie uma cópia antes.',
+    },
+    {
+      id: 'aprendiz-t3-e01-b03',
+      dificuldade: 3,
+      sintoma: 'O método diz que todos passaram numa turma com uma nota 4, e que uma turma vazia não passou: imprime `true false`.',
+      codigo: `public class Aprovacao {
+    static boolean todosAprovados(int[] notas) {
+        for (int n : notas) {
+            if (n >= 6) return true;
+        }
+        return false;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(todosAprovados(new int[] {7, 4}) + " " + todosAprovados(new int[] {}));
+    }
+}`,
+      linha: 4,
+      efeito: { tipo: 'saida', saida: 'true false' },
+      correcao: `public class Aprovacao {
+    static boolean todosAprovados(int[] notas) {
+        for (int n : notas) {
+            if (n < 6) return false;
+        }
+        return true;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(todosAprovados(new int[] {7, 4}) + " " + todosAprovados(new int[] {}));
+    }
+}`,
+      saidaCorrigida: 'false true',
+      dica: 'O método implementa "para todo" ou "existe"? O que basta para responder cada um?',
+      explicacao: 'Do jeito que está, o laço responde "existe alguém aprovado". Para "todos aprovados", basta um contraexemplo para responder `false`, e só se nenhum aparecer a resposta é `true`, inclusive na turma vazia, pela verdade vazia.',
+    },
+  ],
   exercicios: [
     {
       id: 'aprendiz-t3-e01-q01',
@@ -162,6 +280,7 @@ public class Tautologias {
       opcoes: ['16', '8', '4', '32', '24'],
       resposta: 0,
       explicacao: 'Cada proposição tem 2 valores possíveis e as escolhas são independentes: 2 × 2 × 2 × 2 = 2⁴ = 16. Quem responde 8 multiplicou 4 por 2.',
+      dica: 'Cada proposição dobra o número de linhas.',
     },
     {
       id: 'aprendiz-t3-e01-q02',
@@ -176,6 +295,7 @@ public class Tautologias {
       ],
       resposta: 0,
       explicacao: 'A implicação só promete algo quando p acontece. Se p é falso, ela não foi quebrada e vale como verdadeira (verdade vazia). O único caso de quebra é p verdadeiro com q falso.',
+      dica: 'A promessa só é quebrada num caso.',
     },
     {
       id: 'aprendiz-t3-e01-q03',
@@ -190,6 +310,7 @@ public class Tautologias {
       ],
       resposta: 0,
       explicacao: 'É a contrapositiva, ¬q → ¬p, que sempre equivale à original. A segunda opção é a recíproca e a terceira é a inversa: as duas dizem outra coisa (um pedido pode ser enviado como brinde, sem pagamento).',
+      dica: 'A contrapositiva nega as duas partes e inverte a ordem.',
     },
     {
       id: 'aprendiz-t3-e01-q04',
@@ -207,6 +328,7 @@ for (boolean p : v) for (boolean q : v) {
 }
 System.out.println(ok);`,
       explicacao: 'p → q só falha com p verdadeiro e q falso, ou seja, é ¬(p ∧ ¬q). Por De Morgan, isso vira ¬p ∨ q. `p == q` é a bicondicional, que também falha quando p é falso e q é verdadeiro.',
+      dica: 'p → q ≡ ¬p ∨ q.',
     },
     {
       id: 'aprendiz-t3-e01-q05',
@@ -221,6 +343,7 @@ System.out.println(nomes.stream().anyMatch(s -> s.startsWith("B")));
 System.out.println(nomes.stream().allMatch(s -> s.endsWith("a")));`,
       resposta: 'true\ntrue\ntrue\ntrue',
       explicacao: 'Numa lista vazia não há contraexemplo, então "todos" e "nenhum" são verdadeiros. Na lista com nomes, "Bia" começa com B e os dois nomes terminam com "a". Parece pegadinha, mas são quatro `true`.',
+      dica: 'Lista vazia: verdade vazia; nas outras, confira cada predicado.',
     },
     {
       id: 'aprendiz-t3-e01-q06',
@@ -242,6 +365,7 @@ for (int a = 0; a <= 10; a++) for (int b = -2; b <= 2; b++) {
 }
 System.out.println(igual);`,
       explicacao: 'Por De Morgan, a negação de um OU vira o E das negações. A negação de `a > 5` é `a <= 5` (o 5 também falha no `>`), e a de `b == 0` é `b != 0`. Trocar `<=` por `<` erra exatamente no caso `a == 5`.',
+      dica: 'De Morgan, e a negação de `>` é `<=`.',
     },
     {
       id: 'aprendiz-t3-e01-q07',
@@ -262,6 +386,7 @@ for (boolean p : v) for (boolean q : v) {
 }
 System.out.println(t1 + " " + t2 + " " + t3 + " " + t4 + " " + t5);`,
       explicacao: 'p ∨ ¬p é sempre verdadeira. (p ∧ q) → p também: se os dois valem, p vale. p → (p ∧ q) falha com p verdadeiro e q falso. p ∧ ¬p e p ⊕ p são contradições: falsas em todas as linhas.',
+      dica: 'Tautologia é verdadeira em todas as linhas da tabela.',
     },
     {
       id: 'aprendiz-t3-e01-q08',
@@ -276,6 +401,7 @@ System.out.println(a);`,
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`retainAll` mantém só o que também está no outro conjunto: é a interseção. A união seria `addAll` e a diferença, `removeAll`.',
+      dica: '`retainAll` mantém só a interseção.',
     },
     {
       id: 'aprendiz-t3-e01-q09',
@@ -288,6 +414,7 @@ b.removeAll(Set.of("y"));
 System.out.println(a + " " + b.size());`,
       resposta: '[x, z] 2',
       explicacao: '`b = a` não copia o conjunto: as duas variáveis apontam para o mesmo objeto. O `removeAll` em `b` altera `a` também. Para trabalhar numa cópia, use `new TreeSet<>(a)`.',
+      dica: '`b = a` não copia o conjunto.',
     },
     {
       id: 'aprendiz-t3-e01-q10',
@@ -308,6 +435,7 @@ System.out.println(a + " " + b.size());`,
       respostas: ['&'],
       saida: '2',
       explicacao: 'A − B é "está em A **e não** está em B", que em bits é `a & ~b`. O `~grupo` liga todos os bits que o grupo não tem, e o `&` com o dono deixa só o `ESCREVER`.',
+      dica: 'Diferença em bits: `a ___ ~b`.',
     },
     {
       id: 'aprendiz-t3-e01-q11',
@@ -317,6 +445,7 @@ System.out.println(a + " " + b.size());`,
       opcoes: ['170', '200', '230', '140', '110'],
       resposta: 0,
       explicacao: 'Pela inclusão-exclusão, |A ∪ B| = |A| + |B| − |A ∩ B| = 120 + 80 − 30 = 170. Somar só 120 + 80 conta duas vezes os 30 que estão nas duas turmas.',
+      dica: '|A ∪ B| = |A| + |B| − |A ∩ B|.',
     },
     {
       id: 'aprendiz-t3-e01-q12',
@@ -326,6 +455,7 @@ System.out.println(a + " " + b.size());`,
       opcoes: ['32', '25', '10', '31', '120'],
       resposta: 0,
       explicacao: 'Cada um dos 5 elementos está ou não está no subconjunto: 2⁵ = 32. O 31 esquece o conjunto vazio. O 120 é 5!, a quantidade de ordens, que não importa em conjuntos.',
+      dica: 'Cada elemento está ou não está: 2ⁿ.',
     },
     {
       id: 'aprendiz-t3-e01-q13',
@@ -343,6 +473,7 @@ System.out.println(a + " " + b.size());`,
 }`,
       resposta: 6,
       explicacao: 'O `!` tem precedência maior que `>=`, então o Java tenta calcular `!idade`, e não existe negação lógica de um `int`. O certo é `!(idade >= 18)` ou, melhor, `idade < 18`.',
+      dica: 'Procure a linha em que os tipos não combinam com o operador.',
     },
     {
       id: 'aprendiz-t3-e01-q14',
@@ -374,6 +505,7 @@ try {
 }
 System.out.println(ok + " " + lancou);`,
       explicacao: 'De Morgan transforma a expressão em `x == null || !x.isEmpty()`, e a segunda opção é a mesma coisa escrita de outro jeito. A terceira é logicamente equivalente, mas avalia `x.isEmpty()` primeiro e lança `NullPointerException` quando `x` é nulo: o curto-circuito só protege quem vem depois do teste.',
+      dica: 'O curto-circuito protege só quando o teste de `null` vem antes.',
     },
     {
       id: 'aprendiz-t3-e01-q15',
@@ -388,6 +520,7 @@ System.out.println(ok + " " + lancou);`,
       ],
       resposta: 0,
       explicacao: '¬∀x P(x) ≡ ∃x ¬P(x): basta um contraexemplo para a frase "todo pedido foi entregue" ser falsa. "Nenhum pedido foi entregue" é uma afirmação muito mais forte. Em streams, é a diferença entre `!allMatch(p)` e `noneMatch(p)`.',
+      dica: '¬∀ ≡ ∃¬.',
     },
   ],
 };

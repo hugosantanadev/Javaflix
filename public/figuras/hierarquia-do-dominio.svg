@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" role="img" aria-labelledby="t">
+  <title id="t">Uma hierarquia de exceções de domínio: LojaException estende RuntimeException e tem duas filhas, ProdutoNaoEncontradoException e EstoqueEsgotadoException; ao lado, a ordem dos catch: primeiro EstoqueEsgotadoException, que avisa quando o produto chegar, depois LojaException, que pega a exceção de produto não encontrado e qualquer outra filha</title>
+  <rect width="760" height="320" fill="#13110f"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8277"/></marker>
+  </defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="130" y="20" width="200" height="40" rx="6" fill="#1b1916" stroke="#8a8277"/>
+    <text x="144" y="45" fill="#bdb5aa">RuntimeException</text>
+    <rect x="130" y="100" width="200" height="40" rx="6" fill="#26170c" stroke="#ff7a1a"/>
+    <text x="144" y="125" fill="#ff7a1a" font-weight="700">LojaException</text>
+    <rect x="20" y="190" width="220" height="40" rx="6" fill="#1b1916" stroke="#4fd68b"/>
+    <text x="32" y="215" fill="#4fd68b">ProdutoNaoEncontradoException</text>
+    <rect x="260" y="190" width="200" height="40" rx="6" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="272" y="215" fill="#f2c75c">EstoqueEsgotadoException</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M230 100 L230 63"/>
+    <path d="M130 190 L200 143"/>
+    <path d="M360 190 L260 143"/>
+  </g>
+  <text x="20" y="262" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">A seta aponta para a superclasse. Uma filha que esqueça o</text>
+  <text x="20" y="280" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">extends LojaException escapa de todo catch do domínio.</text>
+
+  <text x="500" y="44" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#bdb5aa">Ordem dos catch</text>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11">
+    <rect x="500" y="58" width="240" height="64" rx="6" fill="#1b1916" stroke="#f2c75c"/>
+    <text x="512" y="80" fill="#f2c75c">1. EstoqueEsgotadoException</text>
+    <text x="512" y="104" fill="#bdb5aa">avise quando chegar</text>
+    <rect x="500" y="134" width="240" height="64" rx="6" fill="#1b1916" stroke="#ff7a1a"/>
+    <text x="512" y="156" fill="#ff7a1a">2. LojaException</text>
+    <text x="512" y="180" fill="#bdb5aa">qualquer outra da loja</text>
+  </g>
+  <text x="500" y="226" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">Do mais específico para o mais geral;</text>
+  <text x="500" y="244" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8a8277">invertidos, o segundo nem compila.</text>
+</svg>

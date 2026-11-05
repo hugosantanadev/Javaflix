@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`Collections.max` usa a ordem natural; com um `Comparator`, usa o critério dele.',
     'A ordem de iteração de `Set.of` e `Map.of` muda entre execuções do programa.',
   ],
+  ia: {
+    uso:
+      'Para imutabilidade, a IA ajuda a revisar uma classe e apontar onde uma coleção interna escapa sem proteção. O erro mais comum dela é tratar as três formas como sinônimas: usar `Collections.unmodifiableList` como se fosse cópia, esquecer que `List.copyOf` recusa `null` e dizer que uma lista imutável protege também os elementos.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui a classe ou o record que guarda uma coleção>\n- Diga se a coleção pode ser alterada de fora, por quem criou o objeto ou por quem lê o getter.\n- Para cada proteção, diga se é visão, cópia ou lista nova, e o que acontece se a original mudar depois.\n- Proponha cópias defensivas com List.copyOf no construtor e explique o que acontece com elementos null.\n- Não mude a interface pública da classe.',
+    erros: [
+      'Usa `Collections.unmodifiableList` como cópia defensiva, e a lista original continua alterando o objeto.',
+      'Diz que `List.of` torna imutáveis também os objetos guardados na lista.',
+      'Esquece que `List.copyOf` e `List.of` lançam `NullPointerException` com elementos `null`.',
+      'Cria listas de listas com `Collections.nCopies(n, new ArrayList<>())`, que repete a mesma lista.',
+    ],
+    conferir: [
+      'Altere a lista original depois de criar o objeto e imprima o que ele guarda.',
+      'Tente um `add` pela lista devolvida no getter e veja se lança `UnsupportedOperationException`.',
+      'Passe uma lista com `null` para o construtor e veja o que acontece.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Creating and Processing Data with the Collections Factory Methods',
@@ -147,6 +164,127 @@ public class Catalogos {
     comentarios:
       'O catálogo nunca muda: cada "alteração" cria outro, e `v1` continua intacto depois de gerar `v2`. É o mesmo estilo de `String` e das classes de data do Java, que a próxima temporada explora. A régua acrescentada à lista original não aparece em lugar nenhum, porque a cópia defensiva já tinha cortado o vínculo. O custo é copiar a lista a cada mudança, aceitável para coleções pequenas e para dados que mudam pouco.',
   },
+  bugs: [
+    {
+      id: 'pleno-t3-e07-b01',
+      dificuldade: 1,
+      sintoma: 'A exportação do cabeçalho para a API antiga, que pede um `String[]`, não compila: `incompatible types: Object[] cannot be converted to String[]`.',
+      codigo: `import java.util.List;
+
+public class Exportacao {
+    static void enviar(String[] colunas) {
+        System.out.println("enviando " + colunas.length + " colunas: " + String.join(";", colunas));
+    }
+
+    public static void main(String[] args) {
+        List<String> cabecalho = List.of("data", "cliente", "total");
+        String[] colunas = cabecalho.toArray();
+        enviar(colunas);
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.List;
+
+public class Exportacao {
+    static void enviar(String[] colunas) {
+        System.out.println("enviando " + colunas.length + " colunas: " + String.join(";", colunas));
+    }
+
+    public static void main(String[] args) {
+        List<String> cabecalho = List.of("data", "cliente", "total");
+        String[] colunas = cabecalho.toArray(String[]::new);
+        enviar(colunas);
+    }
+}`,
+      saidaCorrigida: 'enviando 3 colunas: data;cliente;total',
+      dica: 'Que tipo de array o `toArray()` sem argumentos devolve?',
+      explicacao:
+        'Por causa do apagamento, a lista não sabe na execução que guarda `String`, e `toArray()` sem argumentos devolve um `Object[]`. Para um array tipado, passe um gerador, `toArray(String[]::new)`, desde o Java 11, ou um array do tipo, `toArray(new String[0])`.',
+    },
+    {
+      id: 'pleno-t3-e07-b02',
+      dificuldade: 2,
+      sintoma: 'A Bia se inscreveu depois de a turma A ser fechada, e mesmo assim aparece na lista da turma: `turma A: [Ana, Bia]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Matriculas {
+    record Turma(String nome, List<String> alunos) {
+        Turma {
+            alunos = Collections.unmodifiableList(alunos);
+        }
+    }
+
+    public static void main(String[] args) {
+        List<String> inscritos = new ArrayList<>(List.of("Ana"));
+        Turma turma = new Turma("A", inscritos);
+        inscritos.add("Bia");
+        System.out.println("turma " + turma.nome() + ": " + turma.alunos());
+    }
+}`,
+      linha: 8,
+      efeito: { tipo: 'saida', saida: 'turma A: [Ana, Bia]' },
+      correcao: `import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Matriculas {
+    record Turma(String nome, List<String> alunos) {
+        Turma {
+            alunos = List.copyOf(alunos);
+        }
+    }
+
+    public static void main(String[] args) {
+        List<String> inscritos = new ArrayList<>(List.of("Ana"));
+        Turma turma = new Turma("A", inscritos);
+        inscritos.add("Bia");
+        System.out.println("turma " + turma.nome() + ": " + turma.alunos());
+    }
+}`,
+      saidaCorrigida: 'turma A: [Ana]',
+      dica: '`Collections.unmodifiableList` copia a lista ou só embrulha a original?',
+      explicacao:
+        '`unmodifiableList` devolve uma **visão** somente leitura: ninguém altera pela turma, mas quem guardou a lista original ainda altera, e a turma vê a mudança. Para um record que não deve mudar, a cópia defensiva é `List.copyOf(alunos)` no construtor compacto: a turma fica com os alunos do momento da criação.',
+    },
+    {
+      id: 'pleno-t3-e07-b03',
+      dificuldade: 3,
+      sintoma: 'Na agenda da semana, a reunião de segunda e a entrega de sexta aparecem em todos os dias: `segunda: [reunião, entrega], quarta: [reunião, entrega]`.',
+      codigo: `import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Semana {
+    public static void main(String[] args) {
+        List<List<String>> dias = new ArrayList<>(Collections.nCopies(5, new ArrayList<>()));
+        dias.get(0).add("reunião");
+        dias.get(4).add("entrega");
+        System.out.println("segunda: " + dias.get(0) + ", quarta: " + dias.get(2));
+    }
+}`,
+      linha: 7,
+      efeito: { tipo: 'saida', saida: 'segunda: [reunião, entrega], quarta: [reunião, entrega]' },
+      correcao: `import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Semana {
+    public static void main(String[] args) {
+        List<List<String>> dias = new ArrayList<>(); for (int i = 0; i < 5; i++) dias.add(new ArrayList<>());
+        dias.get(0).add("reunião");
+        dias.get(4).add("entrega");
+        System.out.println("segunda: " + dias.get(0) + ", quarta: " + dias.get(2));
+    }
+}`,
+      saidaCorrigida: 'segunda: [reunião], quarta: []',
+      dica: 'Quantas listas de compromissos o `nCopies` criou? Cinco listas, ou cinco referências?',
+      explicacao:
+        '`Collections.nCopies(5, x)` repete a **mesma referência** cinco vezes, e o argumento `new ArrayList<>()` é avaliado uma vez só: os cinco dias apontam para a mesma lista. Com valores imutáveis, como `"-"`, isso não importa; com objetos mutáveis, cada alteração aparece em todos. Crie uma lista nova para cada dia, num laço ou com `Stream.generate`.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t3-e07-q01',
@@ -168,6 +306,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A visão de `unmodifiableList` repassa as leituras à lista original e vê o novo elemento. A cópia de `List.copyOf` ficou com o que existia no momento.',
+      dica: 'A visão acompanha a original; a cópia, não.',
     },
     {
       id: 'pleno-t3-e07-q02',
@@ -193,6 +332,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedOperationException', saida: '1' },
       explicacao: 'As listas de `List.of` recusam qualquer operação de alteração, mesmo uma que não mudaria nada. `sort(null)` significa ordem natural e seria válido numa lista mutável.',
+      dica: '`sort` também é uma alteração.',
     },
     {
       id: 'pleno-t3-e07-q03',
@@ -211,6 +351,7 @@ public class Teste {
 }`,
       resposta: '[a, d, b, c] 1',
       explicacao: '`rotate(l, 1)` leva o último para o começo: `[d, a, b, c]`. Depois, `swap` troca as posições 0 e 1.',
+      dica: '`rotate(l, 1)` leva o último para o começo; `swap` troca duas posições.',
     },
     {
       id: 'pleno-t3-e07-q04',
@@ -230,6 +371,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A lista é imutável, mas o array dentro dela não. Alterar o conteúdo de um elemento não é uma operação da lista.',
+      dica: 'A lista é imutável, mas o array dentro dela não.',
     },
     {
       id: 'pleno-t3-e07-q05',
@@ -245,6 +387,7 @@ public class Teste {
       ],
       respostas: [0, 1, 2],
       explicacao: 'Visões inalteráveis, cópias imutáveis e `nCopies` recusam alterações. Copiar para um `ArrayList` é justamente o jeito de obter uma lista que pode mudar.',
+      dica: 'Três delas são imutáveis ou visões somente leitura.',
     },
     {
       id: 'pleno-t3-e07-q06',
@@ -271,6 +414,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A cópia defensiva no construtor compacto desliga o pedido da lista original. O "pão" entra só na `ArrayList` de quem criou o pedido.',
+      dica: 'O construtor compacto copiou a lista na entrada.',
     },
     {
       id: 'pleno-t3-e07-q07',
@@ -297,6 +441,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException', saida: '1' },
       explicacao: 'O `ArrayList` aceita `null`, mas `List.copyOf`, como `List.of`, rejeita elementos nulos.',
+      dica: '`List.copyOf` recusa `null`, como `List.of`.',
     },
     {
       id: 'pleno-t3-e07-q08',
@@ -313,6 +458,7 @@ public class Linha {
       respostas: ['nCopies'],
       saida: '---',
       explicacao: '`nCopies(n, valor)` devolve uma lista imutável de tamanho `n`, sem criar `n` objetos: todas as posições apontam para o mesmo valor.',
+      dica: 'É o método que repete um valor `n` vezes.',
     },
     {
       id: 'pleno-t3-e07-q09',
@@ -332,6 +478,7 @@ public class Teste {
 }`,
       resposta: 8,
       explicacao: '`toArray()` sem argumentos devolve `Object[]`, que não pode ser atribuído a `String[]` sem cast. As outras duas formas recebem o tipo do array.',
+      dica: '`toArray()` sem argumentos devolve `Object[]`.',
     },
     {
       id: 'pleno-t3-e07-q10',
@@ -350,6 +497,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Sem comparador, `max` usa a ordem alfabética, e "uva" é a última. Com o comparador por tamanho, `min` também escolhe "uva", a mais curta.',
+      dica: '`max` usa a ordem natural; `min`, o comparador por tamanho.',
     },
     {
       id: 'pleno-t3-e07-q11',
@@ -371,6 +519,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`addAll` acrescenta os três valores; `disjoint` confirma que não há elemento em comum; `fill` troca todos por 0, mantendo o tamanho.',
+      dica: '`fill` troca todos os elementos; `disjoint` diz se não há nada em comum.',
     },
     {
       id: 'pleno-t3-e07-q12',
@@ -396,6 +545,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'UnsupportedOperationException', saida: 'a' },
       explicacao: 'O iterador de uma coleção imutável também recusa remoções. Numa lista mutável, `remove` depois de `next` seria válido.',
+      dica: 'O iterador de uma lista imutável também não remove.',
     },
     {
       id: 'pleno-t3-e07-q13',
@@ -415,6 +565,7 @@ public class Teste {
 }`,
       resposta: '[3, 1] true',
       explicacao: 'A visão acompanha cada mudança da original, inclusive a inversão e a remoção. O `equals` de listas compara os elementos.',
+      dica: 'A visão acompanha cada mudança da base.',
     },
     {
       id: 'pleno-t3-e07-q14',
@@ -429,6 +580,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: 'A especificação nunca prometeu uma ordem. Sorteando um valor ao iniciar a JVM, o JDK impede que alguém passe a depender da ordem atual sem perceber.',
+      dica: 'É uma vacina contra dependência acidental de ordem.',
     },
     {
       id: 'pleno-t3-e07-q15',
@@ -448,6 +600,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O mapa é imutável: não se pode trocar o valor de "k" nem acrescentar chaves. A lista guardada como valor, porém, é um `ArrayList` comum.',
+      dica: 'O mapa é imutável; a lista guardada nele, não.',
     },
   ],
 };

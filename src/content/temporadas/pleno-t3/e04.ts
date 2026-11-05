@@ -15,6 +15,23 @@ const episodio: EpisodioConteudo = {
     '`Queue` não tem `push` nem `pop`; esses métodos são de `Deque`.',
     '`Stack` é legado e sincronizado; a recomendação é usar `ArrayDeque`.',
   ],
+  ia: {
+    uso:
+      'Com filas e pilhas, a IA ajuda a escolher a estrutura e a montar o passo a passo de uma sequência de `push`, `offer` e `poll`. Ela erra a ponta de cada método com frequência, sugere `Stack` e `LinkedList` por hábito e esquece que a iteração de uma `PriorityQueue` não segue a prioridade.',
+    pedido:
+      'Estou estudando para a prova 1Z0-830, com Java 21.\n<cole aqui o código com Queue, Deque ou PriorityQueue>\n- Mostre o conteúdo da estrutura depois de cada linha, do começo ao fim, e o que cada poll, pop ou peek devolve.\n- Diga em que ponta cada método atua e qual lança exceção com a estrutura vazia.\n- Se o código usar Stack ou LinkedList como fila, reescreva com ArrayDeque.\n- Não mude a ordem das operações.',
+    erros: [
+      'Diz que `push` numa `Deque` insere no fim, como `offer`.',
+      'Afirma que imprimir uma `PriorityQueue` mostra os elementos em ordem de prioridade.',
+      'Sugere `Stack` para pilhas ou guarda `null` numa `ArrayDeque`, que lança `NullPointerException`.',
+      'Usa `remove()` num laço de consumo sem conferir se a fila esvaziou.',
+    ],
+    conferir: [
+      'Rode a sequência e imprima a estrutura depois de cada operação.',
+      'Teste com três elementos e confira quem sai primeiro: o primeiro a entrar ou o último.',
+      'Esvazie a `PriorityQueue` com `poll` e compare com a impressão direta dela.',
+    ],
+  },
   recursos: [
     {
       titulo: 'Dev.java: Storing Elements in Stacks and Queues',
@@ -158,6 +175,123 @@ public class Validador {
     comentarios:
       'A pilha guarda as aberturas pendentes, e cada fechamento precisa casar com a mais recente: é o LIFO em ação. O `poll` resolve com um `null` o caso do fechamento sem abertura, sem precisar de `try`. O mesmo algoritmo aparece em compiladores, que conferem blocos aninhados, e em editores, que destacam o par de um parêntese.',
   },
+  bugs: [
+    {
+      id: 'pleno-t3-e04-b01',
+      dificuldade: 1,
+      sintoma: 'O sistema de senhas não compila: `Queue is abstract; cannot be instantiated`.',
+      codigo: `import java.util.ArrayDeque;
+import java.util.Queue;
+
+public class Senhas {
+    public static void main(String[] args) {
+        Queue<String> fila = new Queue<>();
+        fila.offer("A01");
+        fila.offer("A02");
+        System.out.println("chamando " + fila.poll());
+    }
+}`,
+      linha: 6,
+      efeito: { tipo: 'naoCompila' },
+      correcao: `import java.util.ArrayDeque;
+import java.util.Queue;
+
+public class Senhas {
+    public static void main(String[] args) {
+        Queue<String> fila = new ArrayDeque<>();
+        fila.offer("A01");
+        fila.offer("A02");
+        System.out.println("chamando " + fila.poll());
+    }
+}`,
+      saidaCorrigida: 'chamando A01',
+      dica: '`Queue` é uma classe ou uma interface? De que classe dá para criar uma fila?',
+      explicacao:
+        '`Queue` é uma interface e não pode ser instanciada. Declare a variável pela interface e escolha a implementação no `new`: `ArrayDeque` é a escolha padrão para filas, e `PriorityQueue`, para filas por prioridade.',
+    },
+    {
+      id: 'pleno-t3-e04-b02',
+      dificuldade: 2,
+      sintoma: 'Os clientes estão sendo atendidos na ordem inversa da chegada: `ordem de atendimento: Caio Bia Ana`.',
+      codigo: `import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
+
+public class Atendimento {
+    public static void main(String[] args) {
+        Deque<String> fila = new ArrayDeque<>();
+        for (String cliente : List.of("Ana", "Bia", "Caio")) {
+            fila.push(cliente);
+        }
+        StringBuilder ordem = new StringBuilder();
+        while (!fila.isEmpty()) {
+            ordem.append(fila.poll()).append(' ');
+        }
+        System.out.println("ordem de atendimento: " + ordem.toString().trim());
+    }
+}`,
+      linha: 9,
+      efeito: { tipo: 'saida', saida: 'ordem de atendimento: Caio Bia Ana' },
+      correcao: `import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
+
+public class Atendimento {
+    public static void main(String[] args) {
+        Deque<String> fila = new ArrayDeque<>();
+        for (String cliente : List.of("Ana", "Bia", "Caio")) {
+            fila.offer(cliente);
+        }
+        StringBuilder ordem = new StringBuilder();
+        while (!fila.isEmpty()) {
+            ordem.append(fila.poll()).append(' ');
+        }
+        System.out.println("ordem de atendimento: " + ordem.toString().trim());
+    }
+}`,
+      saidaCorrigida: 'ordem de atendimento: Ana Bia Caio',
+      dica: 'Numa `Deque`, em que ponta `push` coloca o elemento? E de que ponta `poll` tira?',
+      explicacao:
+        '`push` é um método de pilha e insere no **começo**; `poll` também tira do começo, e o último a chegar sai primeiro. Para uma fila, insira no fim com `offer` e tire do começo com `poll`. Declarar a variável como `Queue` em vez de `Deque` impede o `push` e evita a mistura.',
+    },
+    {
+      id: 'pleno-t3-e04-b03',
+      dificuldade: 3,
+      sintoma: 'O painel do pronto-socorro mostra a gravidade 5 antes da 3, embora a fila seja por prioridade: `próximos no painel: 1 2 4 5 3`.',
+      codigo: `import java.util.PriorityQueue;
+
+public class Triagem {
+    public static void main(String[] args) {
+        PriorityQueue<Integer> fila = new PriorityQueue<>();
+        for (int gravidade : new int[] {5, 1, 4, 2, 3}) {
+            fila.offer(gravidade);
+        }
+        StringBuilder painel = new StringBuilder();
+        for (int p : fila) painel.append(p).append(' ');
+        System.out.println("próximos no painel: " + painel.toString().trim());
+    }
+}`,
+      linha: 10,
+      efeito: { tipo: 'saida', saida: 'próximos no painel: 1 2 4 5 3' },
+      correcao: `import java.util.PriorityQueue;
+
+public class Triagem {
+    public static void main(String[] args) {
+        PriorityQueue<Integer> fila = new PriorityQueue<>();
+        for (int gravidade : new int[] {5, 1, 4, 2, 3}) {
+            fila.offer(gravidade);
+        }
+        StringBuilder painel = new StringBuilder();
+        for (int p : fila.stream().sorted().toList()) painel.append(p).append(' ');
+        System.out.println("próximos no painel: " + painel.toString().trim());
+    }
+}`,
+      saidaCorrigida: 'próximos no painel: 1 2 3 4 5',
+      dica: 'A `PriorityQueue` garante a ordem em quais operações? E a iteração com for-each?',
+      explicacao:
+        'A `PriorityQueue` é um heap: só garante que `peek` e `poll` entregam o menor. A iteração e o `toString` percorrem o array interno, em que cada pai é menor que os filhos, mas o resto não está ordenado. Para mostrar a ordem de atendimento sem esvaziar a fila, ordene uma cópia, como `fila.stream().sorted()`.',
+    },
+  ],
   exercicios: [
     {
       id: 'pleno-t3-e04-q01',
@@ -179,6 +313,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A fila é FIFO: sai o primeiro que entrou. `peek` só consulta, sem remover.',
+      dica: 'Numa fila, sai pelo começo o que entrou primeiro.',
     },
     {
       id: 'pleno-t3-e04-q02',
@@ -197,6 +332,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: '`poll` e `peek` sinalizam fila vazia devolvendo `null`. As versões que lançam exceção são `remove` e `element`.',
+      dica: '`poll` e `peek` não lançam exceção com a fila vazia.',
     },
     {
       id: 'pleno-t3-e04-q03',
@@ -221,6 +357,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NoSuchElementException', saida: 'null' },
       explicacao: '`peek` e `element` consultam o começo da fila; com ela vazia, o primeiro devolve `null` e o segundo lança exceção.',
+      dica: '`peek` devolve `null`; `element` lança exceção.',
     },
     {
       id: 'pleno-t3-e04-q04',
@@ -241,6 +378,7 @@ public class Teste {
 }`,
       resposta: 'cd[a, b]',
       explicacao: '`push` insere no começo e `offer` no fim, formando `[c, a, b, d]`. `pop` tira do começo e `pollLast` do fim.',
+      dica: '`push` usa o começo; `offer` e `offerLast`, o fim.',
     },
     {
       id: 'pleno-t3-e04-q05',
@@ -264,6 +402,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `push` da `Deque` insere no começo, que o `toString` mostra primeiro. A `Stack`, como `Vector`, acrescenta no fim do array e imprime da base para o topo.',
+      dica: 'As duas pilhas têm o mesmo topo, mas imprimem em ordens opostas.',
     },
     {
       id: 'pleno-t3-e04-q06',
@@ -291,6 +430,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'excecao', nome: 'NullPointerException', saida: '1' },
       explicacao: '`LinkedList` aceita `null`. `ArrayDeque` rejeita, porque `null` é o que `poll` devolve para indicar fila vazia.',
+      dica: '`LinkedList` aceita `null`; `ArrayDeque` não.',
     },
     {
       id: 'pleno-t3-e04-q07',
@@ -309,6 +449,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A fila de prioridade entrega sempre o menor pela ordem natural, e `poll` remove o elemento.',
+      dica: 'A `PriorityQueue` entrega o menor primeiro, pela ordem natural.',
     },
     {
       id: 'pleno-t3-e04-q08',
@@ -330,6 +471,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'O `toString` mostra o array do heap. O 1 subiu para a raiz trocando com o 3, e o 2 entrou como segundo filho do 1, sem precisar subir.',
+      dica: 'O `toString` mostra o array do heap; `peek` mostra o menor.',
     },
     {
       id: 'pleno-t3-e04-q09',
@@ -349,6 +491,7 @@ public class Topo {
       respostas: ['pop', 'removeFirst', 'pollFirst', 'poll', 'remove'],
       saida: 'ba',
       explicacao: '`pop` remove do começo da `Deque`, onde `push` coloca. `removeFirst`, `pollFirst`, `poll` e `remove` fazem o mesmo aqui.',
+      dica: 'É o método de pilha que tira o topo.',
     },
     {
       id: 'pleno-t3-e04-q10',
@@ -358,6 +501,7 @@ public class Topo {
       opcoes: ['`push`', '`pop`', '`peek`', '`offer`', '`add`'],
       respostas: [0, 1, 2],
       explicacao: 'Os métodos de pilha usam o começo. `offer` e `add`, herdados de `Queue`, inserem no fim, como numa fila.',
+      dica: 'Os métodos de pilha e o `peek` usam o começo.',
     },
     {
       id: 'pleno-t3-e04-q11',
@@ -377,6 +521,7 @@ public class Teste {
 }`,
       resposta: 8,
       explicacao: 'O objeto é um `ArrayDeque`, mas a variável é `Queue`, e `Queue` não tem `push`. O compilador olha o tipo da referência.',
+      dica: '`push` é de `Deque`, e a variável é uma `Queue`.',
     },
     {
       id: 'pleno-t3-e04-q12',
@@ -397,6 +542,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'A `LinkedList` aceita `null`, e o primeiro `poll` devolve o `null` guardado, indistinguível de "fila vazia". É por isso que as outras filas o proíbem.',
+      dica: '`LinkedList` guarda o `null` como qualquer elemento.',
     },
     {
       id: 'pleno-t3-e04-q13',
@@ -418,6 +564,7 @@ public class Teste {
 }`,
       resposta: 'a,bb,ccc,',
       explicacao: 'O comparador define a prioridade pelo tamanho. Consumir com `poll` até esvaziar entrega na ordem do comparador.',
+      dica: 'O comparador ordena pelo tamanho do texto.',
     },
     {
       id: 'pleno-t3-e04-q14',
@@ -436,6 +583,7 @@ public class Teste {
       resposta: 0,
       verificar: { tipo: 'saida' },
       explicacao: 'Os dois primeiros `Integer` são somados (1 + 3) antes de a concatenação começar. Depois vem o 2, e a última chamada encontra a `Deque` vazia e devolve `null`.',
+      dica: 'Os números são somados antes de virar texto, e a fila vazia devolve `null`.',
     },
     {
       id: 'pleno-t3-e04-q15',
@@ -450,6 +598,7 @@ public class Teste {
       ],
       resposta: 0,
       explicacao: '`Stack` é da época do Java 1.0. Ela continua existindo e funcionando, mas `Deque` oferece a mesma pilha com uma interface mais coerente e sem sincronização.',
+      dica: '`Stack` estende uma classe antiga e sincronizada.',
     },
   ],
 };

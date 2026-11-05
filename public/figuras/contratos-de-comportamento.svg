@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="t">
+  <title id="t">Três classes de hierarquias diferentes: Pato estende Ave, Aviao estende Veiculo e Peixe estende Animal. As interfaces Voador e Nadador cortam as hierarquias: Pato implementa as duas, Aviao implementa Voador e Peixe implementa Nadador</title>
+  <rect width="760" height="300" fill="#13110f"/>
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4fd68b"/></marker></defs>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="13" fill="#bdb5aa">
+    <rect x="60" y="30" width="150" height="40" rx="6" fill="#1b1916" stroke="#43403a"/><text x="76" y="55">Ave</text>
+    <rect x="305" y="30" width="150" height="40" rx="6" fill="#1b1916" stroke="#43403a"/><text x="321" y="55">Veiculo</text>
+    <rect x="550" y="30" width="150" height="40" rx="6" fill="#1b1916" stroke="#43403a"/><text x="566" y="55">Animal</text>
+  </g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#f3eee7">
+    <rect x="60" y="120" width="150" height="44" rx="6" fill="#1b1916" stroke="#f3eee7"/><text x="76" y="147">Pato</text>
+    <rect x="305" y="120" width="150" height="44" rx="6" fill="#1b1916" stroke="#f3eee7"/><text x="321" y="147">Aviao</text>
+    <rect x="550" y="120" width="150" height="44" rx="6" fill="#1b1916" stroke="#f3eee7"/><text x="566" y="147">Peixe</text>
+  </g>
+  <g stroke="#8a8277" stroke-width="1.5"><path d="M135 118 L135 72"/><path d="M380 118 L380 72"/><path d="M625 118 L625 72"/></g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="11" fill="#8a8277"><text x="142" y="100">extends</text><text x="387" y="100">extends</text><text x="632" y="100">extends</text></g>
+  <g font-family="Cascadia Code, Consolas, monospace" font-size="14" font-weight="700" fill="#4fd68b">
+    <rect x="170" y="224" width="170" height="44" rx="22" fill="#13110f" stroke="#4fd68b"/><text x="198" y="251">«Voador»</text>
+    <rect x="430" y="224" width="170" height="44" rx="22" fill="#13110f" stroke="#4fd68b"/><text x="454" y="251">«Nadador»</text>
+  </g>
+  <g stroke="#4fd68b" stroke-width="1.5" stroke-dasharray="5 4" fill="none">
+    <path d="M120 166 L230 220" marker-end="url(#s)"/>
+    <path d="M160 166 L480 220" marker-end="url(#s)"/>
+    <path d="M370 166 L290 220" marker-end="url(#s)"/>
+    <path d="M610 166 L540 220" marker-end="url(#s)"/>
+  </g>
+  <text x="380" y="292" font-family="Segoe UI, system-ui, sans-serif" font-size="12.5" fill="#bdb5aa" text-anchor="middle">Uma superclasse por classe (cinza); quantas interfaces quiser (verde tracejado).</text>
+</svg>
